@@ -4,4 +4,36 @@
 /* Optional for custom themes – Docs: https://daisyui.com/docs/themes/#how-to-add-a-new-custom-theme */
 @plugin "./daisyui-theme.mjs"{
   /* custom theme here */
+  name: "valentine";
+  default: true;
+  prefersdark: false;
+  color-scheme: "light";
+  --color-base-100: #fff7f5;
+  --color-base-200: #fdecea;
+  --color-base-300: #fad5cf;
+  --color-base-content: #3d1a1a;
+  --color-primary: #fc896b;
+  --color-primary-content: #fff5f2;
+  --color-secondary: #fe5771;
+  --color-secondary-content: #fff0f3;
+  --color-accent: #ff6395;
+  --color-accent-content: #fff;
+  --color-neutral: #2a1a1f;
+  --color-neutral-content: #fce8e8;
+  --color-info: #ff7da5;
+  --color-info-content: #3d0020;
+  --color-success: #fca96b;
+  --color-success-content: #3d1500;
+  --color-warning: #fe9166;
+  --color-warning-content: #3d1500;
+  --color-error: #fe695d;
+  --color-error-content: #fff;
+  --radius-selector: 1rem;
+  --radius-field: 1rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
 }
