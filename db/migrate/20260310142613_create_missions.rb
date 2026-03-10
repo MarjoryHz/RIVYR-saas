@@ -4,7 +4,6 @@ class CreateMissions < ActiveRecord::Migration[8.1]
       t.references :region, null: false, foreign_key: true
       t.references :freelancer_profile, null: false, foreign_key: true
       t.references :client_contact, null: false, foreign_key: true
-      t.references :client, null: false, foreign_key: true
       t.references :specialty, null: false, foreign_key: true
       t.string :mission_type
       t.string :title

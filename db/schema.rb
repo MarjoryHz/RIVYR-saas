@@ -16,7 +16,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_142641) do
 
   create_table "candidates", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.bigint "cv_id", null: false
     t.string "email"
     t.string "first_name"
     t.string "last_name"
@@ -26,7 +25,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_142641) do
     t.string "source"
     t.string "status"
     t.datetime "updated_at", null: false
-    t.index ["cv_id"], name: "index_candidates_on_cv_id"
   end
 
   create_table "client_contacts", force: :cascade do |t|
@@ -70,15 +68,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_142641) do
     t.index ["placement_id"], name: "index_commissions_on_placement_id"
   end
 
-  create_table "cvs", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "file_name"
-    t.string "file_type"
-    t.string "file_url"
-    t.string "title"
-    t.datetime "updated_at", null: false
-  end
-
   create_table "freelancer_profiles", force: :cascade do |t|
     t.string "availability_status"
     t.text "bio"
@@ -113,7 +102,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_142641) do
   create_table "missions", force: :cascade do |t|
     t.text "brief_summary"
     t.bigint "client_contact_id", null: false
-    t.bigint "client_id", null: false
     t.date "closed_at"
     t.text "compensation_summary"
     t.boolean "contract_signed"
@@ -133,7 +121,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_142641) do
     t.string "title"
     t.datetime "updated_at", null: false
     t.index ["client_contact_id"], name: "index_missions_on_client_contact_id"
-    t.index ["client_id"], name: "index_missions_on_client_id"
     t.index ["freelancer_profile_id"], name: "index_missions_on_freelancer_profile_id"
     t.index ["region_id"], name: "index_missions_on_region_id"
     t.index ["specialty_id"], name: "index_missions_on_specialty_id"
@@ -197,7 +184,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_142641) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
-  add_foreign_key "candidates", "cvs"
   add_foreign_key "client_contacts", "clients"
   add_foreign_key "commissions", "placements"
   add_foreign_key "freelancer_profiles", "regions"
@@ -205,7 +191,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_142641) do
   add_foreign_key "freelancer_profiles", "users"
   add_foreign_key "invoices", "placements"
   add_foreign_key "missions", "client_contacts"
-  add_foreign_key "missions", "clients"
   add_foreign_key "missions", "freelancer_profiles"
   add_foreign_key "missions", "regions"
   add_foreign_key "missions", "specialties"
