@@ -2,10 +2,10 @@
 
 one:
   name: MyString
-  slug: MyString
+  options: MyString
   active: false
 
 two:
   name: MyString
-  slug: MyString
+  options: MyString
   active: false
