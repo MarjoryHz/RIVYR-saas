@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  mission: one
+  candidate: one
+  status: MyString
+  hired_at: 2026-03-10
+  annual_salary_cents: 1
+  placement_fee_cents: 1
+  notes: MyText
+
+two:
+  mission: two
+  candidate: two
+  status: MyString
+  hired_at: 2026-03-10
+  annual_salary_cents: 1
+  placement_fee_cents: 1
+  notes: MyText
