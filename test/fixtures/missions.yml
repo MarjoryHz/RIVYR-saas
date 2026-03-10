@@ -1,0 +1,43 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  region: one
+  freelancer_profile: one
+  client_contact: one
+  client: one
+  specialty: one
+  mission_type: MyString
+  title: MyString
+  reference: MyString
+  status: MyString
+  location: MyText
+  contract_signed: false
+  opened_at: 2026-03-10
+  started_at: 2026-03-10
+  closed_at: 2026-03-10
+  priority_level: MyString
+  brief_summary: MyText
+  compensation_summary: MyText
+  search_constraints: MyText
+  origin_type: MyString
+
+two:
+  region: two
+  freelancer_profile: two
+  client_contact: two
+  client: two
+  specialty: two
+  mission_type: MyString
+  title: MyString
+  reference: MyString
+  status: MyString
+  location: MyText
+  contract_signed: false
+  opened_at: 2026-03-10
+  started_at: 2026-03-10
+  closed_at: 2026-03-10
+  priority_level: MyString
+  brief_summary: MyText
+  compensation_summary: MyText
+  search_constraints: MyText
+  origin_type: MyString

@@ -1,0 +1,21 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  placement: one
+  commission_rule: MyString
+  status: MyString
+  gross_amount_cents: 1
+  rivyr_share_cents: 1
+  freelancer_share_cents: 1
+  client_payment_required: false
+  eligible_for_invoicing_at: 2026-03-10
+
+two:
+  placement: two
+  commission_rule: MyString
+  status: MyString
+  gross_amount_cents: 1
+  rivyr_share_cents: 1
+  freelancer_share_cents: 1
+  client_payment_required: false
+  eligible_for_invoicing_at: 2026-03-10

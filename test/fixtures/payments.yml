@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  commission: one
+  invoice: one
+  status: MyString
+  amount_cents: 1
+  paid_at: 2026-03-10 15:26:41
+  payment_type: MyString
+  reference: MyString
+
+two:
+  commission: two
+  invoice: two
+  status: MyString
+  amount_cents: 1
+  paid_at: 2026-03-10 15:26:41
+  payment_type: MyString
+  reference: MyString
