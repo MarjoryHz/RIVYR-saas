@@ -1,0 +1,10 @@
+<%= form_with url: path, method: :get, local: true, class: "flex flex-wrap gap-2" do |f| %>
+  <%= f.search_field :q, value: q, placeholder: "Rechercher...", class: "input input-bordered" %>
+
+  <% if status_options.present? %>
+    <%= select_tag status_param, options_for_select([["Tous statuts", ""]] + status_options.map { |value| [value.humanize, value] }, status), class: "select select-bordered" %>
+  <% end %>
+
+  <%= f.submit "Filtrer", class: "btn" %>
+  <%= link_to "Reset", path, class: "btn btn-ghost" %>
+<% end %>

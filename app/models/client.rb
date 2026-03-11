@@ -6,4 +6,13 @@ class Client < ApplicationRecord
   validates :sector, length: { maximum: 255 }, allow_blank: true
   validates :website_url, length: { maximum: 255 }, allow_blank: true
   validates :company_size, length: { maximum: 100 }, allow_blank: true
+
+  scope :search, lambda { |q|
+    return all if q.blank?
+
+    where(
+      "legal_name ILIKE :q OR brand_name ILIKE :q OR sector ILIKE :q OR location ILIKE :q",
+      q: "%#{q}%"
+    )
+  }
 end

@@ -4,7 +4,7 @@ one:
   client: one
   first_name: MyString
   last_name: MyString
-  email: MyString
+  email: contact.one@example.test
   phone: MyString
   job_title: MyString
   primary_contact: false
@@ -13,7 +13,7 @@ two:
   client: two
   first_name: MyString
   last_name: MyString
-  email: MyString
+  email: contact.two@example.test
   phone: MyString
   job_title: MyString
   primary_contact: false

@@ -1,0 +1,50 @@
+<div class="max-w-5xl mx-auto p-6 space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold"><%= @mission.title %></h1>
+    <div class="flex gap-2">
+      <%= link_to "Modifier", edit_mission_path(@mission), class: "btn btn-primary" %>
+      <%= link_to "Supprimer", mission_path(@mission), data: { turbo_method: :delete, turbo_confirm: "Confirmer la suppression ?" }, class: "btn btn-error" %>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <p><strong>Reference:</strong> <%= @mission.reference %></p>
+    <p><strong>Statut:</strong> <%= @mission.status %></p>
+    <p><strong>Type:</strong> <%= @mission.mission_type.presence || "-" %></p>
+    <p><strong>Priorite:</strong> <%= @mission.priority_level.presence || "-" %></p>
+    <p><strong>Client:</strong> <%= @mission.client_contact.client.legal_name %></p>
+    <p><strong>Contact:</strong> <%= [@mission.client_contact.first_name, @mission.client_contact.last_name].join(" ") %></p>
+    <p><strong>Freelancer:</strong> <%= [@mission.freelancer_profile.user.first_name, @mission.freelancer_profile.user.last_name].join(" ") %></p>
+    <p><strong>Region:</strong> <%= @mission.region.name %></p>
+    <p><strong>Specialite:</strong> <%= @mission.specialty.name %></p>
+    <p><strong>Contrat signe:</strong> <%= @mission.contract_signed ? "Oui" : "Non" %></p>
+  </div>
+
+  <div class="grid md:grid-cols-3 gap-4">
+    <p><strong>Ouverte le:</strong> <%= @mission.opened_at.presence || "-" %></p>
+    <p><strong>Commencee le:</strong> <%= @mission.started_at.presence || "-" %></p>
+    <p><strong>Fermee le:</strong> <%= @mission.closed_at.presence || "-" %></p>
+  </div>
+
+  <div>
+    <p><strong>Localisation:</strong> <%= @mission.location.presence || "-" %></p>
+    <p><strong>Origine:</strong> <%= @mission.origin_type.presence || "-" %></p>
+  </div>
+
+  <div>
+    <p><strong>Brief:</strong></p>
+    <p><%= @mission.brief_summary.presence || "-" %></p>
+  </div>
+
+  <div>
+    <p><strong>Remuneration:</strong></p>
+    <p><%= @mission.compensation_summary.presence || "-" %></p>
+  </div>
+
+  <div>
+    <p><strong>Contraintes:</strong></p>
+    <p><%= @mission.search_constraints.presence || "-" %></p>
+  </div>
+
+  <%= link_to "Retour a la liste", missions_path, class: "btn" %>
+</div>

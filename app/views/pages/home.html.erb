@@ -5,8 +5,8 @@
       <h1 class="mb-5 text-5xl font-bold">Trouvez les meilleurs talents</h1>
       <p class="mb-5 text-lg">Plateforme de recrutement intelligente pour transformer votre hiring</p>
       <div class="flex gap-4 justify-center">
-        <button class="btn btn-primary">Commencer gratuitement</button>
-        <button class="btn btn-outline btn-primary">En savoir plus</button>
+        <%= link_to "Commencer gratuitement", new_user_registration_path, class: "btn btn-primary" %>
+        <%= link_to "Voir les clients", clients_path, class: "btn btn-outline btn-primary" %>
       </div>
     </div>
   </div>

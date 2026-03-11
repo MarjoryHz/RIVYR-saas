@@ -1,0 +1,64 @@
+<%= form_with(model: commission, class: "space-y-4") do |f| %>
+  <% if commission.errors.any? %>
+    <div class="alert alert-error">
+      <div>
+        <p><strong><%= pluralize(commission.errors.count, "erreur") %> ont empeche l'enregistrement :</strong></p>
+        <ul class="list-disc ml-6 mt-2">
+          <% commission.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :placement_id, "Placement", class: "block font-medium" %>
+    <%= f.collection_select :placement_id, @placements, :id, ->(p) { "Placement ##{p.id} - #{p.mission.reference}" }, { prompt: "Selectionner un placement" }, { class: "select select-bordered w-full" } %>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :commission_rule, "Regle", class: "block font-medium" %>
+      <%= f.text_field :commission_rule, class: "input input-bordered w-full" %>
+    </div>
+    <div>
+      <%= f.label :status, "Statut", class: "block font-medium" %>
+      <%= f.text_field :status, class: "input input-bordered w-full" %>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-3 gap-4">
+    <div>
+      <%= f.label :gross_amount_cents, "Brut (cents)", class: "block font-medium" %>
+      <%= f.number_field :gross_amount_cents, min: 0, class: "input input-bordered w-full" %>
+    </div>
+    <div>
+      <%= f.label :rivyr_share_cents, "Part Rivyr (cents)", class: "block font-medium" %>
+      <%= f.number_field :rivyr_share_cents, min: 0, class: "input input-bordered w-full" %>
+    </div>
+    <div>
+      <%= f.label :freelancer_share_cents, "Part freelancer (cents)", class: "block font-medium" %>
+      <%= f.number_field :freelancer_share_cents, min: 0, class: "input input-bordered w-full" %>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :eligible_for_invoicing_at, "Eligible facturation", class: "block font-medium" %>
+      <%= f.date_field :eligible_for_invoicing_at, class: "input input-bordered w-full" %>
+    </div>
+
+    <div class="form-control pt-8">
+      <label class="label cursor-pointer justify-start gap-3">
+        <%= f.check_box :client_payment_required, class: "checkbox" %>
+        <span class="label-text">Paiement client requis</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="flex gap-3">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to "Annuler", commissions_path, class: "btn" %>
+  </div>
+<% end %>

@@ -3,17 +3,17 @@
 one:
   commission: one
   invoice: one
-  status: MyString
+  status: pending
   amount_cents: 1
   paid_at: 2026-03-10 15:26:41
-  payment_type: MyString
-  reference: MyString
+  payment_type: client_payment
+  reference: PAY-FIX-0001
 
 two:
   commission: two
   invoice: two
-  status: MyString
+  status: paid
   amount_cents: 1
   paid_at: 2026-03-10 15:26:41
-  payment_type: MyString
-  reference: MyString
+  payment_type: freelancer_payout
+  reference: PAY-FIX-0002

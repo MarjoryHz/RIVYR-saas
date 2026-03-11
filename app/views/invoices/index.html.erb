@@ -1,0 +1,42 @@
+<div class="max-w-6xl mx-auto p-6 space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold">Factures</h1>
+    <%= link_to "Nouvelle facture", new_invoice_path, class: "btn btn-primary" %>
+  </div>
+  <%= render "shared/index_filters", path: invoices_path, q: @q, status: @status, status_options: Invoice.statuses.keys, status_param: :status %>
+
+  <div class="overflow-x-auto bg-base-100 rounded-lg">
+    <% if @invoices.any? %>
+      <table class="table w-full">
+        <thead>
+          <tr>
+            <th>Numero</th>
+            <th>Placement</th>
+            <th>Statut</th>
+            <th>Montant</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @invoices.each do |invoice| %>
+            <tr>
+              <td><%= invoice.number %></td>
+              <td>#<%= invoice.placement_id %></td>
+              <td><%= invoice.status %></td>
+              <td><%= invoice.amount_cents %></td>
+              <td class="text-right">
+                <%= link_to "Voir", invoice_path(invoice), class: "btn btn-sm" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="p-8 text-center space-y-3">
+        <p class="text-lg font-medium">Aucune facture pour le moment</p>
+        <%= link_to "Creer la premiere facture", new_invoice_path, class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+  <%= render "shared/pagination", page: @page, total_pages: @total_pages, extra_params: { q: @q, status: @status }, path: ->(params) { invoices_path(params) } %>
+</div>

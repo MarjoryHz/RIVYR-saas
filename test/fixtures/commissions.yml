@@ -2,8 +2,8 @@
 
 one:
   placement: one
-  commission_rule: MyString
-  status: MyString
+  commission_rule: 70_30
+  status: eligible
   gross_amount_cents: 1
   rivyr_share_cents: 1
   freelancer_share_cents: 1
@@ -12,8 +12,8 @@ one:
 
 two:
   placement: two
-  commission_rule: MyString
-  status: MyString
+  commission_rule: 75_25
+  status: paid
   gross_amount_cents: 1
   rivyr_share_cents: 1
   freelancer_share_cents: 1
