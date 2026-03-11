@@ -1,23 +1,21 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  cv: one
   first_name: MyString
   last_name: MyString
-  email: MyString
+  email: candidate.one@example.test
   phone: MyString
   linkedin_url: MyString
-  status: MyString
+  status: new
   notes: MyText
   source: MyString
 
 two:
-  cv: two
   first_name: MyString
   last_name: MyString
-  email: MyString
+  email: candidate.two@example.test
   phone: MyString
   linkedin_url: MyString
-  status: MyString
+  status: qualified
   notes: MyText
   source: MyString

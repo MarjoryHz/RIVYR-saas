@@ -1,0 +1,25 @@
+<div class="max-w-5xl mx-auto p-6 space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold">Facture <%= @invoice.number %></h1>
+    <div class="flex gap-2">
+      <%= link_to "Modifier", edit_invoice_path(@invoice), class: "btn btn-primary" %>
+      <%= link_to "Supprimer", invoice_path(@invoice), data: { turbo_method: :delete, turbo_confirm: "Confirmer la suppression ?" }, class: "btn btn-error" %>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <p><strong>Placement:</strong> <%= link_to "##{@invoice.placement_id}", placement_path(@invoice.placement), class: "link link-primary" %></p>
+    <p><strong>Mission:</strong> <%= @invoice.placement.mission.reference %></p>
+    <p><strong>Type:</strong> <%= @invoice.invoice_type %></p>
+    <p><strong>Statut:</strong> <%= @invoice.status %></p>
+    <p><strong>Montant (cents):</strong> <%= @invoice.amount_cents %></p>
+    <p><strong>Date emission:</strong> <%= @invoice.issue_date.presence || "-" %></p>
+    <p><strong>Date paiement:</strong> <%= @invoice.paid_date.presence || "-" %></p>
+  </div>
+
+  <div class="flex gap-2">
+    <%= link_to "Nouveau paiement", new_payment_path(invoice_id: @invoice.id), class: "btn" %>
+  </div>
+
+  <%= link_to "Retour a la liste", invoices_path, class: "btn" %>
+</div>

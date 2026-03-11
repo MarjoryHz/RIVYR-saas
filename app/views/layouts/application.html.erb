@@ -25,6 +25,19 @@
   </head>
 
   <body>
+    <% if user_signed_in? %>
+      <nav class="navbar bg-base-200 px-4 gap-2 flex-wrap">
+        <%= link_to "Clients", clients_path, class: "btn btn-ghost btn-sm" %>
+        <%= link_to "Contacts", client_contacts_path, class: "btn btn-ghost btn-sm" %>
+        <%= link_to "Freelancers", freelancer_profiles_path, class: "btn btn-ghost btn-sm" %>
+        <%= link_to "Missions", missions_path, class: "btn btn-ghost btn-sm" %>
+        <%= link_to "Candidats", candidates_path, class: "btn btn-ghost btn-sm" %>
+        <%= link_to "Placements", placements_path, class: "btn btn-ghost btn-sm" %>
+        <%= link_to "Factures", invoices_path, class: "btn btn-ghost btn-sm" %>
+        <%= link_to "Commissions", commissions_path, class: "btn btn-ghost btn-sm" %>
+        <%= link_to "Paiements", payments_path, class: "btn btn-ghost btn-sm" %>
+      </nav>
+    <% end %>
     <%= yield %>
   <%= render "shared/flashes" %>
 </body>

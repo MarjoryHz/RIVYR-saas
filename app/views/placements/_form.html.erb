@@ -1,0 +1,58 @@
+<%= form_with(model: placement, class: "space-y-4") do |f| %>
+  <% if placement.errors.any? %>
+    <div class="alert alert-error">
+      <div>
+        <p><strong><%= pluralize(placement.errors.count, "erreur") %> ont empeche l'enregistrement :</strong></p>
+        <ul class="list-disc ml-6 mt-2">
+          <% placement.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :mission_id, "Mission", class: "block font-medium" %>
+    <%= f.collection_select :mission_id, @missions, :id, ->(m) { "#{m.reference} - #{m.title}" }, { prompt: "Selectionner une mission" }, { class: "select select-bordered w-full" } %>
+  </div>
+
+  <div>
+    <%= f.label :candidate_id, "Candidat", class: "block font-medium" %>
+    <%= f.collection_select :candidate_id, @candidates, :id, ->(c) { "#{c.first_name} #{c.last_name}" }, { prompt: "Selectionner un candidat" }, { class: "select select-bordered w-full" } %>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :status, "Statut", class: "block font-medium" %>
+      <%= f.text_field :status, class: "input input-bordered w-full" %>
+    </div>
+
+    <div>
+      <%= f.label :hired_at, "Date d embauche", class: "block font-medium" %>
+      <%= f.date_field :hired_at, class: "input input-bordered w-full" %>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :annual_salary_cents, "Salaire annuel (cents)", class: "block font-medium" %>
+      <%= f.number_field :annual_salary_cents, min: 0, class: "input input-bordered w-full" %>
+    </div>
+
+    <div>
+      <%= f.label :placement_fee_cents, "Frais de placement (cents)", class: "block font-medium" %>
+      <%= f.number_field :placement_fee_cents, min: 0, class: "input input-bordered w-full" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :notes, "Notes", class: "block font-medium" %>
+    <%= f.text_area :notes, rows: 4, class: "textarea textarea-bordered w-full" %>
+  </div>
+
+  <div class="flex gap-3">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to "Annuler", placements_path, class: "btn" %>
+  </div>
+<% end %>

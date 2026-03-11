@@ -1,0 +1,66 @@
+<%= form_with(model: client, class: "space-y-4") do |f| %>
+  <% if client.errors.any? %>
+    <div class="alert alert-error">
+      <div>
+        <p><strong><%= pluralize(client.errors.count, "erreur") %> ont empeche l'enregistrement :</strong></p>
+        <ul class="list-disc ml-6 mt-2">
+          <% client.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :legal_name, "Raison sociale", class: "block font-medium" %>
+    <%= f.text_field :legal_name, class: "input input-bordered w-full" %>
+  </div>
+
+  <div>
+    <%= f.label :brand_name, "Nom commercial", class: "block font-medium" %>
+    <%= f.text_field :brand_name, class: "input input-bordered w-full" %>
+  </div>
+
+  <div>
+    <%= f.label :sector, "Secteur", class: "block font-medium" %>
+    <%= f.text_field :sector, class: "input input-bordered w-full" %>
+  </div>
+
+  <div>
+    <%= f.label :website_url, "Site web", class: "block font-medium" %>
+    <%= f.url_field :website_url, class: "input input-bordered w-full" %>
+  </div>
+
+  <div>
+    <%= f.label :location, "Localisation", class: "block font-medium" %>
+    <%= f.text_area :location, rows: 2, class: "textarea textarea-bordered w-full" %>
+  </div>
+
+  <div>
+    <%= f.label :company_size, "Taille", class: "block font-medium" %>
+    <%= f.text_field :company_size, class: "input input-bordered w-full" %>
+  </div>
+
+  <div>
+    <%= f.label :ownership_type, "Type de propriete", class: "block font-medium" %>
+    <%= f.text_field :ownership_type, class: "input input-bordered w-full" %>
+  </div>
+
+  <div>
+    <%= f.label :bio, "Description", class: "block font-medium" %>
+    <%= f.text_area :bio, rows: 4, class: "textarea textarea-bordered w-full" %>
+  </div>
+
+  <div class="form-control">
+    <label class="label cursor-pointer justify-start gap-3">
+      <%= f.check_box :active, class: "checkbox" %>
+      <span class="label-text">Client actif</span>
+    </label>
+  </div>
+
+  <div class="flex gap-3">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to "Annuler", clients_path, class: "btn" %>
+  </div>
+<% end %>

@@ -1,0 +1,114 @@
+<%= form_with(model: mission, class: "space-y-4") do |f| %>
+  <% if mission.errors.any? %>
+    <div class="alert alert-error">
+      <div>
+        <p><strong><%= pluralize(mission.errors.count, "erreur") %> ont empeche l'enregistrement :</strong></p>
+        <ul class="list-disc ml-6 mt-2">
+          <% mission.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :title, "Titre", class: "block font-medium" %>
+    <%= f.text_field :title, class: "input input-bordered w-full" %>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :reference, "Reference", class: "block font-medium" %>
+      <%= f.text_field :reference, class: "input input-bordered w-full" %>
+    </div>
+    <div>
+      <%= f.label :status, "Statut", class: "block font-medium" %>
+      <%= f.text_field :status, class: "input input-bordered w-full" %>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :mission_type, "Type de mission", class: "block font-medium" %>
+      <%= f.text_field :mission_type, class: "input input-bordered w-full" %>
+    </div>
+    <div>
+      <%= f.label :priority_level, "Priorite", class: "block font-medium" %>
+      <%= f.text_field :priority_level, class: "input input-bordered w-full" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :client_contact_id, "Contact client", class: "block font-medium" %>
+    <%= f.collection_select :client_contact_id, @client_contacts, :id, ->(c) { "#{c.first_name} #{c.last_name} - #{c.client.legal_name}" }, { prompt: "Selectionner un contact" }, { class: "select select-bordered w-full" } %>
+  </div>
+
+  <div>
+    <%= f.label :freelancer_profile_id, "Freelancer", class: "block font-medium" %>
+    <%= f.collection_select :freelancer_profile_id, @freelancer_profiles, :id, ->(fp) { "#{fp.user.first_name} #{fp.user.last_name}" }, { prompt: "Selectionner un freelancer" }, { class: "select select-bordered w-full" } %>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :region_id, "Region", class: "block font-medium" %>
+      <%= f.collection_select :region_id, @regions, :id, :name, { prompt: "Selectionner une region" }, { class: "select select-bordered w-full" } %>
+    </div>
+    <div>
+      <%= f.label :specialty_id, "Specialite", class: "block font-medium" %>
+      <%= f.collection_select :specialty_id, @specialties, :id, :name, { prompt: "Selectionner une specialite" }, { class: "select select-bordered w-full" } %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :location, "Localisation", class: "block font-medium" %>
+    <%= f.text_area :location, rows: 2, class: "textarea textarea-bordered w-full" %>
+  </div>
+
+  <div class="grid md:grid-cols-3 gap-4">
+    <div>
+      <%= f.label :opened_at, "Ouverte le", class: "block font-medium" %>
+      <%= f.date_field :opened_at, class: "input input-bordered w-full" %>
+    </div>
+    <div>
+      <%= f.label :started_at, "Commencee le", class: "block font-medium" %>
+      <%= f.date_field :started_at, class: "input input-bordered w-full" %>
+    </div>
+    <div>
+      <%= f.label :closed_at, "Fermee le", class: "block font-medium" %>
+      <%= f.date_field :closed_at, class: "input input-bordered w-full" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :origin_type, "Origine", class: "block font-medium" %>
+    <%= f.text_field :origin_type, class: "input input-bordered w-full" %>
+  </div>
+
+  <div>
+    <%= f.label :brief_summary, "Brief", class: "block font-medium" %>
+    <%= f.text_area :brief_summary, rows: 3, class: "textarea textarea-bordered w-full" %>
+  </div>
+
+  <div>
+    <%= f.label :compensation_summary, "Remuneration", class: "block font-medium" %>
+    <%= f.text_area :compensation_summary, rows: 2, class: "textarea textarea-bordered w-full" %>
+  </div>
+
+  <div>
+    <%= f.label :search_constraints, "Contraintes de recherche", class: "block font-medium" %>
+    <%= f.text_area :search_constraints, rows: 2, class: "textarea textarea-bordered w-full" %>
+  </div>
+
+  <div class="form-control">
+    <label class="label cursor-pointer justify-start gap-3">
+      <%= f.check_box :contract_signed, class: "checkbox" %>
+      <span class="label-text">Contrat signe</span>
+    </label>
+  </div>
+
+  <div class="flex gap-3">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to "Annuler", missions_path, class: "btn" %>
+  </div>
+<% end %>

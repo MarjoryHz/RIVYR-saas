@@ -2,10 +2,12 @@
 
 one:
   name: MyString
-  slug: MyString
-  active: false
+  options:
+    - Lille
+    - Roubaix
 
 two:
   name: MyString
-  slug: MyString
-  active: false
+  options:
+    - Paris
+    - Nanterre

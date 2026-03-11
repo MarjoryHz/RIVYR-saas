@@ -1,0 +1,57 @@
+<%= form_with(model: invoice, class: "space-y-4") do |f| %>
+  <% if invoice.errors.any? %>
+    <div class="alert alert-error">
+      <div>
+        <p><strong><%= pluralize(invoice.errors.count, "erreur") %> ont empeche l'enregistrement :</strong></p>
+        <ul class="list-disc ml-6 mt-2">
+          <% invoice.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :placement_id, "Placement", class: "block font-medium" %>
+    <%= f.collection_select :placement_id, @placements, :id, ->(p) { "Placement ##{p.id} - #{p.mission.reference}" }, { prompt: "Selectionner un placement" }, { class: "select select-bordered w-full" } %>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :number, "Numero", class: "block font-medium" %>
+      <%= f.text_field :number, class: "input input-bordered w-full" %>
+    </div>
+    <div>
+      <%= f.label :invoice_type, "Type", class: "block font-medium" %>
+      <%= f.text_field :invoice_type, class: "input input-bordered w-full" %>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :status, "Statut", class: "block font-medium" %>
+      <%= f.text_field :status, class: "input input-bordered w-full" %>
+    </div>
+    <div>
+      <%= f.label :amount_cents, "Montant (cents)", class: "block font-medium" %>
+      <%= f.number_field :amount_cents, min: 0, class: "input input-bordered w-full" %>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :issue_date, "Date emission", class: "block font-medium" %>
+      <%= f.date_field :issue_date, class: "input input-bordered w-full" %>
+    </div>
+    <div>
+      <%= f.label :paid_date, "Date paiement", class: "block font-medium" %>
+      <%= f.date_field :paid_date, class: "input input-bordered w-full" %>
+    </div>
+  </div>
+
+  <div class="flex gap-3">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to "Annuler", invoices_path, class: "btn" %>
+  </div>
+<% end %>

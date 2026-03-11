@@ -1,0 +1,42 @@
+<div class="max-w-6xl mx-auto p-6 space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold">Placements</h1>
+    <%= link_to "Nouveau placement", new_placement_path, class: "btn btn-primary" %>
+  </div>
+  <%= render "shared/index_filters", path: placements_path, q: @q, status: @status, status_options: Placement.statuses.keys, status_param: :status %>
+
+  <div class="overflow-x-auto bg-base-100 rounded-lg">
+    <% if @placements.any? %>
+      <table class="table w-full">
+        <thead>
+          <tr>
+            <th>Mission</th>
+            <th>Candidat</th>
+            <th>Statut</th>
+            <th>Date embauche</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @placements.each do |placement| %>
+            <tr>
+              <td><%= placement.mission.reference %></td>
+              <td><%= [placement.candidate.first_name, placement.candidate.last_name].join(" ") %></td>
+              <td><%= placement.status %></td>
+              <td><%= placement.hired_at.presence || "-" %></td>
+              <td class="text-right">
+                <%= link_to "Voir", placement_path(placement), class: "btn btn-sm" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="p-8 text-center space-y-3">
+        <p class="text-lg font-medium">Aucun placement pour le moment</p>
+        <%= link_to "Creer le premier placement", new_placement_path, class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+  <%= render "shared/pagination", page: @page, total_pages: @total_pages, extra_params: { q: @q, status: @status }, path: ->(params) { placements_path(params) } %>
+</div>
