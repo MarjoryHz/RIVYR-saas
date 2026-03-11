@@ -24,7 +24,9 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
+  <% show_freelance_sidebar = user_signed_in? && current_user.role_freelance? %>
+
+  <body class="<%= 'has-freelance-sidebar' if show_freelance_sidebar %>">
     <% if user_signed_in? %>
       <nav class="navbar bg-base-200 px-4 gap-2 flex-wrap">
         <%= link_to "Clients", clients_path, class: "btn btn-ghost btn-sm" %>
@@ -38,7 +40,10 @@
         <%= link_to "Paiements", payments_path, class: "btn btn-ghost btn-sm" %>
       </nav>
     <% end %>
-    <%= yield %>
-  <%= render "shared/flashes" %>
-</body>
+    <%= render "shared/freelance_sidebar" if show_freelance_sidebar %>
+    <main class="<%= 'freelance-sidebar-layout' if show_freelance_sidebar %>">
+      <%= yield %>
+    </main>
+    <%= render "shared/flashes" %>
+  </body>
 </html>
