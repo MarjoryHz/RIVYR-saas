@@ -7,9 +7,16 @@ Rails.application.routes.draw do
   resources :missions
   resources :candidates
   resources :placements
-  resources :invoices
+  resources :invoices do
+    post :create_note, on: :member
+  end
   resources :commissions
   resources :payments
+  resource :freelance_finance, only: [ :show ] do
+    post :create_client_invoice
+    post :create_freelancer_invoice
+    post :create_payout_request
+  end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

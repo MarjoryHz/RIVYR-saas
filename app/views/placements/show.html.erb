@@ -1,30 +1,228 @@
-<div class="max-w-5xl mx-auto p-6 space-y-6">
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-bold">Placement #<%= @placement.id %></h1>
-    <div class="flex gap-2">
-      <%= link_to "Modifier", edit_placement_path(@placement), class: "btn btn-primary" %>
-      <%= link_to "Supprimer", placement_path(@placement), data: { turbo_method: :delete, turbo_confirm: "Confirmer la suppression ?" }, class: "btn btn-error" %>
+<% client = @mission.client_contact.client %>
+<% started_at = @mission.started_at || @mission.opened_at %>
+<% closed_at = @mission.closed_at || (started_at ? started_at + 3.months : nil) %>
+<% mission_amount_cents = @commission&.freelancer_share_cents.to_i %>
+<% billed_amount_cents = @client_invoice&.amount_cents.to_i %>
+<% duration_months = if started_at && closed_at
+  ((closed_at.year * 12 + closed_at.month) - (started_at.year * 12 + started_at.month)) + 1
+end %>
+<% candidate_initials = [@candidate.first_name.to_s.first, @candidate.last_name.to_s.first].join.upcase %>
+<% source_icon = case @candidate.source
+when "linkedin" then "fa-brands fa-linkedin text-info"
+when "jobboard" then "fa-solid fa-briefcase text-warning"
+when "network" then "fa-solid fa-user-group text-primary"
+when "referral" then "fa-solid fa-handshake text-secondary"
+else "fa-solid fa-bullseye text-accent"
+end %>
+
+<div class="mx-auto max-w-7xl p-4 md:p-6">
+  <section class="relative overflow-hidden rounded-[2rem] border border-base-100/70 bg-gradient-to-br from-rose-100 via-pink-50 to-orange-50 p-4 shadow-xl md:p-6">
+    <div class="pointer-events-none absolute -left-24 -top-20 h-80 w-80 rounded-full bg-secondary/15 blur-3xl"></div>
+    <div class="pointer-events-none absolute -right-16 top-20 h-72 w-72 rounded-full bg-primary/15 blur-3xl"></div>
+
+    <div class="relative z-10 space-y-4">
+      <header class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div class="space-y-1">
+          <p class="badge badge-ghost border-base-300/60 bg-base-100/70">Finance Mission</p>
+          <h1 class="text-2xl font-semibold tracking-tight text-base-content md:text-4xl"><%= @mission.title %></h1>
+          <p class="text-xl text-base-content/85 md:text-3xl">
+            <span class="text-sm align-middle text-base-content/60 md:text-base">Wallonie Engineering</span>
+            <span class="mx-1 text-base-content/40">•</span>
+            <span class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-base-200 bg-base-100 text-sm font-semibold text-primary">S</span>
+            <span class="font-semibold"><%= client.brand_name %></span>
+            <% if duration_months.present? %>
+              <span class="text-base text-base-content/60 md:text-xl">| <%= duration_months %> mois</span>
+            <% end %>
+          </p>
+        </div>
+
+        <div class="card border border-base-100/80 bg-base-100/90 shadow-lg">
+          <div class="card-body gap-1 px-4 py-3">
+            <p class="text-[11px] uppercase tracking-[0.2em] text-base-content/55">Gain mission</p>
+            <p class="text-2xl font-semibold text-base-content"><%= number_to_currency(mission_amount_cents / 100.0, unit: "€") %></p>
+          </div>
+        </div>
+      </header>
+
+      <div class="flex flex-wrap gap-2 rounded-xl border border-base-200/70 bg-base-100/80 p-3">
+        <% @stage_actions.each do |action| %>
+          <% if action[:kind] == :post %>
+            <%= button_to action[:label], action[:path], params: action[:params] || {}, class: "btn btn-sm #{action[:style]}" %>
+          <% else %>
+            <%= link_to action[:label], action[:path], class: "btn btn-sm #{action[:style]}" %>
+          <% end %>
+        <% end %>
+        <%= link_to "Demander un avis client", "mailto:#{@mission.client_contact.email}?subject=Retour%20mission%20RIVYR&body=Bonjour%2C%20pourriez-vous%20laisser%20un%20retour%20sur%20la%20mission%20et%20notre%20accompagnement%20%3F", class: "btn btn-outline btn-sm" %>
+      </div>
+
+      <div class="card border border-base-100/70 bg-base-100/86 shadow">
+        <div class="card-body p-4">
+          <div class="overflow-x-auto">
+            <div class="flex min-w-[1250px] items-start gap-0">
+              <% @stage_states.each_with_index do |step, index| %>
+                <div class="flex min-w-[190px] items-start">
+                  <div class="space-y-2">
+                    <div class="flex items-center gap-2">
+                      <span class="inline-flex h-6 w-6 items-center justify-center rounded-full border <%= step[:done] ? 'border-success bg-success text-success-content' : (step[:active] ? 'border-warning bg-warning text-warning-content' : 'border-base-300 bg-base-200 text-base-content/50') %>">
+                        <% if step[:done] %>
+                          <i class="fa-solid fa-check text-[10px]"></i>
+                        <% elsif step[:active] %>
+                          <i class="fa-solid fa-hourglass-half text-[10px]"></i>
+                        <% else %>
+                          <i class="fa-solid fa-circle text-[6px]"></i>
+                        <% end %>
+                      </span>
+                      <span class="text-xs font-medium text-base-content/80"><%= step[:label] %></span>
+                    </div>
+                    <div class="h-1 w-40 rounded-full <%= step[:done] ? 'bg-success/60' : (step[:active] ? 'bg-warning/60' : 'bg-base-200') %>"></div>
+                  </div>
+                  <% unless index == @stage_states.size - 1 %>
+                    <div class="mt-3 h-px w-4 bg-base-300"></div>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid gap-4 xl:grid-cols-12">
+        <div class="xl:col-span-4 space-y-4">
+          <div class="card border border-base-100/70 bg-base-100/90 shadow">
+            <div class="card-body p-4">
+              <h2 class="text-xl font-semibold text-base-content">Candidat retenu</h2>
+              <div class="mt-2 flex items-center gap-3">
+                <div class="avatar placeholder">
+                  <div class="h-14 w-14 rounded-full bg-primary/20 text-primary">
+                    <span class="text-lg font-semibold"><%= candidate_initials %></span>
+                  </div>
+                </div>
+                <div>
+                  <p class="text-lg font-semibold text-base-content"><%= [@candidate.first_name, @candidate.last_name].join(" ") %></p>
+                  <p class="text-sm text-base-content/65">Demarrage: <%= @placement.hired_at.present? ? l(@placement.hired_at) : "-" %></p>
+                </div>
+              </div>
+              <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
+                <div class="rounded-lg border border-base-200 bg-base-100/80 p-2">
+                  <p class="text-base-content/60">Offre acceptee</p>
+                  <p class="font-medium text-base-content">
+                    <% accepted = (@candidate.status == "placed" || @placement.hired_at.present?) %>
+                    <i class="fa-solid <%= accepted ? 'fa-circle-check text-success' : 'fa-circle-xmark text-error' %>"></i>
+                    <%= accepted ? "Oui" : "Non" %>
+                  </p>
+                </div>
+                <div class="rounded-lg border border-base-200 bg-base-100/80 p-2">
+                  <p class="text-base-content/60">Source</p>
+                  <p class="font-medium text-base-content">
+                    <i class="<%= source_icon %>"></i>
+                    <%= @candidate.source == "jobboard" ? "Hellowork / Jobboard" : @candidate.source %>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card border border-base-100/70 bg-base-100/90 shadow">
+            <div class="card-body p-4">
+              <h2 class="text-xl font-semibold text-base-content">Stats mission</h2>
+              <div class="mt-2 grid grid-cols-2 gap-2 text-sm">
+                <div class="rounded-lg border border-base-200 bg-base-100/80 p-2">
+                  <p class="text-base-content/60">Duree</p>
+                  <p class="font-semibold"><%= @mission_stats[:duration_days].present? ? "#{@mission_stats[:duration_days]} jours" : "-" %></p>
+                </div>
+                <div class="rounded-lg border border-base-200 bg-base-100/80 p-2">
+                  <p class="text-base-content/60">Rencontres</p>
+                  <p class="font-semibold"><%= @mission_stats[:interviewed_candidates] %></p>
+                </div>
+                <div class="rounded-lg border border-base-200 bg-base-100/80 p-2">
+                  <p class="text-base-content/60">Presents</p>
+                  <p class="font-semibold"><%= @mission_stats[:presented_candidates] %></p>
+                </div>
+                <div class="rounded-lg border border-base-200 bg-base-100/80 p-2">
+                  <p class="text-base-content/60">Postules</p>
+                  <p class="font-semibold"><%= @mission_stats[:applied_candidates] %></p>
+                </div>
+                <div class="col-span-2 rounded-lg border border-base-200 bg-base-100/80 p-2">
+                  <p class="text-base-content/60">Sources</p>
+                  <p class="font-semibold"><%= @mission_stats[:sourced_candidates] %></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="xl:col-span-5 space-y-4">
+          <div class="card border border-base-100/70 bg-base-100/90 shadow">
+            <div class="card-body p-4">
+              <h2 class="text-xl font-semibold text-base-content">Resume contractuel et financier</h2>
+              <div class="mt-2 space-y-2 rounded-xl border border-base-200 bg-base-100/80 p-3 text-sm md:text-base">
+                <p>
+                  <i class="fa-solid fa-file-signature text-primary"></i>
+                  Contrat signe le <strong><%= @mission.opened_at.present? ? l(@mission.opened_at) : "-" %></strong>
+                </p>
+                <p>
+                  <i class="fa-solid fa-user-check text-success"></i>
+                  Promesse d'embauche <strong><%= @placement.hired_at.present? ? "validee" : "a confirmer" %></strong>
+                </p>
+                <p>Date de fin <strong><%= closed_at.present? ? l(closed_at) : "-" %></strong></p>
+                <p>Montant facture <strong><%= number_to_currency(billed_amount_cents / 100.0, unit: "€") %></strong></p>
+                <p>Commission freelance <strong><%= number_to_currency(mission_amount_cents / 100.0, unit: "€") %></strong></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card border border-base-100/70 bg-base-100/90 shadow">
+            <div class="card-body p-4">
+              <h2 class="text-xl font-semibold text-base-content">Checklist de validation facturation</h2>
+              <div class="mt-2 space-y-2">
+                <% @validation_checks.each do |check| %>
+                  <div class="flex items-start justify-between gap-3 rounded-lg border border-base-200 bg-base-100/80 p-2">
+                    <div>
+                      <p class="text-sm font-medium text-base-content"><%= check[:label] %></p>
+                      <p class="text-xs text-base-content/60"><%= check[:detail] %></p>
+                    </div>
+                    <i class="fa-solid <%= check[:ok] ? 'fa-circle-check text-success' : 'fa-circle-xmark text-error' %>"></i>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="xl:col-span-3 card border border-base-100/70 bg-base-100/90 shadow">
+          <div class="card-body p-4">
+            <h2 class="text-xl font-semibold text-base-content">Suivi Rivyr</h2>
+            <div class="mt-2 space-y-2">
+              <% if @rivyr_followups.any? %>
+                <% @rivyr_followups.first(10).each do |event| %>
+                  <% badge_class = case event[:tone]
+                  when "success" then "badge-success"
+                  when "action" then "badge-error"
+                  else "badge-info"
+                  end %>
+                  <div class="rounded-lg border border-base-200 bg-base-100/80 p-2">
+                    <p class="text-xs text-base-content/55"><%= l(event[:occurred_at], format: "%d/%m/%Y %H:%M") %></p>
+                    <div class="mt-1 flex items-start gap-2">
+                      <span class="badge badge-xs <%= badge_class %>"></span>
+                      <div>
+                        <p class="text-sm font-medium text-base-content"><%= event[:title] %></p>
+                        <p class="text-xs text-base-content/70"><%= event[:detail] %></p>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              <% else %>
+                <p class="text-sm text-base-content/60">Pas encore d'evenement de suivi.</p>
+              <% end %>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="flex flex-wrap gap-2 pt-1">
+        <%= link_to "Retour finances", freelance_finance_path, class: "btn btn-ghost btn-sm" %>
+        <%= link_to "Voir mission", mission_path(@mission), class: "btn btn-ghost btn-sm" %>
+      </div>
     </div>
-  </div>
-
-  <div class="grid md:grid-cols-2 gap-4">
-    <p><strong>Mission:</strong> <%= link_to @placement.mission.reference, mission_path(@placement.mission), class: "link link-primary" %></p>
-    <p><strong>Candidat:</strong> <%= link_to [@placement.candidate.first_name, @placement.candidate.last_name].join(" "), candidate_path(@placement.candidate), class: "link link-primary" %></p>
-    <p><strong>Statut:</strong> <%= @placement.status %></p>
-    <p><strong>Date embauche:</strong> <%= @placement.hired_at.presence || "-" %></p>
-    <p><strong>Salaire annuel (cents):</strong> <%= @placement.annual_salary_cents.presence || "-" %></p>
-    <p><strong>Frais de placement (cents):</strong> <%= @placement.placement_fee_cents.presence || "-" %></p>
-  </div>
-
-  <div>
-    <p><strong>Notes:</strong></p>
-    <p><%= @placement.notes.presence || "-" %></p>
-  </div>
-
-  <div class="flex gap-2">
-    <%= link_to "Facture", @placement.invoice ? invoice_path(@placement.invoice) : new_invoice_path(placement_id: @placement.id), class: "btn" %>
-    <%= link_to "Commission", @placement.commission ? commission_path(@placement.commission) : new_commission_path(placement_id: @placement.id), class: "btn" %>
-  </div>
-
-  <%= link_to "Retour a la liste", placements_path, class: "btn" %>
+  </section>
 </div>

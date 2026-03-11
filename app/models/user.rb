@@ -14,6 +14,7 @@ class User < ApplicationRecord
   has_one :freelancer_profile
   has_one :client_contact
   has_one :candidate
+  has_many :payout_requests, dependent: :destroy
 
   validates :first_name, presence: true
   validates :last_name, presence: true

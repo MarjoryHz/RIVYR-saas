@@ -16,6 +16,8 @@ puts "============================"
 puts "Cleaning database..."
 
 Payment.destroy_all
+PayoutRequest.destroy_all
+InvoiceNote.destroy_all
 Commission.destroy_all
 Invoice.destroy_all
 Placement.destroy_all
@@ -684,6 +686,18 @@ invoices = placements.map.with_index do |placement, index|
 end
 puts "#{Invoice.count} invoices ready."
 
+puts "Seeding invoice notes..."
+Invoice.where(invoice_type: "client").limit(6).each_with_index do |invoice, index|
+  InvoiceNote.create!(
+    invoice: invoice,
+    user: admin_user,
+    note_type: "follow_up",
+    action_required: (index % 3).zero?,
+    body: "Relance client ##{index + 1}: appel realise, en attente de retour du service comptable."
+  )
+end
+puts "#{InvoiceNote.count} invoice notes ready."
+
 # --------------------------------------------------
 # Commissions
 # --------------------------------------------------
@@ -718,6 +732,23 @@ commissions = placements.map.with_index do |placement, index|
   commission
 end
 puts "#{Commission.count} commissions ready."
+
+puts "Seeding freelancer invoices..."
+placements.each_with_index do |placement, index|
+  next unless index < 4
+  next unless placement.client_invoice&.status == "paid"
+  next if placement.invoices.where(invoice_type: "freelancer").exists?
+
+  Invoice.create!(
+    placement: placement,
+    invoice_type: "freelancer",
+    number: "FAC-FRE-#{Date.current.year}-#{format('%04d', index + 1)}",
+    status: "issued",
+    issue_date: Date.current - (15 - index),
+    amount_cents: placement.commission&.freelancer_share_cents.to_i
+  )
+end
+puts "#{Invoice.where(invoice_type: 'freelancer').count} freelancer invoices ready."
 
 # --------------------------------------------------
 # Payments
@@ -768,6 +799,168 @@ placements.each_with_index do |placement, index|
 end
 puts "#{Payment.count} payments ready."
 
+puts "Seeding payout requests..."
+freelancer_invoice_sample = Invoice.where(invoice_type: "freelancer").first
+if freelancer_invoice_sample
+  PayoutRequest.find_or_create_by!(user: freelancer_invoice_sample.placement.mission.freelancer_profile.user, invoice: freelancer_invoice_sample) do |request|
+    request.amount_cents = freelancer_invoice_sample.amount_cents
+    request.billing_number = freelancer_invoice_sample.number
+    request.status = "pending"
+    request.requested_at = Time.current
+    request.bank_account_label = "Compte principal"
+  end
+end
+puts "#{PayoutRequest.count} payout requests ready."
+
+# --------------------------------------------------
+# Claire Dumont - finance demo dataset
+# --------------------------------------------------
+
+puts "Seeding dedicated finance demo for Claire Dumont..."
+
+claire_user = User.find_by!(email: "claire.dumont@rivyr.test")
+claire_profile = FreelancerProfile.find_by!(user: claire_user)
+fallback_profile = FreelancerProfile.where.not(id: claire_profile.id).first
+
+if fallback_profile
+  Mission.where(freelancer_profile_id: claire_profile.id).update_all(freelancer_profile_id: fallback_profile.id)
+end
+
+demo_candidates = Candidate.limit(8).to_a
+demo_contacts = ClientContact.limit(8).to_a
+demo_region = Region.find_by(name: "Hauts-de-France") || Region.first
+demo_specialty = Specialty.find_by(name: "Direction Generale") || Specialty.first
+
+demo_rows = [
+  # 2 missions en attente de paiement par le client
+  { suffix: "A1", title: "CTO de transition", client_invoice_status: "issued", freelancer_share_cents: 4_800_00, rule: "80_20", payout_status: nil, require_action_note: true },
+  { suffix: "A2", title: "Head of Ops", client_invoice_status: "issued", freelancer_share_cents: 3_600_00, rule: "75_25", payout_status: nil, require_action_note: false },
+  # 2 missions en demande de virement Rivyr
+  { suffix: "B1", title: "DAF Groupe", client_invoice_status: "paid", freelancer_share_cents: 4_000_00, rule: "80_20", payout_status: "pending", payout_amount_cents: 1_000_00, require_action_note: false },
+  { suffix: "B2", title: "Directeur Commercial", client_invoice_status: "paid", freelancer_share_cents: 5_000_00, rule: "80_20", payout_status: "approved", payout_amount_cents: 2_000_00, require_action_note: false },
+  # 2 missions en attente de paiement client
+  { suffix: "C1", title: "COO", client_invoice_status: "issued", freelancer_share_cents: 5_600_00, rule: "70_30", payout_status: nil, require_action_note: true },
+  { suffix: "C2", title: "Directeur de Site", client_invoice_status: "issued", freelancer_share_cents: 4_200_00, rule: "70_30", payout_status: nil, require_action_note: false },
+  # 2 missions en attente de facturation freelance
+  { suffix: "D1", title: "VP People", client_invoice_status: "paid", freelancer_share_cents: 3_000_00, rule: "75_25", payout_status: nil, require_action_note: false },
+  { suffix: "D2", title: "Responsable Transformation", client_invoice_status: "paid", freelancer_share_cents: 3_000_00, rule: "75_25", payout_status: nil, require_action_note: false }
+]
+
+demo_rows.each_with_index do |row, index|
+  contact = demo_contacts[index]
+  candidate = demo_candidates[index]
+  candidate_sources = %w[linkedin jobboard network referral linkedin jobboard network direct]
+  candidate_statuses = %w[placed interviewing presented qualified placed interviewing presented qualified]
+  candidate.update!(source: candidate_sources[index], status: candidate_statuses[index])
+  ratio = commission_ratio(row[:rule])
+  gross_amount_cents = (row[:freelancer_share_cents] / ratio).round
+  rivyr_share_cents = gross_amount_cents - row[:freelancer_share_cents]
+  hired_date = Date.current - (45 - index * 3)
+  mission_ref = "MIS-CL-2026-#{format('%02d', index + 1)}"
+
+  mission = Mission.create!(
+    reference: mission_ref,
+    region: demo_region,
+    freelancer_profile: claire_profile,
+    mission_type: "retained",
+    title: row[:title],
+    status: "in_progress",
+    client_contact: contact,
+    location: contact.client.location,
+    contract_signed: true,
+    opened_at: hired_date - 30,
+    started_at: hired_date - 25,
+    priority_level: index.even? ? "high" : "critical",
+    brief_summary: MISSION_SUMMARIES[index % MISSION_SUMMARIES.size],
+    compensation_summary: COMPENSATION_SUMMARIES[index % COMPENSATION_SUMMARIES.size],
+    search_constraints: SEARCH_CONSTRAINTS[index % SEARCH_CONSTRAINTS.size],
+    origin_type: "freelancer",
+    specialty: demo_specialty
+  )
+
+  placement = Placement.create!(
+    mission: mission,
+    candidate: candidate,
+    hired_at: hired_date,
+    annual_salary_cents: 12_000_000 + (index * 200_000),
+    placement_fee_cents: gross_amount_cents,
+    status: row[:client_invoice_status] == "paid" ? "invoiced" : "validated",
+    notes: "Placement de demonstration pour pilotage financier freelance."
+  )
+
+  client_invoice = Invoice.create!(
+    placement: placement,
+    invoice_type: "client",
+    number: "FAC-CLI-CL-2026-#{format('%02d', index + 1)}",
+    status: row[:client_invoice_status],
+    issue_date: hired_date + 5,
+    paid_date: row[:client_invoice_status] == "paid" ? (hired_date + 18) : nil,
+    amount_cents: gross_amount_cents
+  )
+
+  Commission.create!(
+    placement: placement,
+    commission_rule: row[:rule],
+    status: row[:client_invoice_status] == "paid" ? "paid" : "eligible",
+    gross_amount_cents: gross_amount_cents,
+    rivyr_share_cents: rivyr_share_cents,
+    freelancer_share_cents: row[:freelancer_share_cents],
+    client_payment_required: true,
+    eligible_for_invoicing_at: hired_date + 7
+  )
+
+  note_templates = [
+    "Client contacte: paiement confirme pour fin de mois. Rappel convenu la semaine prochaine pour confirmation de mise en paiement.",
+    "Service compta: merci d'ajouter le numero de commande BON-#{format('%04d', 320 + index)} sur la facture.",
+    "Echange telephonique avec la DRH: accord sur l'echeance de paiement, validation interne en cours.",
+    "Relance email envoyee au client, reponse attendue sous 48h."
+  ]
+
+  InvoiceNote.create!(
+    invoice: client_invoice,
+    user: admin_user,
+    note_type: "follow_up",
+    action_required: row[:require_action_note],
+    body: row[:require_action_note] ? note_templates[index % note_templates.size] : note_templates[(index + 1) % note_templates.size],
+    created_at: Time.current - (index + 2).days - index.hours,
+    updated_at: Time.current - (index + 2).days - index.hours
+  )
+
+  next unless row[:client_invoice_status] == "paid" && row[:payout_status].present?
+
+  freelancer_invoice = Invoice.create!(
+    placement: placement,
+    invoice_type: "freelancer",
+    number: "FAC-FRE-CL-2026-#{format('%02d', index + 1)}",
+    status: "issued",
+    issue_date: hired_date + 20,
+    amount_cents: row[:freelancer_share_cents]
+  )
+
+  PayoutRequest.create!(
+    user: claire_user,
+    invoice: freelancer_invoice,
+    amount_cents: row[:payout_amount_cents],
+    billing_number: freelancer_invoice.number,
+    status: row[:payout_status],
+    requested_at: Time.current - (index + 1).days,
+    bank_account_label: "Compte principal Claire"
+  )
+end
+
+claire_wallet_cents = Placement
+  .joins(mission: :freelancer_profile)
+  .includes(:commission, :client_invoice, freelancer_invoice: :payout_requests)
+  .where(freelancer_profiles: { user_id: claire_user.id })
+  .sum do |placement|
+    next 0 unless placement.client_invoice&.status_paid?
+
+    placement.commission&.freelancer_share_cents.to_i
+  end - claire_user.payout_requests.where(status: "paid").sum(:amount_cents) - claire_user.payout_requests.where(status: %w[pending approved]).sum(:amount_cents)
+
+puts "Claire wallet seeded: #{(claire_wallet_cents / 100.0).round(2)} EUR"
+puts "Claire demo placements: #{Placement.joins(mission: :freelancer_profile).where(freelancer_profiles: { user_id: claire_user.id }).count}"
+
 puts "============================"
 puts "SEED COMPLETED"
 puts "============================"
@@ -783,4 +976,6 @@ puts "Placements: #{Placement.count}"
 puts "Invoices: #{Invoice.count}"
 puts "Commissions: #{Commission.count}"
 puts "Payments: #{Payment.count}"
+puts "InvoiceNotes: #{InvoiceNote.count}"
+puts "PayoutRequests: #{PayoutRequest.count}"
 puts "============================"

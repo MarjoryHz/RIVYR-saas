@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_11_123000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_11_131500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -90,6 +90,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_11_123000) do
     t.index ["user_id"], name: "index_freelancer_profiles_on_user_id"
   end
 
+  create_table "invoice_notes", force: :cascade do |t|
+    t.boolean "action_required", default: false, null: false
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.bigint "invoice_id", null: false
+    t.string "note_type", default: "follow_up", null: false
+    t.datetime "resolved_at"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["invoice_id"], name: "index_invoice_notes_on_invoice_id"
+    t.index ["user_id"], name: "index_invoice_notes_on_user_id"
+  end
+
   create_table "invoices", force: :cascade do |t|
     t.integer "amount_cents"
     t.datetime "created_at", null: false
@@ -100,6 +113,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_11_123000) do
     t.bigint "placement_id", null: false
     t.string "status"
     t.datetime "updated_at", null: false
+    t.index ["placement_id", "invoice_type"], name: "index_invoices_on_placement_id_and_invoice_type", unique: true
     t.index ["placement_id"], name: "index_invoices_on_placement_id"
   end
 
@@ -142,6 +156,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_11_123000) do
     t.datetime "updated_at", null: false
     t.index ["commission_id"], name: "index_payments_on_commission_id"
     t.index ["invoice_id"], name: "index_payments_on_invoice_id"
+  end
+
+  create_table "payout_requests", force: :cascade do |t|
+    t.integer "amount_cents", null: false
+    t.string "bank_account_label"
+    t.string "billing_number", null: false
+    t.datetime "created_at", null: false
+    t.bigint "invoice_id", null: false
+    t.text "note"
+    t.datetime "paid_at"
+    t.datetime "requested_at", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["invoice_id"], name: "index_payout_requests_on_invoice_id"
+    t.index ["user_id"], name: "index_payout_requests_on_user_id"
   end
 
   create_table "placements", force: :cascade do |t|
@@ -196,6 +226,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_11_123000) do
   add_foreign_key "freelancer_profiles", "regions"
   add_foreign_key "freelancer_profiles", "specialties"
   add_foreign_key "freelancer_profiles", "users"
+  add_foreign_key "invoice_notes", "invoices"
+  add_foreign_key "invoice_notes", "users"
   add_foreign_key "invoices", "placements"
   add_foreign_key "missions", "client_contacts"
   add_foreign_key "missions", "freelancer_profiles"
@@ -203,6 +235,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_11_123000) do
   add_foreign_key "missions", "specialties"
   add_foreign_key "payments", "commissions"
   add_foreign_key "payments", "invoices"
+  add_foreign_key "payout_requests", "invoices"
+  add_foreign_key "payout_requests", "users"
   add_foreign_key "placements", "candidates"
   add_foreign_key "placements", "missions"
 end

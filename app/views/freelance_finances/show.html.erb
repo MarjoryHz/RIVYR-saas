@@ -1,0 +1,210 @@
+<div class="mx-auto max-w-7xl p-4 md:p-6">
+  <section class="relative overflow-hidden rounded-[2rem] border border-base-100/60 bg-gradient-to-br from-rose-100 via-pink-50 to-orange-50 p-4 shadow-xl md:p-6">
+    <div class="pointer-events-none absolute -left-20 -top-20 h-72 w-72 rounded-full bg-secondary/15 blur-3xl"></div>
+    <div class="pointer-events-none absolute -bottom-28 -right-16 h-80 w-80 rounded-full bg-primary/15 blur-3xl"></div>
+
+    <div class="relative z-10 space-y-5">
+      <header class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <div class="space-y-1">
+          <h1 class="text-3xl font-semibold tracking-tight text-base-content md:text-4xl">Mon portefeuille RIVYR</h1>
+          <p class="text-base text-base-content/70 md:text-lg">Pilotez vos factures, vos relances et vos virements en un seul endroit.</p>
+        </div>
+
+        <div class="card w-full border border-base-100/70 bg-base-100/90 shadow-lg xl:w-auto">
+          <div class="card-body px-4 py-3">
+            <p class="text-xs uppercase tracking-widest text-base-content/60">Portefeuille disponible</p>
+            <div class="flex items-end gap-2">
+              <p class="text-3xl font-semibold text-base-content"><%= number_to_currency(@wallet_cents / 100.0, unit: "€") %></p>
+              <span class="badge badge-success badge-outline mb-1">Actif</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="stats stats-vertical w-full border border-base-100/70 bg-base-100/85 shadow md:stats-horizontal">
+        <div class="stat">
+          <div class="stat-title">Disponible pour virement</div>
+          <div class="stat-value text-success"><%= number_to_currency(@wallet_cents / 100.0, unit: "€", precision: 0) %></div>
+          <div class="stat-desc">Montant mobilisable maintenant</div>
+        </div>
+        <div class="stat">
+          <div class="stat-title">Paiements en traitement</div>
+          <div class="stat-value text-warning"><%= number_to_currency(@reserved_payout_cents / 100.0, unit: "€", precision: 0) %></div>
+          <div class="stat-desc">Demandes de virement en cours</div>
+        </div>
+        <div class="stat">
+          <div class="stat-title">Paiements clients en attente</div>
+          <div class="stat-value text-error"><%= number_to_currency(@waiting_client_payments_cents / 100.0, unit: "€", precision: 0) %></div>
+          <div class="stat-desc">Factures client non encaissees</div>
+        </div>
+      </div>
+
+      <div class="grid gap-4 xl:grid-cols-3">
+        <div class="xl:col-span-2">
+          <div class="card border border-base-100/70 bg-base-100/90 shadow">
+            <div class="card-body space-y-4 p-4 md:p-5">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <h2 class="text-2xl font-semibold text-base-content">Prochains paiements</h2>
+                <%= link_to "Voir toutes les factures", invoices_path, class: "btn btn-sm btn-ghost" %>
+              </div>
+
+              <%= form_with url: freelance_finance_path, method: :get, class: "grid gap-2 md:grid-cols-5" do %>
+                <%= text_field_tag :q, @q, placeholder: "Mission ou reference", class: "input input-bordered input-sm w-full md:col-span-2" %>
+                <%= select_tag :client_invoice_status, options_for_select([["Facture client", ""], ["Sans facture", "none"], ["Emise", "issued"], ["Payee", "paid"], ["Annulee", "canceled"]], @client_invoice_status), class: "select select-bordered select-sm w-full" %>
+                <%= select_tag :payout_status, options_for_select([["Virement", ""], ["Sans demande", "none"], ["Pending", "pending"], ["Approved", "approved"], ["Paid", "paid"], ["Rejected", "rejected"]], @payout_status), class: "select select-bordered select-sm w-full" %>
+                <%= submit_tag "Filtrer", class: "btn btn-sm btn-primary" %>
+              <% end %>
+
+              <div class="overflow-x-auto rounded-box border border-base-200/70 bg-base-100">
+                <table class="table table-zebra">
+                  <thead>
+                    <tr>
+                      <th>Mission</th>
+                      <th>Client</th>
+                      <th>Montant</th>
+                      <th>Paiement estime</th>
+                      <th>Statut</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% if @upcoming_payments.any? %>
+                      <% @upcoming_payments.each do |row| %>
+                        <tr>
+                          <td class="font-semibold"><%= row[:mission_title] %></td>
+                          <td><%= row[:client_name] %></td>
+                          <td class="font-semibold"><%= number_to_currency(row[:amount_cents] / 100.0, unit: "€") %></td>
+                          <td><%= row[:estimated_date].present? ? l(row[:estimated_date].to_date) : "-" %></td>
+                          <td><span class="badge badge-outline"><%= row[:status_label] %></span></td>
+                          <td><%= link_to "Ouvrir", placement_path(row[:placement]), class: "btn btn-xs btn-outline" %></td>
+                        </tr>
+                      <% end %>
+                    <% else %>
+                      <tr>
+                        <td colspan="6" class="py-6 text-center text-base-content/60">Aucun resultat pour les filtres selectionnes.</td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div class="card border border-base-100/70 bg-base-100/90 shadow">
+            <div class="card-body space-y-2 p-4 md:p-5">
+              <h2 class="text-2xl font-semibold text-base-content">Revenus RIVYR</h2>
+              <p class="text-4xl font-semibold text-base-content"><%= @yearly_revenue[:year] %></p>
+              <p class="text-base-content/80">Placements: <span class="font-semibold"><%= @yearly_revenue[:placements_count] %></span></p>
+              <p class="text-base-content/80">Gains realises: <span class="font-semibold"><%= number_to_currency(@yearly_revenue[:realized_cents] / 100.0, unit: "€") %></span></p>
+              <p class="text-base-content/80">Gains en attente: <span class="font-semibold"><%= number_to_currency(@yearly_revenue[:pending_cents] / 100.0, unit: "€") %></span></p>
+              <p class="text-base-content/80">Projection: <span class="font-semibold"><%= number_to_currency(@yearly_revenue[:projected_cents] / 100.0, unit: "€") %></span></p>
+            </div>
+          </div>
+
+          <div class="card border border-base-100/70 bg-base-100/90 shadow">
+            <div class="card-body space-y-3 p-4 md:p-5">
+              <h2 class="text-2xl font-semibold text-base-content">Actions rapides</h2>
+              <p class="text-sm text-base-content/70">Les actions detaillees sont aussi disponibles mission par mission ci-dessous.</p>
+              <div class="flex flex-wrap gap-2">
+                <%= link_to "Voir mes placements", placements_path, class: "btn btn-sm btn-outline" %>
+                <%= link_to "Voir mes factures", invoices_path, class: "btn btn-sm btn-outline" %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid gap-4 xl:grid-cols-3">
+        <div class="xl:col-span-2">
+          <div class="card border border-base-100/70 bg-base-100/90 shadow">
+            <div class="card-body space-y-4 p-4 md:p-5">
+              <h2 class="text-2xl font-semibold text-base-content">Missions en paiement</h2>
+
+              <% if @active_payment_missions.any? %>
+                <% @active_payment_missions.each do |row| %>
+                  <article class="rounded-2xl border border-base-200/70 bg-base-100/80 p-4">
+                    <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                      <div>
+                        <p class="text-xl font-semibold text-base-content"><%= row[:mission_title] %></p>
+                        <p class="text-base-content/70"><%= row[:client_name] %></p>
+                      </div>
+                      <p class="text-3xl font-semibold text-base-content"><%= number_to_currency(row[:amount_cents] / 100.0, unit: "€") %></p>
+                    </div>
+
+                    <div class="mt-3 space-y-2">
+                      <progress class="progress progress-primary w-full" value="<%= row[:progress_percent] %>" max="100"></progress>
+                      <div class="grid gap-2 text-xs md:grid-cols-4">
+                        <div class="rounded-lg border px-2 py-1 <%= row[:stage] >= 1 ? 'border-primary bg-primary/10 text-base-content' : 'border-base-300 text-base-content/60' %>">Placement valide</div>
+                        <div class="rounded-lg border px-2 py-1 <%= row[:stage] >= 2 ? 'border-success bg-success/10 text-base-content' : 'border-base-300 text-base-content/60' %>">Paiement client</div>
+                        <div class="rounded-lg border px-2 py-1 <%= row[:stage] >= 3 ? 'border-secondary bg-secondary/10 text-base-content' : 'border-base-300 text-base-content/60' %>">Facture freelance</div>
+                        <div class="rounded-lg border px-2 py-1 <%= row[:stage] >= 4 ? 'border-accent bg-accent/10 text-base-content' : 'border-base-300 text-base-content/60' %>">Virement Rivyr</div>
+                      </div>
+                    </div>
+
+                    <div class="mt-4 flex flex-wrap gap-2">
+                      <%= link_to "Voir placement", placement_path(row[:placement]), class: "btn btn-sm btn-outline" %>
+                      <% if row[:placement].client_invoice.blank? %>
+                        <%= button_to "Generer facture client", create_client_invoice_freelance_finance_path, params: { placement_id: row[:placement].id }, class: "btn btn-sm btn-primary" %>
+                      <% end %>
+                      <% if row[:placement].client_invoice&.status_paid? && row[:placement].freelancer_invoice.blank? %>
+                        <%= button_to "Creer facture freelance", create_freelancer_invoice_freelance_finance_path, params: { placement_id: row[:placement].id }, class: "btn btn-sm btn-secondary" %>
+                      <% end %>
+                      <% if row[:placement].freelancer_invoice.present? %>
+                        <%= form_with url: create_payout_request_freelance_finance_path, method: :post, class: "inline-flex" do %>
+                          <%= hidden_field_tag :invoice_id, row[:placement].freelancer_invoice.id %>
+                          <%= hidden_field_tag :amount_cents, row[:placement].freelancer_invoice.amount_cents %>
+                          <%= hidden_field_tag :billing_number, row[:placement].freelancer_invoice.number %>
+                          <%= submit_tag "Demander virement", class: "btn btn-sm btn-accent" %>
+                        <% end %>
+                      <% end %>
+                    </div>
+                  </article>
+                <% end %>
+              <% else %>
+                <div class="alert border border-base-200 bg-base-100">
+                  <span>Aucune mission en flux de paiement pour le moment.</span>
+                  <div>
+                    <%= link_to "Voir mes placements", placements_path, class: "btn btn-sm" %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <div class="card border border-base-100/70 bg-base-100/90 shadow">
+          <div class="card-body space-y-3 p-4 md:p-5">
+            <h2 class="text-2xl font-semibold text-base-content">Suivi financier</h2>
+
+            <% if @finance_feed.any? %>
+              <ul class="timeline timeline-vertical timeline-snap-icon max-md:timeline-compact">
+                <% @finance_feed.each do |event| %>
+                  <li>
+                    <hr class="bg-base-300" />
+                    <div class="timeline-middle">
+                      <% dot_class = case event[:type]
+                      when "success" then "badge-success"
+                      when "action" then "badge-warning"
+                      else "badge-info"
+                      end %>
+                      <span class="badge badge-xs <%= dot_class %>"></span>
+                    </div>
+                    <div class="timeline-end mb-6 max-w-[18rem]">
+                      <p class="font-medium text-base-content"><%= event[:message] %></p>
+                      <p class="text-xs text-base-content/60"><%= l(event[:date], format: :short) %></p>
+                    </div>
+                    <hr class="bg-base-300" />
+                  </li>
+                <% end %>
+              </ul>
+            <% else %>
+              <p class="text-base-content/60">Pas encore d'evenement de suivi.</p>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

@@ -7,6 +7,8 @@ class Invoice < ApplicationRecord
 
   belongs_to :placement
 
+  has_many :invoice_notes, dependent: :destroy
+  has_many :payout_requests, dependent: :destroy
   has_one :payment, dependent: :nullify
 
   validates :number, presence: true, uniqueness: true
