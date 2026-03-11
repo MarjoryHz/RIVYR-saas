@@ -9,7 +9,9 @@ class Placement < ApplicationRecord
   belongs_to :mission
   belongs_to :candidate
 
-  has_one :invoice, dependent: :destroy
+  has_many :invoices, dependent: :destroy
+  has_one :client_invoice, -> { where(invoice_type: "client") }, class_name: "Invoice"
+  has_one :freelancer_invoice, -> { where(invoice_type: "freelancer") }, class_name: "Invoice"
   has_one :commission, dependent: :destroy
 
   validates :status, presence: true

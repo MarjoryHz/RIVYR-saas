@@ -54,6 +54,18 @@ class InvoicesController < ApplicationController
     end
   end
 
+  def create_note
+    @invoice = Invoice.find(params[:id])
+    authorize @invoice
+
+    note = @invoice.invoice_notes.new(invoice_note_params.merge(user: current_user))
+    if note.save
+      redirect_to @invoice, notice: "Note de suivi ajoutee."
+    else
+      redirect_to @invoice, alert: note.errors.full_messages.to_sentence
+    end
+  end
+
   private
 
   def set_invoice
@@ -74,5 +86,9 @@ class InvoicesController < ApplicationController
       :paid_date,
       :amount_cents
     )
+  end
+
+  def invoice_note_params
+    params.require(:invoice_note).permit(:body, :action_required, :note_type)
   end
 end

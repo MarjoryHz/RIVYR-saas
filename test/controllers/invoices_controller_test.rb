@@ -13,10 +13,18 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "creates an invoice" do
+    fresh_placement = Placement.create!(
+      mission: missions(:one),
+      candidate: candidates(:one),
+      status: "validated",
+      annual_salary_cents: 100_000,
+      placement_fee_cents: 10_000
+    )
+
     assert_difference("Invoice.count", 1) do
       post invoices_url, params: {
         invoice: {
-          placement_id: placements(:two).id,
+          placement_id: fresh_placement.id,
           invoice_type: "client",
           number: "FAC-T-#{SecureRandom.hex(4)}",
           status: "issued",
@@ -44,7 +52,14 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "destroys an invoice" do
-    victim = Invoice.create!(placement: placements(:two), number: "FAC-D-#{SecureRandom.hex(4)}", invoice_type: "client", status: "issued", amount_cents: 1000)
+    fresh_placement = Placement.create!(
+      mission: missions(:one),
+      candidate: candidates(:one),
+      status: "validated",
+      annual_salary_cents: 100_000,
+      placement_fee_cents: 10_000
+    )
+    victim = Invoice.create!(placement: fresh_placement, number: "FAC-D-#{SecureRandom.hex(4)}", invoice_type: "client", status: "issued", amount_cents: 1000)
 
     assert_difference("Invoice.count", -1) do
       delete invoice_url(victim)

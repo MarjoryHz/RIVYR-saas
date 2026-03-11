@@ -2,8 +2,12 @@
   <div class="flex items-center justify-between">
     <h1 class="text-2xl font-bold">Facture <%= @invoice.number %></h1>
     <div class="flex gap-2">
-      <%= link_to "Modifier", edit_invoice_path(@invoice), class: "btn btn-primary" %>
-      <%= link_to "Supprimer", invoice_path(@invoice), data: { turbo_method: :delete, turbo_confirm: "Confirmer la suppression ?" }, class: "btn btn-error" %>
+      <% if policy(@invoice).edit? %>
+        <%= link_to "Modifier", edit_invoice_path(@invoice), class: "btn btn-primary" %>
+      <% end %>
+      <% if policy(@invoice).destroy? %>
+        <%= link_to "Supprimer", invoice_path(@invoice), data: { turbo_method: :delete, turbo_confirm: "Confirmer la suppression ?" }, class: "btn btn-error" %>
+      <% end %>
     </div>
   </div>
 
@@ -17,8 +21,48 @@
     <p><strong>Date paiement:</strong> <%= @invoice.paid_date.presence || "-" %></p>
   </div>
 
-  <div class="flex gap-2">
-    <%= link_to "Nouveau paiement", new_payment_path(invoice_id: @invoice.id), class: "btn" %>
+  <% if policy(Payment).new? %>
+    <div class="flex gap-2">
+      <%= link_to "Nouveau paiement", new_payment_path(invoice_id: @invoice.id), class: "btn" %>
+    </div>
+  <% end %>
+
+  <div class="bg-base-100 border rounded-lg p-4 space-y-3">
+    <h2 class="font-semibold">Suivi et relances</h2>
+
+    <% if policy(@invoice).update? %>
+      <%= form_with url: create_note_invoice_path(@invoice), method: :post, class: "space-y-2" do |f| %>
+        <div>
+          <%= label_tag :body, "Note", class: "block text-sm font-medium" %>
+          <%= text_area_tag "invoice_note[body]", nil, rows: 2, class: "textarea textarea-bordered w-full" %>
+        </div>
+        <div>
+          <%= label_tag :note_type, "Type", class: "block text-sm font-medium" %>
+          <%= text_field_tag "invoice_note[note_type]", "follow_up", class: "input input-bordered w-full" %>
+        </div>
+        <label class="label cursor-pointer justify-start gap-2">
+          <%= check_box_tag "invoice_note[action_required]", "1", false, class: "checkbox checkbox-sm" %>
+          <span class="label-text">Action requise du freelance</span>
+        </label>
+        <%= f.submit "Ajouter la note", class: "btn btn-sm btn-primary" %>
+      <% end %>
+    <% end %>
+
+    <% if @invoice.invoice_notes.any? %>
+      <div class="space-y-2">
+        <% @invoice.invoice_notes.order(created_at: :desc).each do |note| %>
+          <div class="border rounded p-3">
+            <% if note.action_required && note.resolved_at.blank? %>
+              <p class="font-semibold text-warning">ALERTE ACTION FREELANCE</p>
+            <% end %>
+            <p><%= note.body %></p>
+            <p class="text-xs opacity-70"><%= l(note.created_at, format: :short) %> - <%= note.note_type %></p>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="opacity-70 text-sm">Aucune note de suivi.</p>
+    <% end %>
   </div>
 
   <%= link_to "Retour a la liste", invoices_path, class: "btn" %>
