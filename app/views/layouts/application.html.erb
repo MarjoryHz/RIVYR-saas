@@ -26,22 +26,16 @@
 
   <% show_freelance_sidebar = user_signed_in? && current_user.role_freelance? %>
 
-  <body class="<%= 'has-freelance-sidebar' if show_freelance_sidebar %>">
+  <body class="relative min-h-screen bg-linear-to-br from-rose-200 via-pink-100 to-orange-100 bg-fixed text-base-content <%= 'has-freelance-sidebar' if show_freelance_sidebar %>">
+    <div class="pointer-events-none fixed inset-0 bg-linear-to-b from-white/10 via-transparent to-white/5"></div>
+    <div class="pointer-events-none fixed -left-32 -top-24 h-[34rem] w-[34rem] rounded-full bg-secondary/25 blur-3xl"></div>
+    <div class="pointer-events-none fixed right-[-8rem] top-16 h-[30rem] w-[30rem] rounded-full bg-primary/25 blur-3xl"></div>
+    <div class="pointer-events-none fixed bottom-[-10rem] left-1/3 h-[28rem] w-[28rem] rounded-full bg-accent/18 blur-3xl"></div>
     <% if user_signed_in? %>
-      <nav class="navbar bg-base-200 px-4 gap-2 flex-wrap">
-        <%= link_to "Clients", clients_path, class: "btn btn-ghost btn-sm" %>
-        <%= link_to "Contacts", client_contacts_path, class: "btn btn-ghost btn-sm" %>
-        <%= link_to "Freelancers", freelancer_profiles_path, class: "btn btn-ghost btn-sm" %>
-        <%= link_to "Missions", missions_path, class: "btn btn-ghost btn-sm" %>
-        <%= link_to "Candidats", candidates_path, class: "btn btn-ghost btn-sm" %>
-        <%= link_to "Placements", placements_path, class: "btn btn-ghost btn-sm" %>
-        <%= link_to "Factures", invoices_path, class: "btn btn-ghost btn-sm" %>
-        <%= link_to "Commissions", commissions_path, class: "btn btn-ghost btn-sm" %>
-        <%= link_to "Paiements", payments_path, class: "btn btn-ghost btn-sm" %>
-      </nav>
+      <%= render(show_freelance_sidebar ? "shared/freelance_top_navbar" : "shared/app_top_navbar") %>
     <% end %>
     <%= render "shared/freelance_sidebar" if show_freelance_sidebar %>
-    <main class="<%= 'freelance-sidebar-layout' if show_freelance_sidebar %>">
+    <main class="relative z-10 <%= 'freelance-sidebar-layout' if show_freelance_sidebar %>">
       <%= yield %>
     </main>
     <%= render "shared/flashes" %>
