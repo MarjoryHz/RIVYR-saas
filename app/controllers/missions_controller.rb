@@ -6,10 +6,24 @@ class MissionsController < ApplicationController
     authorize Mission
     @q = params[:q].to_s.strip
     @status = params[:status].to_s.strip
+    @scope = params[:scope].to_s.strip
     scope = policy_scope(Mission).includes(:client_contact, :region, :specialty, freelancer_profile: :user)
                                  .order(created_at: :desc)
                                  .search(@q)
                                  .with_status(@status)
+
+    if current_user.role_freelance? && @scope.blank? && @status.blank? && @q.blank?
+      load_freelance_missions_dashboard
+      return
+    end
+
+    if current_user.role_freelance? && @scope == "my_missions"
+      scope = scope.joins(:freelancer_profile).where(freelancer_profiles: { user_id: current_user.id })
+    elsif current_user.role_freelance? && @scope == "library"
+      own_mission_ids = Mission.joins(:freelancer_profile).where(freelancer_profiles: { user_id: current_user.id }).select(:id)
+      scope = scope.where.not(id: own_mission_ids)
+    end
+
     @missions = paginate(scope)
   end
 
@@ -107,5 +121,28 @@ class MissionsController < ApplicationController
     attributes[:client_contact_id] = current_user.client_contact&.id if current_user.role_client?
 
     attributes
+  end
+
+  def load_freelance_missions_dashboard
+    current_scope = policy_scope(Mission)
+      .includes(:region, :client_contact, :specialty, freelancer_profile: :user)
+      .joins(:freelancer_profile)
+      .where(freelancer_profiles: { user_id: current_user.id })
+
+    @current_missions = current_scope
+      .where(status: %w[open in_progress])
+      .order(created_at: :desc)
+      .limit(3)
+
+    @current_missions_count = current_scope.where(status: %w[open in_progress]).count
+    @pending_response_count = current_scope.where(status: "open").count
+    @accepted_offers_count = current_scope.where(status: "in_progress").count
+
+    @library_missions = policy_scope(Mission)
+      .includes(:region, :client_contact, :specialty)
+      .where(status: "open")
+      .where.not(id: current_scope.select(:id))
+      .order(created_at: :desc)
+      .limit(3)
   end
 end
