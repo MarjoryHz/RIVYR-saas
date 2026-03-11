@@ -2,18 +2,18 @@
 
 one:
   placement: one
-  invoice_type: MyString
-  number: MyString
-  status: MyString
+  invoice_type: client
+  number: FAC-FIX-0001
+  status: issued
   issue_date: 2026-03-10
   paid_date: 2026-03-10
   amount_cents: 1
 
 two:
   placement: two
-  invoice_type: MyString
-  number: MyString
-  status: MyString
+  invoice_type: client
+  number: FAC-FIX-0002
+  status: paid
   issue_date: 2026-03-10
   paid_date: 2026-03-10
   amount_cents: 1

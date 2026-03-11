@@ -1,0 +1,56 @@
+<%= form_with(model: payment, class: "space-y-4") do |f| %>
+  <% if payment.errors.any? %>
+    <div class="alert alert-error">
+      <div>
+        <p><strong><%= pluralize(payment.errors.count, "erreur") %> ont empeche l'enregistrement :</strong></p>
+        <ul class="list-disc ml-6 mt-2">
+          <% payment.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :invoice_id, "Facture", class: "block font-medium" %>
+    <%= f.collection_select :invoice_id, @invoices, :id, :number, { prompt: "Selectionner une facture" }, { class: "select select-bordered w-full" } %>
+  </div>
+
+  <div>
+    <%= f.label :commission_id, "Commission", class: "block font-medium" %>
+    <%= f.collection_select :commission_id, @commissions, :id, ->(c) { "Commission ##{c.id}" }, { prompt: "Selectionner une commission" }, { class: "select select-bordered w-full" } %>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :status, "Statut", class: "block font-medium" %>
+      <%= f.text_field :status, class: "input input-bordered w-full" %>
+    </div>
+    <div>
+      <%= f.label :amount_cents, "Montant (cents)", class: "block font-medium" %>
+      <%= f.number_field :amount_cents, min: 0, class: "input input-bordered w-full" %>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :payment_type, "Type de paiement", class: "block font-medium" %>
+      <%= f.text_field :payment_type, class: "input input-bordered w-full" %>
+    </div>
+    <div>
+      <%= f.label :reference, "Reference", class: "block font-medium" %>
+      <%= f.text_field :reference, class: "input input-bordered w-full" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :paid_at, "Paye le", class: "block font-medium" %>
+    <%= f.datetime_field :paid_at, class: "input input-bordered w-full" %>
+  </div>
+
+  <div class="flex gap-3">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to "Annuler", payments_path, class: "btn" %>
+  </div>
+<% end %>

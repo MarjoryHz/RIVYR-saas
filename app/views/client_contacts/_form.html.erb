@@ -1,0 +1,58 @@
+<%= form_with(model: client_contact, class: "space-y-4") do |f| %>
+  <% if client_contact.errors.any? %>
+    <div class="alert alert-error">
+      <div>
+        <p><strong><%= pluralize(client_contact.errors.count, "erreur") %> ont empeche l'enregistrement :</strong></p>
+        <ul class="list-disc ml-6 mt-2">
+          <% client_contact.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :client_id, "Client", class: "block font-medium" %>
+    <%= f.collection_select :client_id, @clients, :id, :legal_name, { prompt: "Selectionner un client" }, { class: "select select-bordered w-full" } %>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :first_name, "Prenom", class: "block font-medium" %>
+      <%= f.text_field :first_name, class: "input input-bordered w-full" %>
+    </div>
+
+    <div>
+      <%= f.label :last_name, "Nom", class: "block font-medium" %>
+      <%= f.text_field :last_name, class: "input input-bordered w-full" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :email, "Email", class: "block font-medium" %>
+    <%= f.email_field :email, class: "input input-bordered w-full" %>
+  </div>
+
+  <div>
+    <%= f.label :phone, "Telephone", class: "block font-medium" %>
+    <%= f.telephone_field :phone, class: "input input-bordered w-full" %>
+  </div>
+
+  <div>
+    <%= f.label :job_title, "Poste", class: "block font-medium" %>
+    <%= f.text_field :job_title, class: "input input-bordered w-full" %>
+  </div>
+
+  <div class="form-control">
+    <label class="label cursor-pointer justify-start gap-3">
+      <%= f.check_box :primary_contact, class: "checkbox" %>
+      <span class="label-text">Contact principal</span>
+    </label>
+  </div>
+
+  <div class="flex gap-3">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to "Annuler", client_contacts_path, class: "btn" %>
+  </div>
+<% end %>

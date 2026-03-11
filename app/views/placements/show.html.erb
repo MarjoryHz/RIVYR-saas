@@ -1,0 +1,30 @@
+<div class="max-w-5xl mx-auto p-6 space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold">Placement #<%= @placement.id %></h1>
+    <div class="flex gap-2">
+      <%= link_to "Modifier", edit_placement_path(@placement), class: "btn btn-primary" %>
+      <%= link_to "Supprimer", placement_path(@placement), data: { turbo_method: :delete, turbo_confirm: "Confirmer la suppression ?" }, class: "btn btn-error" %>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <p><strong>Mission:</strong> <%= link_to @placement.mission.reference, mission_path(@placement.mission), class: "link link-primary" %></p>
+    <p><strong>Candidat:</strong> <%= link_to [@placement.candidate.first_name, @placement.candidate.last_name].join(" "), candidate_path(@placement.candidate), class: "link link-primary" %></p>
+    <p><strong>Statut:</strong> <%= @placement.status %></p>
+    <p><strong>Date embauche:</strong> <%= @placement.hired_at.presence || "-" %></p>
+    <p><strong>Salaire annuel (cents):</strong> <%= @placement.annual_salary_cents.presence || "-" %></p>
+    <p><strong>Frais de placement (cents):</strong> <%= @placement.placement_fee_cents.presence || "-" %></p>
+  </div>
+
+  <div>
+    <p><strong>Notes:</strong></p>
+    <p><%= @placement.notes.presence || "-" %></p>
+  </div>
+
+  <div class="flex gap-2">
+    <%= link_to "Facture", @placement.invoice ? invoice_path(@placement.invoice) : new_invoice_path(placement_id: @placement.id), class: "btn" %>
+    <%= link_to "Commission", @placement.commission ? commission_path(@placement.commission) : new_commission_path(placement_id: @placement.id), class: "btn" %>
+  </div>
+
+  <%= link_to "Retour a la liste", placements_path, class: "btn" %>
+</div>

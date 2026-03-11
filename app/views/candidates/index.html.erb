@@ -1,0 +1,42 @@
+<div class="max-w-6xl mx-auto p-6 space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold">Candidats</h1>
+    <%= link_to "Nouveau candidat", new_candidate_path, class: "btn btn-primary" %>
+  </div>
+  <%= render "shared/index_filters", path: candidates_path, q: @q, status: @status, status_options: Candidate.statuses.keys, status_param: :status %>
+
+  <div class="overflow-x-auto bg-base-100 rounded-lg">
+    <% if @candidates.any? %>
+      <table class="table w-full">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Email</th>
+            <th>Telephone</th>
+            <th>Statut</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @candidates.each do |candidate| %>
+            <tr>
+              <td><%= [candidate.first_name, candidate.last_name].join(" ") %></td>
+              <td><%= candidate.email.presence || "-" %></td>
+              <td><%= candidate.phone.presence || "-" %></td>
+              <td><%= candidate.status.presence || "-" %></td>
+              <td class="text-right">
+                <%= link_to "Voir", candidate_path(candidate), class: "btn btn-sm" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="p-8 text-center space-y-3">
+        <p class="text-lg font-medium">Aucun candidat pour le moment</p>
+        <%= link_to "Creer le premier candidat", new_candidate_path, class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+  <%= render "shared/pagination", page: @page, total_pages: @total_pages, extra_params: { q: @q, status: @status }, path: ->(params) { candidates_path(params) } %>
+</div>

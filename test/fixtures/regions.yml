@@ -2,10 +2,12 @@
 
 one:
   name: MyString
-  options: MyString
-  active: false
+  options:
+    - Lille
+    - Roubaix
 
 two:
   name: MyString
-  options: MyString
-  active: false
+  options:
+    - Paris
+    - Nanterre

@@ -1,0 +1,38 @@
+<div class="max-w-4xl mx-auto p-6 space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold"><%= @client.legal_name %></h1>
+    <div class="flex gap-2">
+      <%= link_to "Contacts", client_contacts_path, class: "btn" %>
+      <%= link_to "Modifier", edit_client_path(@client), class: "btn btn-primary" %>
+      <%= link_to "Supprimer", client_path(@client), data: { turbo_method: :delete, turbo_confirm: "Confirmer la suppression ?" }, class: "btn btn-error" %>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <p><strong>Nom commercial:</strong> <%= @client.brand_name.presence || "-" %></p>
+    <p><strong>Secteur:</strong> <%= @client.sector.presence || "-" %></p>
+    <p><strong>Type de propriete:</strong> <%= @client.ownership_type.presence || "-" %></p>
+    <p><strong>Taille:</strong> <%= @client.company_size.presence || "-" %></p>
+    <p>
+      <strong>Site web:</strong>
+      <% if @client.website_url.present? %>
+        <% website_url = @client.website_url[%r{\Ahttps?://}] ? @client.website_url : "https://#{@client.website_url}" %>
+        <%= link_to @client.website_url, website_url, target: "_blank", rel: "noopener", class: "link link-primary" %>
+      <% else %>
+        -
+      <% end %>
+    </p>
+    <p><strong>Actif:</strong> <%= @client.active ? "Oui" : "Non" %></p>
+  </div>
+
+  <div>
+    <p><strong>Localisation:</strong> <%= @client.location.presence || "-" %></p>
+  </div>
+
+  <div>
+    <p><strong>Description:</strong></p>
+    <p><%= @client.bio.presence || "-" %></p>
+  </div>
+
+  <%= link_to "Retour a la liste", clients_path, class: "btn" %>
+</div>

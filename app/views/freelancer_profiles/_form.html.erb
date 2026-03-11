@@ -1,0 +1,75 @@
+<%= form_with(model: freelancer_profile, class: "space-y-4") do |f| %>
+  <% if freelancer_profile.errors.any? %>
+    <div class="alert alert-error">
+      <div>
+        <p><strong><%= pluralize(freelancer_profile.errors.count, "erreur") %> ont empeche l'enregistrement :</strong></p>
+        <ul class="list-disc ml-6 mt-2">
+          <% freelancer_profile.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :user_id, "Utilisateur", class: "block font-medium" %>
+    <%= f.collection_select :user_id, @users, :id, ->(u) { "#{u.first_name} #{u.last_name} (#{u.email})" }, { prompt: "Selectionner un utilisateur" }, { class: "select select-bordered w-full" } %>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :region_id, "Region", class: "block font-medium" %>
+      <%= f.collection_select :region_id, @regions, :id, :name, { prompt: "Selectionner une region" }, { class: "select select-bordered w-full" } %>
+    </div>
+
+    <div>
+      <%= f.label :specialty_id, "Specialite", class: "block font-medium" %>
+      <%= f.collection_select :specialty_id, @specialties, :id, :name, { prompt: "Selectionner une specialite" }, { class: "select select-bordered w-full" } %>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :operational_status, "Statut operationnel", class: "block font-medium" %>
+      <%= f.text_field :operational_status, class: "input input-bordered w-full" %>
+    </div>
+
+    <div>
+      <%= f.label :availability_status, "Disponibilite", class: "block font-medium" %>
+      <%= f.text_field :availability_status, class: "input input-bordered w-full" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :rivyr_score_current, "Score Rivyr", class: "block font-medium" %>
+    <%= f.number_field :rivyr_score_current, min: 0, class: "input input-bordered w-full" %>
+  </div>
+
+  <div>
+    <%= f.label :linkedin_url, "LinkedIn", class: "block font-medium" %>
+    <%= f.url_field :linkedin_url, class: "input input-bordered w-full" %>
+  </div>
+
+  <div>
+    <%= f.label :website_url, "Site web", class: "block font-medium" %>
+    <%= f.url_field :website_url, class: "input input-bordered w-full" %>
+  </div>
+
+  <div>
+    <%= f.label :bio, "Bio", class: "block font-medium" %>
+    <%= f.text_area :bio, rows: 4, class: "textarea textarea-bordered w-full" %>
+  </div>
+
+  <div class="form-control">
+    <label class="label cursor-pointer justify-start gap-3">
+      <%= f.check_box :profile_private, class: "checkbox" %>
+      <span class="label-text">Profil prive</span>
+    </label>
+  </div>
+
+  <div class="flex gap-3">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to "Annuler", freelancer_profiles_path, class: "btn" %>
+  </div>
+<% end %>

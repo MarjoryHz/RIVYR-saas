@@ -1,0 +1,19 @@
+<div class="max-w-4xl mx-auto p-6 space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold"><%= [@client_contact.first_name, @client_contact.last_name].join(" ") %></h1>
+    <div class="flex gap-2">
+      <%= link_to "Modifier", edit_client_contact_path(@client_contact), class: "btn btn-primary" %>
+      <%= link_to "Supprimer", client_contact_path(@client_contact), data: { turbo_method: :delete, turbo_confirm: "Confirmer la suppression ?" }, class: "btn btn-error" %>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <p><strong>Client:</strong> <%= link_to @client_contact.client.legal_name, client_path(@client_contact.client), class: "link link-primary" %></p>
+    <p><strong>Poste:</strong> <%= @client_contact.job_title.presence || "-" %></p>
+    <p><strong>Email:</strong> <%= @client_contact.email.presence || "-" %></p>
+    <p><strong>Telephone:</strong> <%= @client_contact.phone.presence || "-" %></p>
+    <p><strong>Contact principal:</strong> <%= @client_contact.primary_contact ? "Oui" : "Non" %></p>
+  </div>
+
+  <%= link_to "Retour a la liste", client_contacts_path, class: "btn" %>
+</div>

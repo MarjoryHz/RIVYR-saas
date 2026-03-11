@@ -1,0 +1,61 @@
+<%= form_with(model: candidate, class: "space-y-4") do |f| %>
+  <% if candidate.errors.any? %>
+    <div class="alert alert-error">
+      <div>
+        <p><strong><%= pluralize(candidate.errors.count, "erreur") %> ont empeche l'enregistrement :</strong></p>
+        <ul class="list-disc ml-6 mt-2">
+          <% candidate.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :first_name, "Prenom", class: "block font-medium" %>
+      <%= f.text_field :first_name, class: "input input-bordered w-full" %>
+    </div>
+    <div>
+      <%= f.label :last_name, "Nom", class: "block font-medium" %>
+      <%= f.text_field :last_name, class: "input input-bordered w-full" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :email, "Email", class: "block font-medium" %>
+    <%= f.email_field :email, class: "input input-bordered w-full" %>
+  </div>
+
+  <div>
+    <%= f.label :phone, "Telephone", class: "block font-medium" %>
+    <%= f.telephone_field :phone, class: "input input-bordered w-full" %>
+  </div>
+
+  <div>
+    <%= f.label :linkedin_url, "LinkedIn", class: "block font-medium" %>
+    <%= f.url_field :linkedin_url, class: "input input-bordered w-full" %>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :status, "Statut", class: "block font-medium" %>
+      <%= f.text_field :status, class: "input input-bordered w-full" %>
+    </div>
+    <div>
+      <%= f.label :source, "Source", class: "block font-medium" %>
+      <%= f.text_field :source, class: "input input-bordered w-full" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :notes, "Notes", class: "block font-medium" %>
+    <%= f.text_area :notes, rows: 4, class: "textarea textarea-bordered w-full" %>
+  </div>
+
+  <div class="flex gap-3">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to "Annuler", candidates_path, class: "btn" %>
+  </div>
+<% end %>

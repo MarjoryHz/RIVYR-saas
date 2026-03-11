@@ -2,10 +2,12 @@
 
 one:
   name: MyString
-  options: MyString
-  active: false
+  options:
+    - Directeur General
+    - COO
 
 two:
   name: MyString
-  options: MyString
-  active: false
+  options:
+    - Product Manager
+    - Product Owner

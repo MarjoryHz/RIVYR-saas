@@ -1,0 +1,42 @@
+<div class="max-w-6xl mx-auto p-6 space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold">Missions</h1>
+    <%= link_to "Nouvelle mission", new_mission_path, class: "btn btn-primary" %>
+  </div>
+  <%= render "shared/index_filters", path: missions_path, q: @q, status: @status, status_options: Mission.statuses.keys, status_param: :status %>
+
+  <div class="overflow-x-auto bg-base-100 rounded-lg">
+    <% if @missions.any? %>
+      <table class="table w-full">
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>Titre</th>
+            <th>Client</th>
+            <th>Statut</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @missions.each do |mission| %>
+            <tr>
+              <td><%= mission.reference %></td>
+              <td><%= mission.title %></td>
+              <td><%= mission.client_contact.client.legal_name %></td>
+              <td><%= mission.status %></td>
+              <td class="text-right">
+                <%= link_to "Voir", mission_path(mission), class: "btn btn-sm" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="p-8 text-center space-y-3">
+        <p class="text-lg font-medium">Aucune mission pour le moment</p>
+        <%= link_to "Creer la premiere mission", new_mission_path, class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+  <%= render "shared/pagination", page: @page, total_pages: @total_pages, extra_params: { q: @q, status: @status }, path: ->(params) { missions_path(params) } %>
+</div>

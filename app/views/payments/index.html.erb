@@ -1,0 +1,44 @@
+<div class="max-w-6xl mx-auto p-6 space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold">Paiements</h1>
+    <%= link_to "Nouveau paiement", new_payment_path, class: "btn btn-primary" %>
+  </div>
+  <%= render "shared/index_filters", path: payments_path, q: @q, status: @status, status_options: Payment.statuses.keys, status_param: :status %>
+
+  <div class="overflow-x-auto bg-base-100 rounded-lg">
+    <% if @payments.any? %>
+      <table class="table w-full">
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>Invoice</th>
+            <th>Commission</th>
+            <th>Statut</th>
+            <th>Montant</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @payments.each do |payment| %>
+            <tr>
+              <td><%= payment.reference.presence || "-" %></td>
+              <td><%= payment.invoice.number %></td>
+              <td>#<%= payment.commission_id %></td>
+              <td><%= payment.status %></td>
+              <td><%= payment.amount_cents %></td>
+              <td class="text-right">
+                <%= link_to "Voir", payment_path(payment), class: "btn btn-sm" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="p-8 text-center space-y-3">
+        <p class="text-lg font-medium">Aucun paiement pour le moment</p>
+        <%= link_to "Creer le premier paiement", new_payment_path, class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+  <%= render "shared/pagination", page: @page, total_pages: @total_pages, extra_params: { q: @q, status: @status }, path: ->(params) { payments_path(params) } %>
+</div>

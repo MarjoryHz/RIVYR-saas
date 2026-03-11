@@ -1,0 +1,32 @@
+<div class="max-w-4xl mx-auto p-6 space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold"><%= [@freelancer_profile.user.first_name, @freelancer_profile.user.last_name].join(" ") %></h1>
+    <div class="flex gap-2">
+      <%= link_to "Modifier", edit_freelancer_profile_path(@freelancer_profile), class: "btn btn-primary" %>
+      <%= link_to "Supprimer", freelancer_profile_path(@freelancer_profile), data: { turbo_method: :delete, turbo_confirm: "Confirmer la suppression ?" }, class: "btn btn-error" %>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <p><strong>Email:</strong> <%= @freelancer_profile.user.email %></p>
+    <p><strong>Telephone:</strong> <%= @freelancer_profile.user.phone.presence || "-" %></p>
+    <p><strong>Region:</strong> <%= @freelancer_profile.region&.name || "-" %></p>
+    <p><strong>Specialite:</strong> <%= @freelancer_profile.specialty&.name || "-" %></p>
+    <p><strong>Statut operationnel:</strong> <%= @freelancer_profile.operational_status.presence || "-" %></p>
+    <p><strong>Disponibilite:</strong> <%= @freelancer_profile.availability_status.presence || "-" %></p>
+    <p><strong>Score Rivyr:</strong> <%= @freelancer_profile.rivyr_score_current.nil? ? "-" : @freelancer_profile.rivyr_score_current %></p>
+    <p><strong>Profil prive:</strong> <%= @freelancer_profile.profile_private ? "Oui" : "Non" %></p>
+  </div>
+
+  <div>
+    <p><strong>LinkedIn:</strong> <%= @freelancer_profile.linkedin_url.presence || "-" %></p>
+    <p><strong>Site web:</strong> <%= @freelancer_profile.website_url.presence || "-" %></p>
+  </div>
+
+  <div>
+    <p><strong>Bio:</strong></p>
+    <p><%= @freelancer_profile.bio.presence || "-" %></p>
+  </div>
+
+  <%= link_to "Retour a la liste", freelancer_profiles_path, class: "btn" %>
+</div>

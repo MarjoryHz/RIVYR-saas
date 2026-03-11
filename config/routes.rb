@@ -1,6 +1,15 @@
 Rails.application.routes.draw do
   devise_for :users
   root to: "pages#home"
+  resources :clients
+  resources :client_contacts
+  resources :freelancer_profiles
+  resources :missions
+  resources :candidates
+  resources :placements
+  resources :invoices
+  resources :commissions
+  resources :payments
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
