@@ -1,7 +1,6 @@
 class ClientContact < ApplicationRecord
   belongs_to :client
-
-  has_many :missions
+  has_many :missions, dependent: :destroy
 
   validates :first_name, presence: true
   validates :last_name, presence: true

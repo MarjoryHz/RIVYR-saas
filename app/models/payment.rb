@@ -1,6 +1,6 @@
 class Payment < ApplicationRecord
-  has_one :commission
   belongs_to :invoice
+  belongs_to :commission
 
   validates :status, presence: true
   validates :amount_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0 }

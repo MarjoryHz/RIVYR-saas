@@ -1,13 +1,13 @@
 class Mission < ApplicationRecord
-  belongs_to :region, optional: true
+  belongs_to :region
   belongs_to :freelancer_profile
   belongs_to :client_contact
-  has_one :client, through: :client_contact
-  belongs_to :specialty, optional: true
-  has_many :placements
+  belongs_to :specialty
+
+  has_one :placement, dependent: :destroy
 
   validates :title, presence: true
+  validates :reference, presence: true
   validates :status, presence: true
-  validates :reference, length: { maximum: 100 }, allow_blank: true
   validates :priority_level, length: { maximum: 50 }, allow_blank: true
 end

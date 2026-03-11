@@ -3,5 +3,4 @@ class Region < ApplicationRecord
   has_many :missions, dependent: :nullify
 
   validates :name, presence: true, uniqueness: true
-  validates :options
 end
