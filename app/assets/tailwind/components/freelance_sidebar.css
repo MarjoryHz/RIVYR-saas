@@ -1,0 +1,289 @@
+@layer components {
+  :root {
+    --freelance-sidebar-shell-bg: #ffd3d8;
+    --freelance-sidebar-page-bg: #fff7f5;
+    --freelance-sidebar-text: #4b1f1f;
+  }
+
+  .freelance-sidebar {
+    position: fixed;
+    top: 5.5rem;
+    left: 0;
+    z-index: 30;
+  }
+
+  body.has-freelance-sidebar,
+  body.has-freelance-sidebar .freelance-sidebar-layout {
+    background: #f9eeed;
+  }
+
+  .freelance-sidebar__toggle {
+    display: none;
+  }
+
+  .freelance-sidebar__shell {
+    width: 14.75rem;
+    height: calc(100vh - 5.5rem);
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    border-radius: 0 1.05rem 0 0;
+    background: var(--freelance-sidebar-shell-bg);
+    color: var(--freelance-sidebar-text);
+    box-shadow: -14px 18px 32px rgba(75, 31, 31, 0.1);
+    transition: width 0.25s ease;
+  }
+
+  .freelance-sidebar__header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.7rem 1rem 0.35rem;
+  }
+
+  .freelance-sidebar__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+  }
+
+  .freelance-sidebar__brand-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 2px solid currentColor;
+    border-radius: 0.85rem;
+    font-size: 1.2rem;
+  }
+
+  .freelance-sidebar__collapse {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    cursor: pointer;
+    font-size: 1.8rem;
+  }
+
+  .freelance-sidebar__collapse-closed {
+    display: none;
+  }
+
+  .freelance-sidebar__content {
+    position: relative;
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.35rem 0.9rem 1.05rem;
+    direction: rtl;
+  }
+
+  .freelance-sidebar__content::-webkit-scrollbar {
+    width: 0.55rem;
+  }
+
+  .freelance-sidebar__content::-webkit-scrollbar-thumb {
+    background: #e22d2d;
+    border-radius: 999px;
+  }
+
+  .freelance-sidebar__section {
+    display: grid;
+    gap: 0.65rem;
+    direction: ltr;
+  }
+
+  .freelance-sidebar__divider {
+    margin: 1rem 0;
+    border: 0;
+    border-top: 1px solid #f08f74;
+    direction: ltr;
+  }
+
+  .freelance-sidebar__item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-height: 3.75rem;
+    padding: 0 0.85rem;
+    border-radius: 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--freelance-sidebar-text);
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .freelance-sidebar__active-highlight {
+    position: absolute;
+    left: 0.9rem;
+    right: 0;
+    height: 4rem;
+    background: #f5eae8;
+    border-radius: 1.45rem 0 0 1.45rem;
+    z-index: 0;
+    pointer-events: none;
+    transition: top 0.2s ease;
+  }
+
+  .freelance-sidebar__active-highlight::before,
+  .freelance-sidebar__active-highlight::after {
+    position: absolute;
+    right: 0;
+    width: 2rem;
+    height: 2rem;
+    content: "";
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .freelance-sidebar__active-highlight::before {
+    bottom: 100%;
+    box-shadow: 1rem 1rem 0 0 #f5eae8;
+  }
+
+  .freelance-sidebar__active-highlight::after {
+    top: 100%;
+    box-shadow: 1rem -1rem 0 0 #f5eae8;
+  }
+
+  .freelance-sidebar__item--active {
+    color: var(--freelance-sidebar-text);
+  }
+
+  .freelance-sidebar__item i {
+    width: 1.5rem;
+    text-align: center;
+    font-size: 1.2rem;
+  }
+
+  .freelance-sidebar__section,
+  .freelance-sidebar__divider {
+    position: relative;
+    z-index: 1;
+  }
+
+  .freelance-sidebar__item:hover:not(.freelance-sidebar__item--active) {
+    background: rgba(255, 247, 245, 0.45);
+  }
+
+  .freelance-sidebar__item--disabled {
+    color: var(--freelance-sidebar-text);
+    opacity: 1;
+    cursor: default;
+  }
+
+  .freelance-sidebar__footer {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0;
+    padding: 1rem 1.25rem;
+    border-radius: 0;
+    background: #fe5771;
+    color: #fff;
+  }
+
+  .freelance-sidebar__avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 999px;
+    background: #2f1616;
+    color: #fff3ef;
+    font-weight: 700;
+  }
+
+  .freelance-sidebar__identity {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+
+  .freelance-sidebar__identity span {
+    font-size: 0.9rem;
+    opacity: 0.8;
+  }
+
+  .freelance-sidebar-layout {
+    padding-left: 18.25rem;
+  }
+
+  #freelance-sidebar-toggle:checked + .freelance-sidebar__shell {
+    width: 4.5rem;
+  }
+
+  #freelance-sidebar-toggle:checked + .freelance-sidebar__shell .freelance-sidebar__brand-text,
+  #freelance-sidebar-toggle:checked + .freelance-sidebar__shell .freelance-sidebar__item span,
+  #freelance-sidebar-toggle:checked + .freelance-sidebar__shell .freelance-sidebar__identity {
+    display: none;
+  }
+
+  #freelance-sidebar-toggle:checked + .freelance-sidebar__shell .freelance-sidebar__collapse-open {
+    display: none;
+  }
+
+  #freelance-sidebar-toggle:checked + .freelance-sidebar__shell .freelance-sidebar__collapse-closed {
+    display: inline;
+  }
+
+  #freelance-sidebar-toggle:checked + .freelance-sidebar__shell .freelance-sidebar__brand {
+    justify-content: center;
+    gap: 0;
+  }
+
+  #freelance-sidebar-toggle:checked + .freelance-sidebar__shell .freelance-sidebar__item,
+  #freelance-sidebar-toggle:checked + .freelance-sidebar__shell .freelance-sidebar__footer {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  #freelance-sidebar-toggle:checked + .freelance-sidebar__shell .freelance-sidebar__header {
+    justify-content: center;
+    padding-inline: 0.9rem;
+  }
+
+  #freelance-sidebar-toggle:checked + .freelance-sidebar__shell .freelance-sidebar__content {
+    padding-inline: 0.7rem;
+  }
+
+  #freelance-sidebar-toggle:checked + .freelance-sidebar__shell .freelance-sidebar__footer {
+    margin-inline: 0;
+    border-radius: 0;
+  }
+
+  #freelance-sidebar-toggle:checked + .freelance-sidebar__shell .freelance-sidebar__avatar {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  body:has(#freelance-sidebar-toggle:checked) .freelance-sidebar-layout {
+    padding-left: 7.4rem;
+  }
+
+  @media (max-width: 1024px) {
+    .freelance-sidebar {
+      position: static;
+      margin: 1rem;
+    }
+
+    .freelance-sidebar__shell {
+      width: auto;
+      height: auto;
+    }
+
+    .freelance-sidebar-layout,
+    body:has(#freelance-sidebar-toggle:checked) .freelance-sidebar-layout {
+      padding-left: 0;
+    }
+  }
+}

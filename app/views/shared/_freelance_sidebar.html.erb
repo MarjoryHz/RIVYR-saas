@@ -1,0 +1,70 @@
+<% active_controller = controller_name %>
+<% active_highlight_top = case active_controller
+when "missions" then "4.5rem"
+when "invoices" then "9rem"
+when "freelancer_profiles" then "13.5rem"
+end %>
+
+<aside class="freelance-sidebar">
+  <input id="freelance-sidebar-toggle" type="checkbox" class="freelance-sidebar__toggle">
+
+  <div class="freelance-sidebar__shell">
+    <div class="freelance-sidebar__header">
+      <div aria-hidden="true"></div>
+
+      <label for="freelance-sidebar-toggle" class="freelance-sidebar__collapse" aria-label="Reduire la sidebar freelance">
+        <span class="freelance-sidebar__collapse-open"><i class="fa-solid fa-angle-left"></i></span>
+        <span class="freelance-sidebar__collapse-closed"><i class="fa-solid fa-bars"></i></span>
+      </label>
+    </div>
+
+    <div class="freelance-sidebar__content">
+      <% if active_highlight_top.present? %>
+        <div class="freelance-sidebar__active-highlight" style="top: <%= active_highlight_top %>;"></div>
+      <% end %>
+
+      <div class="freelance-sidebar__section">
+        <span class="freelance-sidebar__item freelance-sidebar__item--disabled">
+          <i class="fa-solid fa-table-columns"></i>
+          <span>Dashboard</span>
+        </span>
+        <%= link_to missions_path, class: ["freelance-sidebar__item", ("freelance-sidebar__item--active" if active_controller == "missions")] do %>
+          <i class="fa-solid fa-briefcase"></i>
+          <span>Missions</span>
+        <% end %>
+        <%= link_to invoices_path, class: ["freelance-sidebar__item", ("freelance-sidebar__item--active" if active_controller == "invoices")] do %>
+          <i class="fa-solid fa-file-invoice"></i>
+          <span>Factures</span>
+        <% end %>
+        <%= link_to freelancer_profiles_path, class: ["freelance-sidebar__item", ("freelance-sidebar__item--active" if active_controller == "freelancer_profiles")] do %>
+          <i class="fa-solid fa-folder-open"></i>
+          <span>CVthèque</span>
+        <% end %>
+        <span class="freelance-sidebar__item freelance-sidebar__item--disabled">
+          <i class="fa-solid fa-list-check"></i>
+          <span>To do list</span>
+        </span>
+        <span class="freelance-sidebar__item freelance-sidebar__item--disabled">
+          <i class="fa-solid fa-newspaper"></i>
+          <span>Feed</span>
+        </span>
+        <span class="freelance-sidebar__item freelance-sidebar__item--disabled">
+          <i class="fa-solid fa-users"></i>
+          <span>Communauté</span>
+        </span>
+      </div>
+    </div>
+
+    <% if user_signed_in? %>
+      <div class="freelance-sidebar__footer">
+        <div class="freelance-sidebar__avatar">
+          <%= (current_user.first_name.to_s.first || current_user.email.to_s.first || "U").upcase %>
+        </div>
+        <div class="freelance-sidebar__identity">
+          <strong><%= current_user.first_name.presence || current_user.email %></strong>
+          <span><%= current_user.role.presence || "Utilisateur" %></span>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</aside>
