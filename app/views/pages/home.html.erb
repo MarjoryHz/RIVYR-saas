@@ -6,7 +6,9 @@
       <p class="mb-5 text-lg">Plateforme de recrutement intelligente pour transformer votre hiring</p>
       <div class="flex gap-4 justify-center">
         <%= link_to "Commencer gratuitement", new_user_registration_path, class: "btn btn-primary" %>
-        <%= link_to "Voir les clients", clients_path, class: "btn btn-outline btn-primary" %>
+        <% if policy(Client).index? %>
+          <%= link_to "Voir les clients", clients_path, class: "btn btn-outline btn-primary" %>
+        <% end %>
       </div>
     </div>
   </div>

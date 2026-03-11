@@ -72,4 +72,25 @@ class FreelancerProfilesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to freelancer_profiles_path
   end
+
+  test "allows candidate to read freelancer profiles but forbids creation" do
+    sign_out :user
+    candidate_user = User.create!(
+      email: "candidate-#{SecureRandom.hex(4)}@example.test",
+      password: "password123",
+      password_confirmation: "password123",
+      first_name: "Candidate",
+      last_name: "User",
+      status: "active",
+      role: "candidate"
+    )
+    sign_in_as(candidate_user)
+
+    get freelancer_profiles_url
+    assert_response :success
+
+    get new_freelancer_profile_url
+    assert_redirected_to root_path
+    assert_equal "Vous n'etes pas autorise a effectuer cette action.", flash[:alert]
+  end
 end

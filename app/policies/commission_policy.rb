@@ -1,0 +1,2 @@
+class CommissionPolicy < ApplicationPolicy
+end

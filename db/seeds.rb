@@ -406,13 +406,15 @@ ALL_FREELANCERS.each_with_index do |data, index|
     u.last_name = data[:last_name]
     u.phone = safe_phone(index + 1)
     u.status = 'active'
+    u.role = 'freelance'
   end
 
   user.update!(
     first_name: data[:first_name],
     last_name: data[:last_name],
     phone: user.phone.presence || safe_phone(index + 1),
-    status: 'active'
+    status: 'active',
+    role: 'freelance'
   )
 
   region = Region.find_by!(name: data[:region])
@@ -444,6 +446,16 @@ ALL_FREELANCERS.each_with_index do |data, index|
 end
 puts "#{User.count} users ready."
 puts "#{FreelancerProfile.count} freelancer profiles ready."
+
+admin_user = User.find_or_create_by!(email: "admin@rivyr.test") do |u|
+  u.password = "password"
+  u.first_name = "Admin"
+  u.last_name = "Rivyr"
+  u.phone = safe_phone(999)
+  u.status = "active"
+  u.role = "admin"
+end
+admin_user.update!(status: "active", role: "admin")
 
 # --------------------------------------------------
 # Clients
@@ -491,6 +503,20 @@ CLIENT_CONTACTS_DATA.each_with_index do |data, index|
   )
 end
 puts "#{ClientContact.count} client contacts ready."
+
+first_contact = ClientContact.order(:id).first
+if first_contact
+  client_user = User.find_or_create_by!(email: "client@rivyr.test") do |u|
+    u.password = "password"
+    u.first_name = first_contact.first_name
+    u.last_name = first_contact.last_name
+    u.phone = first_contact.phone
+    u.status = "active"
+    u.role = "client"
+  end
+  client_user.update!(status: "active", role: "client")
+  first_contact.update!(user: client_user)
+end
 
 # --------------------------------------------------
 # Missions
@@ -582,6 +608,20 @@ candidates = []
 end
 
 puts "#{Candidate.count} candidates ready."
+
+first_candidate = Candidate.order(:id).first
+if first_candidate
+  candidate_user = User.find_or_create_by!(email: "candidate@rivyr.test") do |u|
+    u.password = "password"
+    u.first_name = first_candidate.first_name
+    u.last_name = first_candidate.last_name
+    u.phone = first_candidate.phone
+    u.status = "active"
+    u.role = "candidate"
+  end
+  candidate_user.update!(status: "active", role: "candidate")
+  first_candidate.update!(user: candidate_user)
+end
 
 # --------------------------------------------------
 # Placements

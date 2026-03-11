@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_10_142641) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_11_123000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -25,6 +25,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_142641) do
     t.string "source"
     t.string "status"
     t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["user_id"], name: "index_candidates_on_user_id", unique: true, where: "(user_id IS NOT NULL)"
   end
 
   create_table "client_contacts", force: :cascade do |t|
@@ -37,7 +39,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_142641) do
     t.string "phone"
     t.boolean "primary_contact"
     t.datetime "updated_at", null: false
+    t.bigint "user_id"
     t.index ["client_id"], name: "index_client_contacts_on_client_id"
+    t.index ["user_id"], name: "index_client_contacts_on_user_id", unique: true, where: "(user_id IS NOT NULL)"
   end
 
   create_table "clients", force: :cascade do |t|
@@ -178,13 +182,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_142641) do
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
+    t.string "role", default: "candidate", null: false
     t.string "status"
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "candidates", "users"
   add_foreign_key "client_contacts", "clients"
+  add_foreign_key "client_contacts", "users"
   add_foreign_key "commissions", "placements"
   add_foreign_key "freelancer_profiles", "regions"
   add_foreign_key "freelancer_profiles", "specialties"

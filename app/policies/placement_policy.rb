@@ -1,0 +1,2 @@
+class PlacementPolicy < ApplicationPolicy
+end

@@ -3,20 +3,24 @@ class ClientContactsController < ApplicationController
   before_action :set_clients, only: [ :new, :create, :edit, :update ]
 
   def index
+    authorize ClientContact
     @q = params[:q].to_s.strip
-    scope = ClientContact.includes(:client).order(:last_name, :first_name).search(@q)
+    scope = policy_scope(ClientContact).includes(:client).order(:last_name, :first_name).search(@q)
     @client_contacts = paginate(scope)
   end
 
   def show
+    authorize @client_contact
   end
 
   def new
     @client_contact = ClientContact.new
+    authorize @client_contact
   end
 
   def create
     @client_contact = ClientContact.new(client_contact_params)
+    authorize @client_contact
 
     if @client_contact.save
       redirect_to @client_contact, notice: "Contact client cree avec succes."
@@ -26,9 +30,12 @@ class ClientContactsController < ApplicationController
   end
 
   def edit
+    authorize @client_contact
   end
 
   def update
+    authorize @client_contact
+
     if @client_contact.update(client_contact_params)
       redirect_to @client_contact, notice: "Contact client mis a jour avec succes."
     else
@@ -37,6 +44,8 @@ class ClientContactsController < ApplicationController
   end
 
   def destroy
+    authorize @client_contact
+
     if @client_contact.destroy
       redirect_to client_contacts_path, status: :see_other, notice: "Contact client supprime avec succes."
     else
@@ -51,7 +60,7 @@ class ClientContactsController < ApplicationController
   end
 
   def set_clients
-    @clients = Client.order(:legal_name)
+    @clients = policy_scope(Client).order(:legal_name)
   end
 
   def client_contact_params

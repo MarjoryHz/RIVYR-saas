@@ -2,8 +2,12 @@
   <div class="flex items-center justify-between">
     <h1 class="text-2xl font-bold"><%= @mission.title %></h1>
     <div class="flex gap-2">
-      <%= link_to "Modifier", edit_mission_path(@mission), class: "btn btn-primary" %>
-      <%= link_to "Supprimer", mission_path(@mission), data: { turbo_method: :delete, turbo_confirm: "Confirmer la suppression ?" }, class: "btn btn-error" %>
+      <% if policy(@mission).edit? %>
+        <%= link_to "Modifier", edit_mission_path(@mission), class: "btn btn-primary" %>
+      <% end %>
+      <% if policy(@mission).destroy? %>
+        <%= link_to "Supprimer", mission_path(@mission), data: { turbo_method: :delete, turbo_confirm: "Confirmer la suppression ?" }, class: "btn btn-error" %>
+      <% end %>
     </div>
   </div>
 
@@ -12,8 +16,13 @@
     <p><strong>Statut:</strong> <%= @mission.status %></p>
     <p><strong>Type:</strong> <%= @mission.mission_type.presence || "-" %></p>
     <p><strong>Priorite:</strong> <%= @mission.priority_level.presence || "-" %></p>
-    <p><strong>Client:</strong> <%= @mission.client_contact.client.legal_name %></p>
-    <p><strong>Contact:</strong> <%= [@mission.client_contact.first_name, @mission.client_contact.last_name].join(" ") %></p>
+    <% if policy(@mission).view_client_identity? %>
+      <p><strong>Client:</strong> <%= @mission.client_contact.client.legal_name %></p>
+      <p><strong>Contact:</strong> <%= [@mission.client_contact.first_name, @mission.client_contact.last_name].join(" ") %></p>
+    <% else %>
+      <p><strong>Client:</strong> Confidentiel</p>
+      <p><strong>Contact:</strong> Confidentiel</p>
+    <% end %>
     <p><strong>Freelancer:</strong> <%= [@mission.freelancer_profile.user.first_name, @mission.freelancer_profile.user.last_name].join(" ") %></p>
     <p><strong>Region:</strong> <%= @mission.region.name %></p>
     <p><strong>Specialite:</strong> <%= @mission.specialty.name %></p>

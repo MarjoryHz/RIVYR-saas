@@ -24,6 +24,8 @@ class ActionDispatch::IntegrationTest
       email: "test-#{SecureRandom.hex(6)}@example.test",
       password: "password123",
       password_confirmation: "password123",
+      status: "active",
+      role: "admin",
       first_name: "Test",
       last_name: "User"
     )

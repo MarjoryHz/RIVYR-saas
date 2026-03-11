@@ -1,7 +1,9 @@
 <div class="max-w-6xl mx-auto p-6 space-y-6">
   <div class="flex items-center justify-between">
     <h1 class="text-2xl font-bold">Missions</h1>
-    <%= link_to "Nouvelle mission", new_mission_path, class: "btn btn-primary" %>
+    <% if policy(Mission).new? %>
+      <%= link_to "Nouvelle mission", new_mission_path, class: "btn btn-primary" %>
+    <% end %>
   </div>
   <%= render "shared/index_filters", path: missions_path, q: @q, status: @status, status_options: Mission.statuses.keys, status_param: :status %>
 
@@ -12,7 +14,9 @@
           <tr>
             <th>Reference</th>
             <th>Titre</th>
-            <th>Client</th>
+            <% if policy(Mission).view_client_identity? %>
+              <th>Client</th>
+            <% end %>
             <th>Statut</th>
             <th></th>
           </tr>
@@ -22,7 +26,9 @@
             <tr>
               <td><%= mission.reference %></td>
               <td><%= mission.title %></td>
-              <td><%= mission.client_contact.client.legal_name %></td>
+              <% if policy(Mission).view_client_identity? %>
+                <td><%= mission.client_contact.client.legal_name %></td>
+              <% end %>
               <td><%= mission.status %></td>
               <td class="text-right">
                 <%= link_to "Voir", mission_path(mission), class: "btn btn-sm" %>
@@ -34,7 +40,9 @@
     <% else %>
       <div class="p-8 text-center space-y-3">
         <p class="text-lg font-medium">Aucune mission pour le moment</p>
-        <%= link_to "Creer la premiere mission", new_mission_path, class: "btn btn-primary" %>
+        <% if policy(Mission).new? %>
+          <%= link_to "Creer la premiere mission", new_mission_path, class: "btn btn-primary" %>
+        <% end %>
       </div>
     <% end %>
   </div>
