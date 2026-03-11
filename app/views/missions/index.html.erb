@@ -1,50 +1,158 @@
-<div class="max-w-6xl mx-auto p-6 space-y-6">
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-bold">Missions</h1>
-    <% if policy(Mission).new? %>
-      <%= link_to "Nouvelle mission", new_mission_path, class: "btn btn-primary" %>
-    <% end %>
-  </div>
-  <%= render "shared/index_filters", path: missions_path, q: @q, status: @status, status_options: Mission.statuses.keys, status_param: :status %>
+<% if current_user.role_freelance? %>
+  <div class="mx-auto max-w-7xl p-4 md:p-6">
+    <section class="space-y-6">
+      <header class="space-y-3">
+        <h1 class="text-3xl font-semibold tracking-tight text-base-content md:text-4xl">Missions</h1>
+        <p class="max-w-3xl text-base text-base-content/70 md:text-lg">
+          Accedez a vos missions en cours et decouvrez de nouvelles missions.
+        </p>
+      </header>
 
-  <div class="overflow-x-auto bg-base-100 rounded-lg">
-    <% if @missions.any? %>
-      <table class="table w-full">
-        <thead>
-          <tr>
-            <th>Reference</th>
-            <th>Titre</th>
-            <% if policy(Mission).view_client_identity? %>
-              <th>Client</th>
-            <% end %>
-            <th>Statut</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @missions.each do |mission| %>
-            <tr>
-              <td><%= mission.reference %></td>
-              <td><%= mission.title %></td>
-              <% if policy(Mission).view_client_identity? %>
-                <td><%= mission.client_contact.client.legal_name %></td>
+      <div class="grid gap-6 xl:grid-cols-2">
+        <%= link_to missions_path(scope: "my_missions"), class: "group flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-base-100/70 bg-base-100/88 shadow-lg transition hover:-translate-y-1 hover:shadow-xl" do %>
+          <div class="h-40 bg-gradient-to-br from-rose-100 via-pink-50 to-orange-50">
+            <%= image_tag "img_mes_missions.svg", alt: "Mes missions", class: "h-full w-full object-cover" %>
+          </div>
+          <div class="flex flex-1 flex-col space-y-4 p-5">
+            <div class="space-y-2">
+              <h2 class="text-2xl font-semibold text-base-content">Mes missions en cours</h2>
+              <div class="space-y-1 text-base-content/70">
+                <p><span class="text-3xl font-semibold text-primary"><%= @current_missions_count %></span> missions en cours</p>
+                <p>
+                  <span class="font-semibold text-primary"><%= @pending_response_count %></span> en attente de reponse
+                  <span class="mx-2 text-base-content/30">|</span>
+                  <span class="font-semibold text-secondary"><%= @accepted_offers_count %></span> offres acceptees
+                </p>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <% if @current_missions.any? %>
+                <% @current_missions.each do |mission| %>
+                  <div class="flex items-center justify-between rounded-2xl border border-base-200 bg-base-100/80 px-4 py-3">
+                    <div class="min-w-0">
+                      <p class="truncate text-lg font-medium text-base-content"><%= mission.title %></p>
+                      <p class="truncate text-sm text-base-content/65">
+                        <%= mission.client_contact.client.brand_name.presence || mission.client_contact.client.legal_name %>
+                        <% if mission.region.present? %>
+                          <span class="mx-1 text-base-content/30">•</span>
+                          <%= mission.region.name %>
+                        <% end %>
+                      </p>
+                    </div>
+                    <i class="fa-solid fa-angle-right text-primary"></i>
+                  </div>
+                <% end %>
+              <% else %>
+                <div class="rounded-2xl border border-base-200 bg-base-100/80 px-4 py-5 text-sm text-base-content/65">
+                  Aucune mission active pour le moment.
+                </div>
               <% end %>
-              <td><%= mission.status %></td>
-              <td class="text-right">
-                <%= link_to "Voir", mission_path(mission), class: "btn btn-sm" %>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    <% else %>
-      <div class="p-8 text-center space-y-3">
-        <p class="text-lg font-medium">Aucune mission pour le moment</p>
-        <% if policy(Mission).new? %>
-          <%= link_to "Creer la premiere mission", new_mission_path, class: "btn btn-primary" %>
+            </div>
+
+            <div class="mt-auto flex justify-end pt-1">
+              <span class="inline-flex items-center gap-2 rounded-full border border-[#f1a38b] bg-[#f4a58a] px-5 py-3 text-base font-semibold text-white shadow-sm">
+                <i class="fa-solid fa-circle-check"></i>
+                Voir mes missions
+              </span>
+            </div>
+          </div>
+        <% end %>
+
+        <%= link_to missions_path(scope: "library", status: "open"), class: "group flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-base-100/70 bg-base-100/88 shadow-lg transition hover:-translate-y-1 hover:shadow-xl" do %>
+          <div class="h-40 bg-gradient-to-br from-rose-100 via-pink-50 to-orange-50">
+            <%= image_tag "img_lib_missions.svg", alt: "Bibliotheque de missions", class: "h-full w-full object-cover" %>
+          </div>
+          <div class="flex flex-1 flex-col space-y-4 p-5">
+            <div class="space-y-2">
+              <h2 class="text-2xl font-semibold text-base-content">Bibliotheque de missions</h2>
+              <p class="text-base text-base-content/70">
+                Explorez et postulez aux missions disponibles sur Rivyr.
+              </p>
+            </div>
+
+            <div class="space-y-3">
+              <% if @library_missions.any? %>
+                <% @library_missions.each do |mission| %>
+                  <div class="flex items-center justify-between rounded-2xl border border-base-200 bg-base-100/80 px-4 py-3">
+                    <div class="min-w-0">
+                      <p class="truncate text-lg font-medium text-base-content"><%= mission.title %></p>
+                      <p class="truncate text-sm text-base-content/65">
+                        <%= mission.region&.name || "Region a confirmer" %>
+                        <span class="mx-1 text-base-content/30">•</span>
+                        <%= mission.mission_type.presence || mission.specialty&.name || "Mission ouverte" %>
+                      </p>
+                    </div>
+                    <i class="fa-solid fa-angle-right text-primary"></i>
+                  </div>
+                <% end %>
+              <% else %>
+                <div class="rounded-2xl border border-base-200 bg-base-100/80 px-4 py-5 text-sm text-base-content/65">
+                  Aucune mission disponible dans la bibliotheque pour l'instant.
+                </div>
+              <% end %>
+            </div>
+
+            <div class="mt-auto flex justify-end pt-1">
+              <span class="inline-flex items-center gap-2 rounded-full border border-[#f1a38b] bg-[#f4a58a] px-5 py-3 text-base font-semibold text-white shadow-sm">
+                <i class="fa-solid fa-star"></i>
+                Acceder a la bibliotheque
+              </span>
+            </div>
+          </div>
         <% end %>
       </div>
-    <% end %>
+    </section>
   </div>
-  <%= render "shared/pagination", page: @page, total_pages: @total_pages, extra_params: { q: @q, status: @status }, path: ->(params) { missions_path(params) } %>
-</div>
+<% else %>
+  <div class="max-w-6xl mx-auto p-6 space-y-6">
+    <div class="flex items-center justify-between">
+      <h1 class="text-2xl font-bold">Missions</h1>
+      <% if policy(Mission).new? %>
+        <%= link_to "Nouvelle mission", new_mission_path, class: "btn btn-primary" %>
+      <% end %>
+    </div>
+    <%= render "shared/index_filters", path: missions_path, q: @q, status: @status, status_options: Mission.statuses.keys, status_param: :status %>
+
+    <div class="overflow-x-auto bg-base-100 rounded-lg">
+      <% if @missions.any? %>
+        <table class="table w-full">
+          <thead>
+            <tr>
+              <th>Reference</th>
+              <th>Titre</th>
+              <% if policy(Mission).view_client_identity? %>
+                <th>Client</th>
+              <% end %>
+              <th>Statut</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @missions.each do |mission| %>
+              <tr>
+                <td><%= mission.reference %></td>
+                <td><%= mission.title %></td>
+                <% if policy(Mission).view_client_identity? %>
+                  <td><%= mission.client_contact.client.legal_name %></td>
+                <% end %>
+                <td><%= mission.status %></td>
+                <td class="text-right">
+                  <%= link_to "Voir", mission_path(mission), class: "btn btn-sm" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <div class="p-8 text-center space-y-3">
+          <p class="text-lg font-medium">Aucune mission pour le moment</p>
+          <% if policy(Mission).new? %>
+            <%= link_to "Creer la premiere mission", new_mission_path, class: "btn btn-primary" %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    <%= render "shared/pagination", page: @page, total_pages: @total_pages, extra_params: { q: @q, status: @status }, path: ->(params) { missions_path(params) } %>
+  </div>
+<% end %>
