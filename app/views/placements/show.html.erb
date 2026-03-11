@@ -14,13 +14,23 @@ when "network" then "fa-solid fa-user-group text-primary"
 when "referral" then "fa-solid fa-handshake text-secondary"
 else "fa-solid fa-bullseye text-accent"
 end %>
+<% action_button_base = "btn btn-sm rounded-full border shadow-sm transition" %>
+<% action_button_tone = lambda do |style|
+  case style
+  when "btn-primary"
+    "border-[#f1a38b] bg-[#f4a58a] text-white hover:border-[#e39479] hover:bg-[#ee977c]"
+  when "btn-secondary"
+    "border-[#f0a1b2] bg-[#feeff3] text-[#b44a66] hover:border-[#e58ea3] hover:bg-[#fde3ea]"
+  when "btn-accent"
+    "border-[#f5b38f] bg-[#fff0e5] text-[#c56a42] hover:border-[#eca178] hover:bg-[#ffe5d4]"
+  else
+    "border-base-200 bg-base-100/90 text-[#7a4a55] hover:border-base-300 hover:bg-base-100"
+  end
+end %>
 
 <div class="mx-auto max-w-7xl p-4 md:p-6">
-  <section class="relative overflow-hidden rounded-[2rem] border border-base-100/70 bg-gradient-to-br from-rose-100 via-pink-50 to-orange-50 p-4 shadow-xl md:p-6">
-    <div class="pointer-events-none absolute -left-24 -top-20 h-80 w-80 rounded-full bg-secondary/15 blur-3xl"></div>
-    <div class="pointer-events-none absolute -right-16 top-20 h-72 w-72 rounded-full bg-primary/15 blur-3xl"></div>
-
-    <div class="relative z-10 space-y-4">
+  <section class="space-y-4">
+    <div class="placement-summary-sticky space-y-4">
       <header class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div class="space-y-1">
           <p class="badge badge-ghost border-base-300/60 bg-base-100/70">Finance Mission</p>
@@ -44,20 +54,24 @@ end %>
         </div>
       </header>
 
-      <div class="flex flex-wrap gap-2 rounded-xl border border-base-200/70 bg-base-100/80 p-3">
+      <div class="flex flex-wrap gap-2">
         <% @stage_actions.each do |action| %>
+          <% action_style = action[:label] == "Voir details mission" ? "btn-primary" : action[:style] %>
+          <% action_class = "#{action_button_base} #{action_button_tone.call(action_style)}" %>
           <% if action[:kind] == :post %>
-            <%= button_to action[:label], action[:path], params: action[:params] || {}, class: "btn btn-sm #{action[:style]}" %>
+            <%= button_to action[:label], action[:path], params: action[:params] || {}, class: action_class %>
           <% else %>
-            <%= link_to action[:label], action[:path], class: "btn btn-sm #{action[:style]}" %>
+            <%= link_to action[:label], action[:path], class: action_class %>
           <% end %>
         <% end %>
-        <%= link_to "Demander un avis client", "mailto:#{@mission.client_contact.email}?subject=Retour%20mission%20RIVYR&body=Bonjour%2C%20pourriez-vous%20laisser%20un%20retour%20sur%20la%20mission%20et%20notre%20accompagnement%20%3F", class: "btn btn-outline btn-sm" %>
+        <%= link_to "Demander un avis client", "mailto:#{@mission.client_contact.email}?subject=Retour%20mission%20RIVYR&body=Bonjour%2C%20pourriez-vous%20laisser%20un%20retour%20sur%20la%20mission%20et%20notre%20accompagnement%20%3F", class: "#{action_button_base} #{action_button_tone.call('btn-primary')}" %>
       </div>
+    </div>
 
+    <div class="placement-content-scroll space-y-4">
       <div class="card border border-base-100/70 bg-base-100/86 shadow">
         <div class="card-body p-4">
-          <div class="overflow-x-auto">
+          <div class="placement-timeline-scroll">
             <div class="flex min-w-[1250px] items-start gap-0">
               <% @stage_states.each_with_index do |step, index| %>
                 <div class="flex min-w-[190px] items-start">
@@ -192,7 +206,7 @@ end %>
         <aside class="xl:col-span-3 card border border-base-100/70 bg-base-100/90 shadow">
           <div class="card-body p-4">
             <h2 class="text-xl font-semibold text-base-content">Suivi Rivyr</h2>
-            <div class="mt-2 space-y-2">
+            <div class="placement-followups-scroll mt-2 space-y-2">
               <% if @rivyr_followups.any? %>
                 <% @rivyr_followups.first(10).each do |event| %>
                   <% badge_class = case event[:tone]

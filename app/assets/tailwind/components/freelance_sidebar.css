@@ -1,20 +1,17 @@
 @layer components {
   :root {
-    --freelance-sidebar-shell-bg: #ffd3d8;
-    --freelance-sidebar-page-bg: #fff7f5;
+    --freelance-sidebar-shell-bg: rgba(255, 247, 245, 0.9);
     --freelance-sidebar-text: #4b1f1f;
+    --freelance-sidebar-border: rgba(255, 255, 255, 0.72);
+    --freelance-sidebar-surface: rgba(255, 255, 255, 0.8);
+    --freelance-sidebar-highlight: rgba(255, 255, 255, 0.86);
   }
 
   .freelance-sidebar {
     position: fixed;
-    top: 5.5rem;
+    top: 7rem;
     left: 0;
     z-index: 30;
-  }
-
-  body.has-freelance-sidebar,
-  body.has-freelance-sidebar .freelance-sidebar-layout {
-    background: #f9eeed;
   }
 
   .freelance-sidebar__toggle {
@@ -23,13 +20,15 @@
 
   .freelance-sidebar__shell {
     width: 14.75rem;
-    height: calc(100vh - 5.5rem);
+    height: calc(100vh - 7rem);
     display: flex;
     flex-direction: column;
     overflow: visible;
     border-radius: 0 1.05rem 0 0;
+    border: 1px solid var(--freelance-sidebar-border);
     background: var(--freelance-sidebar-shell-bg);
     color: var(--freelance-sidebar-text);
+    backdrop-filter: blur(10px);
     box-shadow: -14px 18px 32px rgba(75, 31, 31, 0.1);
     transition: width 0.25s ease;
   }
@@ -89,7 +88,7 @@
   }
 
   .freelance-sidebar__content::-webkit-scrollbar-thumb {
-    background: #e22d2d;
+    background: rgba(252, 137, 107, 0.7);
     border-radius: 999px;
   }
 
@@ -113,6 +112,7 @@
     min-height: 3.75rem;
     padding: 0 0.85rem;
     border-radius: 1.5rem;
+    border: 1px solid transparent;
     font-size: 1rem;
     font-weight: 600;
     color: var(--freelance-sidebar-text);
@@ -125,7 +125,9 @@
     left: 0.9rem;
     right: 0;
     height: 4rem;
-    background: #f5eae8;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(2px);
     border-radius: 1.45rem 0 0 1.45rem;
     z-index: 0;
     pointer-events: none;
@@ -145,12 +147,12 @@
 
   .freelance-sidebar__active-highlight::before {
     bottom: 100%;
-    box-shadow: 1rem 1rem 0 0 #f5eae8;
+    box-shadow: 1rem 1rem 0 0 rgba(255, 255, 255, 0.18);
   }
 
   .freelance-sidebar__active-highlight::after {
     top: 100%;
-    box-shadow: 1rem -1rem 0 0 #f5eae8;
+    box-shadow: 1rem -1rem 0 0 rgba(255, 255, 255, 0.18);
   }
 
   .freelance-sidebar__item--active {
@@ -170,7 +172,7 @@
   }
 
   .freelance-sidebar__item:hover:not(.freelance-sidebar__item--active) {
-    background: rgba(255, 247, 245, 0.45);
+    background: var(--freelance-sidebar-surface);
   }
 
   .freelance-sidebar__item--disabled {
@@ -186,7 +188,8 @@
     margin: 0;
     padding: 1rem 1.25rem;
     border-radius: 0;
-    background: #fe5771;
+    border-top: 1px solid #f1a38b;
+    background: #f4a58a;
     color: #fff;
   }
 
@@ -197,8 +200,8 @@
     width: 3.25rem;
     height: 3.25rem;
     border-radius: 999px;
-    background: #2f1616;
-    color: #fff3ef;
+    background: rgba(255, 255, 255, 0.88);
+    color: #cf6f55;
     font-weight: 700;
   }
 
@@ -215,7 +218,7 @@
   }
 
   .freelance-sidebar-layout {
-    padding-left: 18.25rem;
+    padding-left: 14.8rem;
   }
 
   #freelance-sidebar-toggle:checked + .freelance-sidebar__shell {
@@ -267,7 +270,7 @@
   }
 
   body:has(#freelance-sidebar-toggle:checked) .freelance-sidebar-layout {
-    padding-left: 7.4rem;
+    padding-left: 5.2rem;
   }
 
   @media (max-width: 1024px) {
