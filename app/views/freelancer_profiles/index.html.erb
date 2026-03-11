@@ -1,7 +1,9 @@
 <div class="max-w-6xl mx-auto p-6 space-y-6">
   <div class="flex items-center justify-between">
     <h1 class="text-2xl font-bold">Freelancer profiles</h1>
-    <%= link_to "Nouveau profil", new_freelancer_profile_path, class: "btn btn-primary" %>
+    <% if policy(FreelancerProfile).new? %>
+      <%= link_to "Nouveau profil", new_freelancer_profile_path, class: "btn btn-primary" %>
+    <% end %>
   </div>
   <%= render "shared/index_filters", path: freelancer_profiles_path, q: @q, status: @operational_status, status_options: FreelancerProfile.operational_statuses.keys, status_param: :operational_status %>
 
@@ -36,7 +38,9 @@
     <% else %>
       <div class="p-8 text-center space-y-3">
         <p class="text-lg font-medium">Aucun profil freelancer pour le moment</p>
-        <%= link_to "Creer le premier profil", new_freelancer_profile_path, class: "btn btn-primary" %>
+        <% if policy(FreelancerProfile).new? %>
+          <%= link_to "Creer le premier profil", new_freelancer_profile_path, class: "btn btn-primary" %>
+        <% end %>
       </div>
     <% end %>
   </div>

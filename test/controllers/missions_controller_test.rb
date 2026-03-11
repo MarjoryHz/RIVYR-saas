@@ -62,4 +62,56 @@ class MissionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to missions_path
   end
+
+  test "freelance cannot access missions that do not belong to them" do
+    sign_out :user
+    sign_in_as(users(:one))
+
+    foreign_mission = missions(:two)
+    get mission_url(foreign_mission)
+
+    assert_redirected_to root_path
+    assert_equal "Vous n'etes pas autorise a effectuer cette action.", flash[:alert]
+  end
+
+  test "client can only access their own missions" do
+    sign_out :user
+    client_user = User.create!(
+      email: "client-#{SecureRandom.hex(4)}@example.test",
+      password: "password123",
+      password_confirmation: "password123",
+      first_name: "Client",
+      last_name: "User",
+      status: "active",
+      role: "client"
+    )
+    client_contacts(:one).update!(user: client_user)
+    sign_in_as(client_user)
+
+    get mission_url(missions(:one))
+    assert_response :success
+
+    get mission_url(missions(:two))
+    assert_redirected_to root_path
+    assert_equal "Vous n'etes pas autorise a effectuer cette action.", flash[:alert]
+  end
+
+  test "candidate can view a mission but not client identity details" do
+    sign_out :user
+    candidate_user = User.create!(
+      email: "candidate-#{SecureRandom.hex(4)}@example.test",
+      password: "password123",
+      password_confirmation: "password123",
+      first_name: "Candidate",
+      last_name: "User",
+      status: "active",
+      role: "candidate"
+    )
+    sign_in_as(candidate_user)
+
+    get mission_url(@mission)
+
+    assert_response :success
+    assert_includes @response.body, "Confidentiel"
+  end
 end

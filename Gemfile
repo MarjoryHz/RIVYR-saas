@@ -43,6 +43,7 @@ gem "thruster", require: false
 gem "image_processing", "~> 1.2"
 
 gem "devise"
+gem "pundit"
 gem "simple_form"
 gem "simple_form-tailwind"
 group :development, :test do

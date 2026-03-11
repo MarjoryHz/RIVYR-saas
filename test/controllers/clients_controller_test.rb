@@ -12,6 +12,41 @@ class ClientsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_user_session_path
   end
 
+  test "forbids inactive users on index" do
+    sign_out :user
+    sign_in_as(User.create!(
+      email: "inactive-#{SecureRandom.hex(4)}@example.test",
+      password: "password123",
+      password_confirmation: "password123",
+      first_name: "Inactive",
+      last_name: "User",
+      status: "inactive"
+    ))
+
+    get clients_url
+
+    assert_redirected_to root_path
+    assert_equal "Vous n'etes pas autorise a effectuer cette action.", flash[:alert]
+  end
+
+  test "forbids non admin users on index" do
+    sign_out :user
+    sign_in_as(User.create!(
+      email: "freelance-#{SecureRandom.hex(4)}@example.test",
+      password: "password123",
+      password_confirmation: "password123",
+      first_name: "Freelance",
+      last_name: "User",
+      status: "active",
+      role: "freelance"
+    ))
+
+    get clients_url
+
+    assert_redirected_to root_path
+    assert_equal "Vous n'etes pas autorise a effectuer cette action.", flash[:alert]
+  end
+
   test "creates a client" do
     assert_difference("Client.count", 1) do
       post clients_url, params: {

@@ -11,6 +11,7 @@ one:
   last_name: User
   phone: "0600000001"
   status: active
+  role: freelance
 
 two:
   email: two@example.test
@@ -19,3 +20,4 @@ two:
   last_name: User
   phone: "0600000002"
   status: active
+  role: admin

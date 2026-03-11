@@ -39,15 +39,31 @@
     </div>
   </div>
 
-  <div>
-    <%= f.label :client_contact_id, "Contact client", class: "block font-medium" %>
-    <%= f.collection_select :client_contact_id, @client_contacts, :id, ->(c) { "#{c.first_name} #{c.last_name} - #{c.client.legal_name}" }, { prompt: "Selectionner un contact" }, { class: "select select-bordered w-full" } %>
-  </div>
+  <% if current_user.role_client? %>
+    <div>
+      <p class="block font-medium">Contact client</p>
+      <p><%= [current_user.client_contact&.first_name, current_user.client_contact&.last_name].compact.join(" ").presence || "-" %></p>
+      <%= f.hidden_field :client_contact_id, value: current_user.client_contact&.id %>
+    </div>
+  <% else %>
+    <div>
+      <%= f.label :client_contact_id, "Contact client", class: "block font-medium" %>
+      <%= f.collection_select :client_contact_id, @client_contacts, :id, ->(c) { "#{c.first_name} #{c.last_name} - #{c.client.legal_name}" }, { prompt: "Selectionner un contact" }, { class: "select select-bordered w-full" } %>
+    </div>
+  <% end %>
 
-  <div>
-    <%= f.label :freelancer_profile_id, "Freelancer", class: "block font-medium" %>
-    <%= f.collection_select :freelancer_profile_id, @freelancer_profiles, :id, ->(fp) { "#{fp.user.first_name} #{fp.user.last_name}" }, { prompt: "Selectionner un freelancer" }, { class: "select select-bordered w-full" } %>
-  </div>
+  <% if current_user.role_freelance? %>
+    <div>
+      <p class="block font-medium">Freelancer</p>
+      <p><%= [current_user.first_name, current_user.last_name].join(" ") %></p>
+      <%= f.hidden_field :freelancer_profile_id, value: current_user.freelancer_profile&.id %>
+    </div>
+  <% else %>
+    <div>
+      <%= f.label :freelancer_profile_id, "Freelancer", class: "block font-medium" %>
+      <%= f.collection_select :freelancer_profile_id, @freelancer_profiles, :id, ->(fp) { "#{fp.user.first_name} #{fp.user.last_name}" }, { prompt: "Selectionner un freelancer" }, { class: "select select-bordered w-full" } %>
+    </div>
+  <% end %>
 
   <div class="grid md:grid-cols-2 gap-4">
     <div>

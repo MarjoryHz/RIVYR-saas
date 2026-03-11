@@ -1,7 +1,14 @@
 class ApplicationController < ActionController::Base
+  include Pundit::Authorization
+
   before_action :authenticate_user!
+  rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
 
   private
+
+  def user_not_authorized
+    redirect_back_or_to(root_path, alert: "Vous n'etes pas autorise a effectuer cette action.")
+  end
 
   def paginate(scope, per_page: 20)
     total_count = scope.count

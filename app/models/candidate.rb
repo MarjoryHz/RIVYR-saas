@@ -8,6 +8,7 @@ class Candidate < ApplicationRecord
   }, prefix: true
 
   has_many :placements, dependent: :nullify
+  belongs_to :user, optional: true
 
   validates :first_name, presence: true
   validates :last_name, presence: true

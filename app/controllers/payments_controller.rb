@@ -3,13 +3,15 @@ class PaymentsController < ApplicationController
   before_action :set_form_collections, only: [ :new, :create, :edit, :update ]
 
   def index
+    authorize Payment
     @q = params[:q].to_s.strip
     @status = params[:status].to_s.strip
-    scope = Payment.includes(:invoice, :commission).order(created_at: :desc).search(@q).with_status(@status)
+    scope = policy_scope(Payment).includes(:invoice, :commission).order(created_at: :desc).search(@q).with_status(@status)
     @payments = paginate(scope)
   end
 
   def show
+    authorize @payment
   end
 
   def new
@@ -17,10 +19,12 @@ class PaymentsController < ApplicationController
       invoice_id: params[:invoice_id],
       commission_id: params[:commission_id]
     )
+    authorize @payment
   end
 
   def create
     @payment = Payment.new(payment_params)
+    authorize @payment
 
     if @payment.save
       redirect_to @payment, notice: "Paiement cree avec succes."
@@ -30,9 +34,12 @@ class PaymentsController < ApplicationController
   end
 
   def edit
+    authorize @payment
   end
 
   def update
+    authorize @payment
+
     if @payment.update(payment_params)
       redirect_to @payment, notice: "Paiement mis a jour avec succes."
     else
@@ -41,6 +48,8 @@ class PaymentsController < ApplicationController
   end
 
   def destroy
+    authorize @payment
+
     if @payment.destroy
       redirect_to payments_path, status: :see_other, notice: "Paiement supprime avec succes."
     else
@@ -55,8 +64,8 @@ class PaymentsController < ApplicationController
   end
 
   def set_form_collections
-    @invoices = Invoice.order(:number)
-    @commissions = Commission.order(:id)
+    @invoices = policy_scope(Invoice).order(:number)
+    @commissions = policy_scope(Commission).order(:id)
   end
 
   def payment_params
