@@ -64,7 +64,7 @@
           </div>
         <% end %>
 
-        <%= link_to missions_path(scope: "library", status: "open"), class: "group flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-base-100/70 bg-base-100/88 shadow-lg transition hover:-translate-y-1 hover:shadow-xl" do %>
+        <div class="group flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-base-100/70 bg-base-100/88 shadow-lg transition hover:-translate-y-1 hover:shadow-xl">
           <div class="h-40 bg-gradient-to-br from-rose-100 via-pink-50 to-orange-50">
             <%= image_tag "img_lib_missions.svg", alt: "Bibliotheque de missions", class: "h-full w-full object-cover" %>
           </div>
@@ -99,13 +99,13 @@
             </div>
 
             <div class="mt-auto flex justify-end pt-1">
-              <span class="inline-flex items-center gap-2 rounded-full border border-[#f1a38b] bg-[#f4a58a] px-5 py-3 text-base font-semibold text-white shadow-sm">
+              <%= link_to library_missions_path(status: "open"), class: "inline-flex items-center gap-2 rounded-full border border-[#f1a38b] bg-[#f4a58a] px-5 py-3 text-base font-semibold text-white shadow-sm" do %>
                 <i class="fa-solid fa-star"></i>
                 Acceder a la bibliotheque
-              </span>
+              <% end %>
             </div>
           </div>
-        <% end %>
+        </div>
       </div>
     </section>
   </div>

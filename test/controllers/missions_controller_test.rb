@@ -114,4 +114,158 @@ class MissionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes @response.body, "Confidentiel"
   end
+
+  test "freelance can view open library mission without client identity" do
+    sign_out :user
+    sign_in_as(users(:one))
+
+    client = clients(:two)
+    client.update!(legal_name: "Societe Secrete", company_size: "450")
+    mission = create_library_mission!(
+      title: "Mission Library Open",
+      reference: "MIS-LIB-SHOW",
+      freelancer_profile: freelancer_profiles(:two),
+      specialty: specialties(:one),
+      origin_type: "rivyr",
+      status: "open"
+    )
+
+    get mission_url(mission)
+
+    assert_response :success
+    assert_not_includes @response.body, "Societe Secrete"
+    assert_includes @response.body, "ETI"
+  end
+
+  test "library redirects non freelance users" do
+    get library_missions_url
+
+    assert_redirected_to missions_path
+    assert_equal "La bibliotheque de missions est reservee aux freelances.", flash[:alert]
+  end
+
+  test "freelance can access library page" do
+    sign_out :user
+    sign_in_as(users(:one))
+
+    create_library_mission!(
+      title: "Mission RIVYR Visible",
+      reference: "MIS-LIB-RIVYR",
+      freelancer_profile: freelancer_profiles(:two),
+      specialty: specialties(:one),
+      origin_type: "rivyr",
+      status: "open"
+    )
+
+    get library_missions_url
+
+    assert_response :success
+    assert_includes @response.body, "Bibliotheque de missions"
+    assert_includes @response.body, "Suggestions pour vous"
+  end
+
+  test "library only shows open missions from admin pool" do
+    sign_out :user
+    sign_in_as(users(:one))
+
+    create_library_mission!(
+      title: "Mission Pool Admin",
+      reference: "MIS-LIB-POOL-OPEN",
+      freelancer_profile: freelancer_profiles(:two),
+      specialty: specialties(:one),
+      origin_type: "partner",
+      status: "open"
+    )
+    create_library_mission!(
+      title: "Mission Hors Pool",
+      reference: "MIS-LIB-HORS-POOL",
+      freelancer_profile: freelancer_profiles(:one),
+      specialty: specialties(:one),
+      origin_type: "rivyr",
+      status: "open"
+    )
+    create_library_mission!(
+      title: "Mission Pool Fermee",
+      reference: "MIS-LIB-POOL-CLOSED",
+      freelancer_profile: freelancer_profiles(:two),
+      specialty: specialties(:one),
+      origin_type: "rivyr",
+      status: "closed"
+    )
+
+    get library_missions_url
+
+    assert_response :success
+    assert_includes @response.body, "Mission Pool Admin"
+    assert_not_includes @response.body, "Mission Hors Pool"
+    assert_not_includes @response.body, "Mission Pool Fermee"
+  end
+
+  test "library exposes 4 suggestions max and full library list below" do
+    sign_out :user
+    sign_in_as(users(:one))
+
+    6.times do |index|
+      create_library_mission!(
+        title: "Mission Suggestion #{index}",
+        reference: "MIS-LIB-SUGG-#{index}",
+        freelancer_profile: freelancer_profiles(:two),
+        specialty: specialties(:one),
+        origin_type: "rivyr",
+        status: "open"
+      )
+    end
+
+    get library_missions_url
+
+    assert_response :success
+    assert_includes @response.body, "Suggestions pour vous"
+    assert_includes @response.body, "Bibliotheque de missions disponibles"
+    assert_equal 4, @response.body.scan("radial-progress").size
+    assert_includes @response.body, "Mission Suggestion 5"
+  end
+
+  test "library applies q and status filters" do
+    sign_out :user
+    sign_in_as(users(:one))
+
+    create_library_mission!(
+      title: "Mission Filtre Cible",
+      reference: "MIS-LIB-FILTER-OK",
+      freelancer_profile: freelancer_profiles(:two),
+      specialty: specialties(:one),
+      origin_type: "client",
+      status: "open"
+    )
+    create_library_mission!(
+      title: "Mission Filtre Hors Statut",
+      reference: "MIS-LIB-FILTER-KO",
+      freelancer_profile: freelancer_profiles(:two),
+      specialty: specialties(:one),
+      origin_type: "client",
+      status: "closed"
+    )
+
+    get library_missions_url, params: { q: "Cible", status: "open" }
+
+    assert_response :success
+    assert_includes @response.body, "Mission Filtre Cible"
+    assert_not_includes @response.body, "Mission Filtre Hors Statut"
+  end
+
+  private
+
+  def create_library_mission!(title:, reference:, freelancer_profile:, specialty:, origin_type:, status:)
+    Mission.create!(
+      region: regions(:one),
+      freelancer_profile: freelancer_profile,
+      client_contact: client_contacts(:two),
+      specialty: specialty,
+      title: title,
+      reference: reference,
+      status: status,
+      opened_at: Date.current,
+      origin_type: origin_type
+    )
+  end
 end

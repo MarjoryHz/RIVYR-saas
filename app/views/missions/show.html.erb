@@ -20,7 +20,7 @@
       <p><strong>Client:</strong> <%= @mission.client_contact.client.legal_name %></p>
       <p><strong>Contact:</strong> <%= [@mission.client_contact.first_name, @mission.client_contact.last_name].join(" ") %></p>
     <% else %>
-      <p><strong>Client:</strong> Confidentiel</p>
+      <p><strong>Client:</strong> <%= mission_company_segment(@mission) %></p>
       <p><strong>Contact:</strong> Confidentiel</p>
     <% end %>
     <p><strong>Freelancer:</strong> <%= [@mission.freelancer_profile.user.first_name, @mission.freelancer_profile.user.last_name].join(" ") %></p>

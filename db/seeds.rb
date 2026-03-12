@@ -281,7 +281,23 @@ MISSIONS_DATA = [
   { reference: 'MIS-2026-017', client_legal_name: 'Littoral Agro Solutions SAS', specialty: 'Supply Chain', title: 'Responsable Logistique', priority: 'medium' },
   { reference: 'MIS-2026-018', client_legal_name: 'Euronextia Services SAS', specialty: 'Commercial', title: 'Head of Sales', priority: 'high' },
   { reference: 'MIS-2026-019', client_legal_name: 'Wallonie Engineering SA', specialty: 'Direction Generale', title: 'Directeur de Business Unit', priority: 'high' },
-  { reference: 'MIS-2026-020', client_legal_name: 'Seine Corporate Finance SAS', specialty: 'Juridique', title: 'Responsable Juridique', priority: 'medium' }
+  { reference: 'MIS-2026-020', client_legal_name: 'Seine Corporate Finance SAS', specialty: 'Juridique', title: 'Responsable Juridique', priority: 'medium' },
+
+  # 4 missions volontairement alignees avec le profil de Claire Dumont
+  { reference: 'MIS-2026-021', client_legal_name: 'Flandres Industrie SAS', specialty: 'Direction Generale', title: 'Directeur General Adjoint', priority: 'critical', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 40 },
+  { reference: 'MIS-2026-022', client_legal_name: 'Nord Logistics Group SAS', specialty: 'Direction Generale', title: 'Directeur des Operations Groupe', priority: 'high', status: 'open', origin_type: 'partner', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 18 },
+  { reference: 'MIS-2026-023', client_legal_name: 'Artois Conseil & Transformation SAS', specialty: 'Direction Generale', title: 'Directeur Transformation', priority: 'medium', status: 'open', origin_type: 'freelancer', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 12 },
+  { reference: 'MIS-2026-024', client_legal_name: 'Flandres Industrie SAS', specialty: 'Direction Generale', title: 'Directeur de Business Unit Industrie', priority: 'critical', status: 'open', origin_type: 'partner', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 5 },
+
+  # Missions supplementaires middle / top management
+  { reference: 'MIS-2026-025', client_legal_name: 'Hexa Retail Performance SAS', specialty: 'Marketing', title: 'Head of Growth', priority: 'high', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 30 },
+  { reference: 'MIS-2026-026', client_legal_name: 'BelgoTech Solutions SA', specialty: 'Digital & Produit', title: 'Chief Product Officer', priority: 'critical', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 27 },
+  { reference: 'MIS-2026-027', client_legal_name: 'Littoral Agro Solutions SAS', specialty: 'Industrie', title: 'Directeur Performance Industrielle', priority: 'high', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 24 },
+  { reference: 'MIS-2026-028', client_legal_name: 'Seine Corporate Finance SAS', specialty: 'Finance', title: 'Responsable M&A', priority: 'high', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 21 },
+  { reference: 'MIS-2026-029', client_legal_name: 'Euronextia Services SAS', specialty: 'Ressources Humaines', title: 'DRH Groupe', priority: 'critical', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 19 },
+  { reference: 'MIS-2026-030', client_legal_name: 'Cap Avenir Energie SAS', specialty: 'Supply Chain', title: 'Directeur Supply Chain Europe', priority: 'critical', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 16 },
+  { reference: 'MIS-2026-031', client_legal_name: 'Wallonie Engineering SA', specialty: 'Ingenierie', title: 'Directeur Projets Strategiques', priority: 'high', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 14 },
+  { reference: 'MIS-2026-032', client_legal_name: 'Nord Logistics Group SAS', specialty: 'Commercial', title: 'Directeur Grands Comptes', priority: 'high', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 11 }
 ].freeze
 
 PLACEMENTS_DATA = [
@@ -300,9 +316,10 @@ MISSION_SUMMARIES = [
 ].freeze
 
 COMPENSATION_SUMMARIES = [
-  "Package compose d un fixe attractif, d un variable selon le niveau de responsabilite et d avantages associes au poste.",
-  "Remuneration a definir selon experience, avec variable, vehicule ou avantages selon la fonction.",
-  "Package global competitif, construit pour attirer un profil senior capable de prendre rapidement de la hauteur."
+  "30 000EUR - 40 000EUR",
+  "45 000EUR - 60 000EUR",
+  "65 000EUR - 85 000EUR",
+  "90 000EUR - 120 000EUR"
 ].freeze
 
 SEARCH_CONSTRAINTS = [
@@ -459,6 +476,28 @@ admin_user = User.find_or_create_by!(email: "admin@rivyr.test") do |u|
 end
 admin_user.update!(status: "active", role: "admin")
 
+# Pool Rivyr: ce profil porte les missions "non attribuees" de la bibliotheque.
+library_region = Region.find_by!(name: "Hauts-de-France")
+library_specialty = Specialty.find_by!(name: "Direction Generale")
+library_freelancer_pool = FreelancerProfile.find_or_create_by!(user: admin_user) do |fp|
+  fp.region = library_region
+  fp.specialty = library_specialty
+  fp.operational_status = "active"
+  fp.availability_status = "available"
+  fp.bio = "Profil pool Rivyr pour les missions non attribuees."
+  fp.linkedin_url = "https://www.linkedin.com/company/rivyr"
+  fp.website_url = "https://www.rivyr.com"
+  fp.rivyr_score_current = 100
+  fp.profile_private = true
+end
+library_freelancer_pool.update!(
+  region: library_region,
+  specialty: library_specialty,
+  operational_status: "active",
+  availability_status: "available",
+  profile_private: true
+)
+
 # --------------------------------------------------
 # Clients
 # --------------------------------------------------
@@ -530,45 +569,55 @@ MISSIONS_DATA.each_with_index do |data, index|
   contact = ClientContact.find_by!(client: client)
   specialty = Specialty.find_by!(name: data[:specialty])
   region = Region.find_by!(name: client.location)
-  matching_freelancer = FreelancerProfile.joins(:specialty).find_by(specialties: { name: data[:specialty] }) || FreelancerProfile.first
+  assigned_freelancer = User.includes(:freelancer_profile).find_by(email: data[:assigned_freelancer_email])&.freelancer_profile
+  matching_freelancer = assigned_freelancer || FreelancerProfile.joins(:specialty).find_by(specialties: { name: data[:specialty] }) || FreelancerProfile.first
+  mission_status = data[:status] || mission_status_for(index)
+  mission_origin = data[:origin_type] || MISSION_ORIGINS[index % MISSION_ORIGINS.size]
+  opened_days_ago = data[:opened_days_ago] || (180 - (index * 5))
+  opened_at = seeded_date(opened_days_ago)
+  started_days_ago = data.key?(:started_days_ago) ? data[:started_days_ago] : [ opened_days_ago - 10, 1 ].max
+  started_at = seeded_date(started_days_ago)
+  closed_days_ago = data[:closed_days_ago] || (120 - (index * 3))
+  closed_at = mission_status == 'closed' ? seeded_date(closed_days_ago) : nil
+  mission_type = data[:mission_type] || mission_type_for(index)
 
   mission = Mission.find_or_create_by!(reference: data[:reference]) do |m|
     m.region = region
     m.freelancer_profile = matching_freelancer
-    m.mission_type = mission_type_for(index)
+    m.mission_type = mission_type
     m.title = data[:title]
-    m.status = mission_status_for(index)
+    m.status = mission_status
     m.client_contact = contact
     m.location = client.location
     m.contract_signed = true
-    m.opened_at = seeded_date(180 - (index * 5))
-    m.started_at = seeded_date(170 - (index * 5))
-    m.closed_at = mission_status_for(index) == 'closed' ? seeded_date(120 - (index * 3)) : nil
+    m.opened_at = opened_at
+    m.started_at = started_at
+    m.closed_at = closed_at
     m.priority_level = data[:priority]
     m.brief_summary = MISSION_SUMMARIES[index % MISSION_SUMMARIES.size]
     m.compensation_summary = COMPENSATION_SUMMARIES[index % COMPENSATION_SUMMARIES.size]
     m.search_constraints = SEARCH_CONSTRAINTS[index % SEARCH_CONSTRAINTS.size]
-    m.origin_type = MISSION_ORIGINS[index % MISSION_ORIGINS.size]
+    m.origin_type = mission_origin
     m.specialty = specialty
   end
 
   mission.update!(
     region: region,
     freelancer_profile: matching_freelancer,
-    mission_type: mission_type_for(index),
+    mission_type: mission_type,
     title: data[:title],
-    status: mission_status_for(index),
+    status: mission_status,
     client_contact: contact,
     location: client.location,
     contract_signed: true,
-    opened_at: seeded_date(180 - (index * 5)),
-    started_at: seeded_date(170 - (index * 5)),
-    closed_at: mission_status_for(index) == 'closed' ? seeded_date(120 - (index * 3)) : nil,
+    opened_at: opened_at,
+    started_at: started_at,
+    closed_at: closed_at,
     priority_level: data[:priority],
     brief_summary: MISSION_SUMMARIES[index % MISSION_SUMMARIES.size],
     compensation_summary: COMPENSATION_SUMMARIES[index % COMPENSATION_SUMMARIES.size],
     search_constraints: SEARCH_CONSTRAINTS[index % SEARCH_CONSTRAINTS.size],
-    origin_type: MISSION_ORIGINS[index % MISSION_ORIGINS.size],
+    origin_type: mission_origin,
     specialty: specialty
   )
 end
