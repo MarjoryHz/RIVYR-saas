@@ -4,7 +4,14 @@ Rails.application.routes.draw do
   resources :clients
   resources :client_contacts
   resources :freelancer_profiles
-  resources :missions
+  resources :missions do
+    collection do
+      get :library, as: :library
+    end
+    member do
+      post :toggle_favorite
+    end
+  end
   resources :candidates
   resources :placements
   resources :invoices do
