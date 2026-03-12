@@ -1,4 +1,9 @@
 <% if current_user.role_freelance? %>
+  <% current_missions = Array(@current_missions) %>
+  <% library_missions = Array(@library_missions) %>
+  <% current_missions_count = @current_missions_count.to_i %>
+  <% pending_response_count = @pending_response_count.to_i %>
+  <% accepted_offers_count = @accepted_offers_count.to_i %>
   <div class="mx-auto max-w-7xl p-4 md:p-6">
     <section class="space-y-6">
       <header class="space-y-3">
@@ -17,18 +22,18 @@
             <div class="space-y-2">
               <h2 class="text-2xl font-semibold text-base-content">Mes missions en cours</h2>
               <div class="space-y-1 text-base-content/70">
-                <p><span class="text-3xl font-semibold text-primary"><%= @current_missions_count %></span> missions en cours</p>
+                <p><span class="text-3xl font-semibold text-primary"><%= current_missions_count %></span> missions en cours</p>
                 <p>
-                  <span class="font-semibold text-primary"><%= @pending_response_count %></span> en attente de reponse
+                  <span class="font-semibold text-primary"><%= pending_response_count %></span> en attente de reponse
                   <span class="mx-2 text-base-content/30">|</span>
-                  <span class="font-semibold text-secondary"><%= @accepted_offers_count %></span> offres acceptees
+                  <span class="font-semibold text-secondary"><%= accepted_offers_count %></span> offres acceptees
                 </p>
               </div>
             </div>
 
             <div class="space-y-3">
-              <% if @current_missions.any? %>
-                <% @current_missions.each do |mission| %>
+              <% if current_missions.any? %>
+                <% current_missions.each do |mission| %>
                   <div class="flex items-center justify-between rounded-2xl border border-base-200 bg-base-100/80 px-4 py-3">
                     <div class="min-w-0">
                       <p class="truncate text-lg font-medium text-base-content"><%= mission.title %></p>
@@ -72,8 +77,8 @@
             </div>
 
             <div class="space-y-3">
-              <% if @library_missions.any? %>
-                <% @library_missions.each do |mission| %>
+              <% if library_missions.any? %>
+                <% library_missions.each do |mission| %>
                   <div class="flex items-center justify-between rounded-2xl border border-base-200 bg-base-100/80 px-4 py-3">
                     <div class="min-w-0">
                       <p class="truncate text-lg font-medium text-base-content"><%= mission.title %></p>
