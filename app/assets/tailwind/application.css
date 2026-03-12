@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./components/freelance_sidebar.css";
+@import "./components/missions.css";
 @import "./components/placement_timeline.css";
 @source not "./daisyui{,*}.mjs";
 @plugin "./daisyui.mjs";

@@ -23,7 +23,7 @@ class ClientContactsController < ApplicationController
     authorize @client_contact
 
     if @client_contact.save
-      redirect_to @client_contact, notice: "Contact client cree avec succes."
+      redirect_to @client_contact, notice: "Contact client créé avec succès."
     else
       render :new, status: :unprocessable_entity
     end
@@ -37,7 +37,7 @@ class ClientContactsController < ApplicationController
     authorize @client_contact
 
     if @client_contact.update(client_contact_params)
-      redirect_to @client_contact, notice: "Contact client mis a jour avec succes."
+      redirect_to @client_contact, notice: "Contact client mis à jour avec succès."
     else
       render :edit, status: :unprocessable_entity
     end
@@ -47,7 +47,7 @@ class ClientContactsController < ApplicationController
     authorize @client_contact
 
     if @client_contact.destroy
-      redirect_to client_contacts_path, status: :see_other, notice: "Contact client supprime avec succes."
+      redirect_to client_contacts_path, status: :see_other, notice: "Contact client supprimé avec succès."
     else
       redirect_to @client_contact, alert: "Impossible de supprimer ce contact client."
     end

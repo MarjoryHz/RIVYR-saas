@@ -5,7 +5,7 @@
       <%= link_to "Nouveau placement", new_placement_path, class: "btn btn-primary" %>
     <% end %>
   </div>
-  <%= render "shared/index_filters", path: placements_path, q: @q, status: @status, status_options: Placement.statuses.keys, status_param: :status %>
+  <%= render "shared/index_filters", path: placements_path, q: @q, status: @status, status_options: Placement.statuses.keys, status_param: :status, extra_params: { scope: @scope.presence } %>
 
   <div class="overflow-x-auto bg-base-100 rounded-lg">
     <% if @placements.any? %>
@@ -15,7 +15,7 @@
             <th>Mission</th>
             <th>Candidat</th>
             <th>Statut</th>
-            <th>Date embauche</th>
+            <th>Date d'embauche</th>
             <th></th>
           </tr>
         </thead>
@@ -37,10 +37,10 @@
       <div class="p-8 text-center space-y-3">
         <p class="text-lg font-medium">Aucun placement pour le moment</p>
         <% if policy(Placement).new? %>
-          <%= link_to "Creer le premier placement", new_placement_path, class: "btn btn-primary" %>
+          <%= link_to "Créer le premier placement", new_placement_path, class: "btn btn-primary" %>
         <% end %>
       </div>
     <% end %>
   </div>
-  <%= render "shared/pagination", page: @page, total_pages: @total_pages, extra_params: { q: @q, status: @status }, path: ->(params) { placements_path(params) } %>
+  <%= render "shared/pagination", page: @page, total_pages: @total_pages, extra_params: { q: @q, status: @status, scope: @scope.presence }, path: ->(params) { placements_path(params) } %>
 </div>

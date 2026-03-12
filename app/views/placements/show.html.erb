@@ -56,7 +56,7 @@ end %>
 
       <div class="flex flex-wrap gap-2">
         <% @stage_actions.each do |action| %>
-          <% action_style = action[:label] == "Voir details mission" ? "btn-primary" : action[:style] %>
+          <% action_style = action[:label] == "Voir détails mission" ? "btn-primary" : action[:style] %>
           <% action_class = "#{action_button_base} #{action_button_tone.call(action_style)}" %>
           <% if action[:kind] == :post %>
             <%= button_to action[:label], action[:path], params: action[:params] || {}, class: action_class %>
@@ -118,7 +118,7 @@ end %>
               </div>
               <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
                 <div class="rounded-lg border border-base-200 bg-base-100/80 p-2">
-                  <p class="text-base-content/60">Offre acceptee</p>
+                  <p class="text-base-content/60">Offre acceptée</p>
                   <p class="font-medium text-base-content">
                     <% accepted = (@candidate.status == "placed" || @placement.hired_at.present?) %>
                     <i class="fa-solid <%= accepted ? 'fa-circle-check text-success' : 'fa-circle-xmark text-error' %>"></i>
@@ -172,11 +172,11 @@ end %>
               <div class="mt-2 space-y-2 rounded-xl border border-base-200 bg-base-100/80 p-3 text-sm md:text-base">
                 <p>
                   <i class="fa-solid fa-file-signature text-primary"></i>
-                  Contrat signe le <strong><%= @mission.opened_at.present? ? l(@mission.opened_at) : "-" %></strong>
+                  Contrat signé le <strong><%= @mission.opened_at.present? ? l(@mission.opened_at) : "-" %></strong>
                 </p>
                 <p>
                   <i class="fa-solid fa-user-check text-success"></i>
-                  Promesse d'embauche <strong><%= @placement.hired_at.present? ? "validee" : "a confirmer" %></strong>
+                  Promesse d'embauche <strong><%= @placement.hired_at.present? ? "validée" : "à confirmer" %></strong>
                 </p>
                 <p>Date de fin <strong><%= closed_at.present? ? l(closed_at) : "-" %></strong></p>
                 <p>Montant facture <strong><%= number_to_currency(billed_amount_cents / 100.0, unit: "€") %></strong></p>

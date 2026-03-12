@@ -24,7 +24,7 @@ class CommissionsController < ApplicationController
     authorize @commission
 
     if @commission.save
-      redirect_to @commission, notice: "Commission creee avec succes."
+      redirect_to @commission, notice: "Commission créée avec succès."
     else
       render :new, status: :unprocessable_entity
     end
@@ -38,7 +38,7 @@ class CommissionsController < ApplicationController
     authorize @commission
 
     if @commission.update(commission_params)
-      redirect_to @commission, notice: "Commission mise a jour avec succes."
+      redirect_to @commission, notice: "Commission mise à jour avec succès."
     else
       render :edit, status: :unprocessable_entity
     end
@@ -48,7 +48,7 @@ class CommissionsController < ApplicationController
     authorize @commission
 
     if @commission.destroy
-      redirect_to commissions_path, status: :see_other, notice: "Commission supprimee avec succes."
+      redirect_to commissions_path, status: :see_other, notice: "Commission supprimée avec succès."
     else
       redirect_to @commission, alert: "Impossible de supprimer cette commission."
     end

@@ -30,7 +30,7 @@ class FreelanceFinancesController < ApplicationController
 
     placement = @placements_scope.find(params[:placement_id])
     if placement.client_invoice.present?
-      return redirect_to freelance_finance_path, alert: "Une facture client existe deja pour ce placement."
+      return redirect_to freelance_finance_path, alert: "Une facture client existe déjà pour ce placement."
     end
 
     invoice = placement.invoices.new(
@@ -42,7 +42,7 @@ class FreelanceFinancesController < ApplicationController
     )
 
     if invoice.save
-      redirect_to freelance_finance_path, notice: "Facture client generee et transmise a Rivyr pour suivi."
+      redirect_to freelance_finance_path, notice: "Facture client générée et transmise à Rivyr pour suivi."
     else
       redirect_to freelance_finance_path, alert: invoice.errors.full_messages.to_sentence
     end
@@ -53,11 +53,11 @@ class FreelanceFinancesController < ApplicationController
 
     placement = @placements_scope.find(params[:placement_id])
     if placement.freelancer_invoice.present?
-      return redirect_to freelance_finance_path, alert: "Une facture freelance existe deja pour ce placement."
+      return redirect_to freelance_finance_path, alert: "Une facture freelance existe déjà pour ce placement."
     end
 
     unless placement.client_invoice&.status_paid?
-      return redirect_to freelance_finance_path, alert: "La facture client doit etre encaissee par Rivyr avant facturation freelance."
+      return redirect_to freelance_finance_path, alert: "La facture client doit être encaissée par Rivyr avant facturation freelance."
     end
 
     commission_amount = placement.commission&.freelancer_share_cents.to_i
@@ -74,7 +74,7 @@ class FreelanceFinancesController < ApplicationController
     )
 
     if invoice.save
-      redirect_to freelance_finance_path, notice: "Facture freelance creee avec succes."
+      redirect_to freelance_finance_path, notice: "Facture freelance créée avec succès."
     else
       redirect_to freelance_finance_path, alert: invoice.errors.full_messages.to_sentence
     end
@@ -88,11 +88,11 @@ class FreelanceFinancesController < ApplicationController
     amount_cents = invoice.amount_cents if amount_cents <= 0
 
     if amount_cents > available_wallet_cents
-      return redirect_to freelance_finance_path, alert: "Montant superieur au portefeuille disponible."
+      return redirect_to freelance_finance_path, alert: "Montant supérieur au portefeuille disponible."
     end
 
     if current_user.payout_requests.where(invoice: invoice, status: [ "pending", "approved" ]).exists?
-      return redirect_to freelance_finance_path, alert: "Une demande de virement est deja en cours pour cette facture."
+      return redirect_to freelance_finance_path, alert: "Une demande de virement est déjà en cours pour cette facture."
     end
 
     payout_request = current_user.payout_requests.new(
@@ -105,7 +105,7 @@ class FreelanceFinancesController < ApplicationController
     )
 
     if payout_request.save
-      redirect_to freelance_finance_path, notice: "Demande de virement envoyee a Rivyr."
+      redirect_to freelance_finance_path, notice: "Demande de virement envoyée à Rivyr."
     else
       redirect_to freelance_finance_path, alert: payout_request.errors.full_messages.to_sentence
     end

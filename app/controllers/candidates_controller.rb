@@ -23,7 +23,7 @@ class CandidatesController < ApplicationController
     authorize @candidate
 
     if @candidate.save
-      redirect_to @candidate, notice: "Candidat cree avec succes."
+      redirect_to @candidate, notice: "Candidat créé avec succès."
     else
       render :new, status: :unprocessable_entity
     end
@@ -37,7 +37,7 @@ class CandidatesController < ApplicationController
     authorize @candidate
 
     if @candidate.update(candidate_params)
-      redirect_to @candidate, notice: "Candidat mis a jour avec succes."
+      redirect_to @candidate, notice: "Candidat mis à jour avec succès."
     else
       render :edit, status: :unprocessable_entity
     end
@@ -47,7 +47,7 @@ class CandidatesController < ApplicationController
     authorize @candidate
 
     if @candidate.destroy
-      redirect_to candidates_path, status: :see_other, notice: "Candidat supprime avec succes."
+      redirect_to candidates_path, status: :see_other, notice: "Candidat supprimé avec succès."
     else
       redirect_to @candidate, alert: "Impossible de supprimer ce candidat."
     end

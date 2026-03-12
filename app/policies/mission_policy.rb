@@ -3,6 +3,10 @@ class MissionPolicy < ApplicationPolicy
     admin? || freelance? || client? || candidate?
   end
 
+  def my_missions?
+    index?
+  end
+
   def show?
     admin? || mission_owned_by_freelance? || mission_owned_by_client? || candidate?
   end

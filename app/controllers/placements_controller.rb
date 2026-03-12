@@ -6,7 +6,13 @@ class PlacementsController < ApplicationController
     authorize Placement
     @q = params[:q].to_s.strip
     @status = params[:status].to_s.strip
+    @scope = params[:scope].to_s.strip
     scope = policy_scope(Placement).includes(:mission, :candidate).order(created_at: :desc).search(@q).with_status(@status)
+
+    if current_user.role_freelance? && @scope == "closed_missions"
+      scope = scope.joins(:mission).where(missions: { status: "closed" })
+    end
+
     @placements = paginate(scope)
   end
 
@@ -41,7 +47,7 @@ class PlacementsController < ApplicationController
     authorize @placement
 
     if @placement.save
-      redirect_to @placement, notice: "Placement cree avec succes."
+      redirect_to @placement, notice: "Placement créé avec succès."
     else
       render :new, status: :unprocessable_entity
     end
@@ -55,7 +61,7 @@ class PlacementsController < ApplicationController
     authorize @placement
 
     if @placement.update(placement_params)
-      redirect_to @placement, notice: "Placement mis a jour avec succes."
+      redirect_to @placement, notice: "Placement mis à jour avec succès."
     else
       render :edit, status: :unprocessable_entity
     end
@@ -65,7 +71,7 @@ class PlacementsController < ApplicationController
     authorize @placement
 
     if @placement.destroy
-      redirect_to placements_path, status: :see_other, notice: "Placement supprime avec succes."
+      redirect_to placements_path, status: :see_other, notice: "Placement supprimé avec succès."
     else
       redirect_to @placement, alert: "Impossible de supprimer ce placement."
     end
@@ -111,12 +117,12 @@ class PlacementsController < ApplicationController
     events = []
 
     if @mission.contract_signed && @mission.opened_at.present?
-      events << { date: @mission.opened_at, label: "Contrat signe", tone: "success" }
+      events << { date: @mission.opened_at, label: "Contrat signé", tone: "success" }
     end
 
     if @client_invoice.present?
-      events << { date: @client_invoice.issue_date, label: "Facture client envoyee", tone: "warning" } if @client_invoice.issue_date.present?
-      events << { date: @client_invoice.paid_date, label: "Paiement client confirme", tone: "success" } if @client_invoice.paid_date.present?
+      events << { date: @client_invoice.issue_date, label: "Facture client envoyée", tone: "warning" } if @client_invoice.issue_date.present?
+      events << { date: @client_invoice.paid_date, label: "Paiement client confirmé", tone: "success" } if @client_invoice.paid_date.present?
     end
 
     @invoice_notes.each do |note|
@@ -141,32 +147,32 @@ class PlacementsController < ApplicationController
       {
         label: "Contrat client signe",
         ok: @mission.contract_signed,
-        detail: @mission.opened_at.present? ? "Signe le #{I18n.l(@mission.opened_at)}" : "Date non renseignee"
+        detail: @mission.opened_at.present? ? "Signé le #{I18n.l(@mission.opened_at)}" : "Date non renseignée"
       },
       {
         label: "Promesse d'embauche",
         ok: @placement.hired_at.present?,
-        detail: @placement.hired_at.present? ? "Demarrage le #{I18n.l(@placement.hired_at)}" : "A renseigner"
+        detail: @placement.hired_at.present? ? "Démarrage le #{I18n.l(@placement.hired_at)}" : "À renseigner"
       },
       {
-        label: "Candidat accepte",
+        label: "Candidat accepté",
         ok: @candidate.status == "placed" || @placement.hired_at.present?,
         detail: "Statut candidat: #{@candidate.status}"
       },
       {
-        label: "Facture client creee",
+        label: "Facture client créée",
         ok: @client_invoice.present?,
-        detail: @client_invoice.present? ? @client_invoice.number : "Non creee"
+        detail: @client_invoice.present? ? @client_invoice.number : "Non créée"
       },
       {
-        label: "Paiement client recu",
+        label: "Paiement client reçu",
         ok: @client_invoice&.status_paid?,
-        detail: @client_invoice&.paid_date.present? ? "Paye le #{I18n.l(@client_invoice.paid_date)}" : "En attente"
+        detail: @client_invoice&.paid_date.present? ? "Payé le #{I18n.l(@client_invoice.paid_date)}" : "En attente"
       },
       {
-        label: "Facture freelance emise",
+        label: "Facture freelance émise",
         ok: @freelancer_invoice.present?,
-        detail: @freelancer_invoice.present? ? @freelancer_invoice.number : "Non emise"
+        detail: @freelancer_invoice.present? ? @freelancer_invoice.number : "Non émise"
       }
     ]
   end
@@ -197,8 +203,8 @@ class PlacementsController < ApplicationController
     if @client_invoice&.issue_date.present?
       followups << {
         occurred_at: @client_invoice.issue_date.to_time.change(hour: 10, min: 0),
-        title: "Facture client envoyee",
-        detail: "Facture #{@client_invoice.number} envoyee au contact client.",
+        title: "Facture client envoyée",
+        detail: "Facture #{@client_invoice.number} envoyée au contact client.",
         tone: "success"
       }
     end
@@ -206,7 +212,7 @@ class PlacementsController < ApplicationController
     @invoice_notes.each do |note|
       followups << {
         occurred_at: note.created_at,
-        title: note.action_required ? "Action demandee" : "Suivi Rivyr",
+        title: note.action_required ? "Action demandée" : "Suivi Rivyr",
         detail: note.body,
         tone: note.action_required && note.resolved_at.blank? ? "action" : "info"
       }
@@ -216,7 +222,7 @@ class PlacementsController < ApplicationController
       followups << {
         occurred_at: @latest_payout_request.requested_at,
         title: "Demande de virement #{@latest_payout_request.status}",
-        detail: "Reference: #{@latest_payout_request.billing_number}",
+        detail: "Référence : #{@latest_payout_request.billing_number}",
         tone: @latest_payout_request.status_paid? ? "success" : "info"
       }
     end
@@ -230,19 +236,19 @@ class PlacementsController < ApplicationController
     wallet_available = @client_invoice&.status_paid? && @freelancer_invoice.present? && !payout_pending_or_approved && !payout_paid
 
     stages = [
-      { key: :placement_realized, label: "Placement realise", done: @placement.hired_at.present? },
+      { key: :placement_realized, label: "Placement réalisé", done: @placement.hired_at.present? },
       { key: :documents_transmitted, label: "Documents transmis", done: @candidate.status.in?(%w[presented interviewing placed]) },
-      { key: :documents_validated, label: "Documents valides", done: @mission.contract_signed? },
-      { key: :client_invoice_created, label: "Creation facture client", done: @client_invoice.present? },
-      { key: :client_invoice_validated, label: "Facture validee", done: @client_invoice.present? && @client_invoice.issue_date.present? },
-      { key: :client_invoice_sent, label: "Facture envoyee", done: @client_invoice&.status.in?(%w[issued paid]) },
+      { key: :documents_validated, label: "Documents validés", done: @mission.contract_signed? },
+      { key: :client_invoice_created, label: "Création facture client", done: @client_invoice.present? },
+      { key: :client_invoice_validated, label: "Facture validée", done: @client_invoice.present? && @client_invoice.issue_date.present? },
+      { key: :client_invoice_sent, label: "Facture envoyée", done: @client_invoice&.status.in?(%w[issued paid]) },
       { key: :client_payment_started, label: "Paiement client", done: @client_invoice&.status.in?(%w[issued paid]) },
-      { key: :client_payment_received, label: "Paiement client recu", done: @client_invoice&.status_paid? },
-      { key: :freelancer_invoice_created, label: "Creation facture freelance", done: @freelancer_invoice.present? },
+      { key: :client_payment_received, label: "Paiement client reçu", done: @client_invoice&.status_paid? },
+      { key: :freelancer_invoice_created, label: "Création facture freelance", done: @freelancer_invoice.present? },
       { key: :freelancer_invoice_validated, label: "Validation facture freelance", done: @freelancer_invoice.present? },
       { key: :in_payment, label: "En paiement", done: payout_pending_or_approved || payout_paid },
       { key: :wallet_available, label: "Virement wallet disponible", done: wallet_available || payout_pending_or_approved || payout_paid },
-      { key: :paid, label: "Paye", done: payout_paid }
+      { key: :paid, label: "Payé", done: payout_paid }
     ]
 
     first_missing_index = stages.index { |stage| !stage[:done] }
@@ -269,12 +275,12 @@ class PlacementsController < ApplicationController
       ]
     when :client_invoice_created
       [
-        { label: "Creer facture client", path: create_client_invoice_freelance_finance_path, kind: :post, style: "btn-primary", params: { placement_id: @placement.id } }
+        { label: "Créer facture client", path: create_client_invoice_freelance_finance_path, kind: :post, style: "btn-primary", params: { placement_id: @placement.id } }
       ]
     when :client_payment_received
       if @freelancer_invoice.blank?
         [
-          { label: "Creer facture freelance", path: create_freelancer_invoice_freelance_finance_path, kind: :post, style: "btn-secondary", params: { placement_id: @placement.id } }
+          { label: "Créer facture freelance", path: create_freelancer_invoice_freelance_finance_path, kind: :post, style: "btn-secondary", params: { placement_id: @placement.id } }
         ]
       else
         []
@@ -299,7 +305,7 @@ class PlacementsController < ApplicationController
       end
     else
       [
-        { label: "Voir details mission", path: mission_path(@mission), kind: :link, style: "btn-outline" }
+        { label: "Voir détails mission", path: mission_path(@mission), kind: :link, style: "btn-outline" }
       ]
     end
   end

@@ -12,6 +12,12 @@ class MissionsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_user_session_path
   end
 
+  test "redirects guests to sign in on my_missions" do
+    sign_out :user
+    get my_missions_missions_url
+    assert_redirected_to new_user_session_path
+  end
+
   test "creates a mission" do
     assert_difference("Mission.count", 1) do
       post missions_url, params: {
@@ -113,5 +119,15 @@ class MissionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes @response.body, "Confidentiel"
+  end
+
+  test "freelance can access my_missions" do
+    sign_out :user
+    sign_in_as(users(:one))
+
+    get my_missions_missions_url
+
+    assert_response :success
+    assert_includes @response.body, "Mes missions"
   end
 end

@@ -4,7 +4,10 @@ Rails.application.routes.draw do
   resources :clients
   resources :client_contacts
   resources :freelancer_profiles
-  resources :missions
+  resources :missions do
+    get :my_missions, on: :collection
+    patch :toggle_freelance_urgent, on: :member
+  end
   resources :candidates
   resources :placements
   resources :invoices do

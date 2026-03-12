@@ -1,0 +1,191 @@
+<% surface_card_class = "rounded-[1.45rem] border border-base-100/70 bg-base-100/88 shadow-lg" %>
+
+<div class="mx-auto max-w-7xl p-4 md:p-6">
+  <section class="space-y-6">
+    <div class="missions-summary-sticky">
+      <header class="space-y-5">
+        <div class="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+          <div class="space-y-5">
+            <div class="space-y-2">
+              <h1 class="text-3xl font-semibold tracking-tight text-base-content md:text-4xl">Missions en cours</h1>
+            </div>
+
+            <div class="relative">
+              <div class="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-2 rounded-2xl border border-base-200 bg-base-100/75 px-5 py-3 text-base font-medium text-base-content/70 shadow-sm transition hover:bg-base-100/95"
+                  aria-controls="missions-filtres"
+                  aria-expanded="false"
+                  onclick="document.getElementById('missions-filtres').classList.toggle('hidden'); this.setAttribute('aria-expanded', String(!document.getElementById('missions-filtres').classList.contains('hidden')));">
+                  <i class="fa-solid fa-sliders"></i>
+                  Filtres
+                  <i class="fa-solid fa-angle-down text-xs"></i>
+                </button>
+                <button type="button" class="inline-flex items-center gap-2 rounded-full border border-[#f1a38b] bg-[#f4a58a] px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]">
+                  <i class="fa-solid fa-plus"></i>
+                  Créer une mission
+                </button>
+              </div>
+
+              <div id="missions-filtres" class="absolute left-0 top-full z-30 mt-3 hidden w-full rounded-[1.45rem] border border-base-200 bg-base-100 p-4 shadow-xl xl:min-w-[72rem]">
+                <%= form_with url: my_missions_missions_path, method: :get, class: "grid gap-3 md:grid-cols-2 xl:grid-cols-5", html: { onsubmit: "document.getElementById('missions-filtres').classList.add('hidden')" } do %>
+                  <div>
+                    <label for="amount-filter" class="mb-1 block text-sm font-medium text-base-content/70">Montant</label>
+                    <%= select_tag :amount,
+                      options_for_select(
+                        [
+                          ["Tous les montants", ""],
+                          ["Moins de 5 000 €", "under_5000"],
+                          ["5 000 € à 10 000 €", "5000_10000"],
+                          ["10 000 € à 20 000 €", "10000_20000"],
+                          ["Plus de 20 000 €", "over_20000"]
+                        ],
+                        @amount_filter
+                      ),
+                      id: "amount-filter",
+                      class: "select select-bordered w-full" %>
+                  </div>
+
+                  <div>
+                    <label for="region-filter" class="mb-1 block text-sm font-medium text-base-content/70">Ville</label>
+                    <%= select_tag :region,
+                      options_for_select([["Toutes les villes", ""]] + @region_options.map { |region| [region, region] }, @region_filter),
+                      id: "region-filter",
+                      class: "select select-bordered w-full" %>
+                  </div>
+
+                  <div>
+                    <label for="urgent-filter" class="mb-1 block text-sm font-medium text-base-content/70">Urgence</label>
+                    <%= select_tag :urgent,
+                      options_for_select([["Toutes", ""], ["Urgentes", "urgent"], ["Non urgentes", "normal"]], @urgent_filter),
+                      id: "urgent-filter",
+                      class: "select select-bordered w-full" %>
+                  </div>
+
+                  <div>
+                    <label for="company-filter" class="mb-1 block text-sm font-medium text-base-content/70">Société</label>
+                    <%= select_tag :company,
+                      options_for_select([["Toutes les sociétés", ""]] + @company_options.map { |company| [company, company] }, @company_filter),
+                      id: "company-filter",
+                      class: "select select-bordered w-full" %>
+                  </div>
+
+                  <div class="flex items-end gap-2">
+                    <%= submit_tag "Appliquer", class: "btn btn-primary flex-1" %>
+                    <%= link_to "Réinitialiser", my_missions_missions_path, class: "btn btn-ghost" %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+
+            <div class="grid min-w-0 overflow-hidden md:grid-cols-4 <%= surface_card_class %>">
+              <div class="p-4 md:border-r md:border-base-200/80 md:pr-6">
+                <p class="text-3xl font-semibold text-base-content"><%= number_to_currency(@total_potential_cents / 100.0, unit: "€", precision: 0) %></p>
+                <p class="mt-1 text-base text-base-content/60">Total potentiel</p>
+              </div>
+              <div class="p-4 md:border-r md:border-base-200/80 md:px-6">
+                <p class="text-3xl font-semibold text-base-content"><%= @average_open_days %> jours</p>
+                <p class="mt-1 text-base text-base-content/60">Mission ouverte depuis</p>
+              </div>
+              <div class="p-4 md:border-r md:border-base-200/80 md:px-6">
+                <p class="text-3xl font-semibold text-base-content"><%= @total_sent_candidates %></p>
+                <p class="mt-1 text-base text-base-content/60">candidats chez le client</p>
+              </div>
+              <%= link_to placements_path(scope: "closed_missions"), class: "flex h-full min-h-full flex-col items-center justify-center bg-[#f4a58a] px-5 py-4 text-center text-white transition hover:bg-[#ee977c]" do %>
+                <p class="text-base font-semibold">Missions clôturées</p>
+              <% end %>
+            </div>
+          </div>
+
+        </div>
+      </header>
+    </div>
+
+    <div class="missions-content-scroll space-y-6">
+      <% if @mission_rows.any? %>
+        <div class="<%= surface_card_class %> divide-y divide-base-200/70 overflow-hidden">
+          <% @mission_rows.each do |row| %>
+            <% mission = row[:mission] %>
+            <article class="px-4 py-4 md:px-6">
+              <div class="space-y-3">
+                <div class="grid min-h-[2.5rem] grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+                  <div class="min-w-0 flex items-center gap-2">
+                    <h2 class="min-w-0 truncate whitespace-nowrap text-xl font-semibold leading-tight text-base-content md:text-2xl"><%= mission.title %></h2>
+                    <% if mission.region.present? %>
+                      <span class="shrink-0 text-base-content/35">|</span>
+                      <span class="shrink-0 whitespace-nowrap text-sm font-medium text-base-content/55 md:text-base"><%= mission.region.name %></span>
+                    <% end %>
+                  </div>
+                  <div class="flex items-center justify-self-end gap-4">
+                    <span class="text-sm font-medium <%= row[:open_days_tone] %>">
+                      <%= row[:open_days] %> jours
+                    </span>
+                    <%= form_with url: toggle_freelance_urgent_mission_path(mission), method: :patch, local: true do |form| %>
+                      <label class="inline-flex cursor-pointer items-center gap-3 rounded-full border px-3 py-1.5 transition <%= row[:urgent] ? 'border-[#f5c7bb] bg-[#ffe3db]' : 'border-base-200 bg-base-100 hover:bg-base-100/90' %>">
+                        <%= form.check_box :urgent,
+                          {
+                            checked: row[:urgent],
+                            class: "toggle toggle-sm border-[#ef8a73] bg-white [--tglbg:#ffffff] checked:border-[#ef8a73] checked:bg-[#ef8a73] checked:text-white",
+                            onchange: "this.form.requestSubmit()"
+                          },
+                          "true",
+                          "false" %>
+                        <span class="text-sm font-medium transition <%= row[:urgent] ? 'text-[#ef8a73]' : 'text-base-content/55' %>">Urgent</span>
+                      </label>
+                    <% end %>
+                  </div>
+                </div>
+
+                <div class="grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_auto] xl:items-center">
+                  <div class="min-w-0 space-y-3">
+                    <div class="flex min-h-[3.25rem] flex-wrap items-center gap-4 text-base text-base-content/75">
+                    <div class="flex items-center gap-3">
+                      <% if row[:company_logo].present? %>
+                        <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-base-200 bg-base-100">
+                          <%= image_tag row[:company_logo], alt: row[:company_name], class: "h-full w-full object-cover" %>
+                        </div>
+                      <% else %>
+                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/18 text-primary">
+                          <i class="fa-regular fa-building text-lg"></i>
+                        </div>
+                      <% end %>
+                      <div class="space-y-1">
+                        <p class="font-medium text-base-content"><%= row[:company_name] %></p>
+                        <div class="flex min-h-[1.25rem] flex-wrap items-center gap-3 text-sm text-base-content/55">
+                          <span><%= row[:client_contact_name].presence || "Contact client" %></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  </div>
+
+                  <div class="flex flex-col gap-3 xl:min-w-[35rem] xl:items-end">
+                    <div class="flex min-h-[3.5rem] flex-wrap items-center gap-3 text-base-content xl:justify-end">
+                      <p class="min-w-[8rem] text-xl font-semibold md:text-2xl xl:text-right"><%= number_to_currency(row[:potential_cents] / 100.0, unit: "€", precision: 0) %></p>
+                      <button type="button" class="inline-flex min-w-[12rem] items-center justify-center gap-2 rounded-full border border-[#f6d6db] bg-[#ffe8ec] px-4 py-2.5 text-sm font-medium text-[#8c5665]">
+                        <i class="fa-regular fa-comment-dots text-[#ef8a73]"></i>
+                        Envoyer un candidat
+                      </button>
+                      <button type="button" class="inline-flex min-w-[14rem] items-center justify-center gap-2 rounded-full border border-[#ead7dc] bg-base-100/82 px-4 py-2.5 text-sm font-medium text-[#8c5665]">
+                        Suivre <%= row[:sent_candidates_count] %> candidats envoyés
+                      </button>
+                      <%= link_to mission_path(mission), class: "inline-flex min-w-[11rem] items-center justify-center rounded-full border border-[#f1a38b] bg-[#f4a58a] px-6 py-2.5 text-base font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" do %>
+                        Voir la mission
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="<%= surface_card_class %> p-8 text-center text-base-content/65">
+          Aucune mission en cours pour le moment.
+        </div>
+      <% end %>
+
+    </div>
+  </section>
+</div>
