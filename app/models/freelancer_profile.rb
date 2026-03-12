@@ -17,6 +17,7 @@ class FreelancerProfile < ApplicationRecord
 
   has_many :missions, dependent: :nullify
   has_many :freelance_mission_preferences, dependent: :destroy
+  has_many :freelance_mission_applications, dependent: :destroy
 
   validates :bio, length: { maximum: 2000 }, allow_blank: true
   validates :linkedin_url, length: { maximum: 255 }, allow_blank: true

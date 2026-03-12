@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_12_133000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_12_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -71,6 +71,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_12_133000) do
     t.string "status"
     t.datetime "updated_at", null: false
     t.index ["placement_id"], name: "index_commissions_on_placement_id"
+  end
+
+  create_table "freelance_mission_applications", force: :cascade do |t|
+    t.datetime "applied_at"
+    t.datetime "client_rejected_at"
+    t.datetime "client_validated_at"
+    t.datetime "created_at", null: false
+    t.bigint "freelancer_profile_id", null: false
+    t.bigint "mission_id", null: false
+    t.text "note"
+    t.string "status", default: "applied", null: false
+    t.datetime "submitted_to_client_at"
+    t.datetime "updated_at", null: false
+    t.index ["freelancer_profile_id"], name: "index_freelance_mission_applications_on_freelancer_profile_id"
+    t.index ["mission_id", "freelancer_profile_id"], name: "index_freelance_mission_applications_uniqueness", unique: true
+    t.index ["mission_id"], name: "index_freelance_mission_applications_on_mission_id"
+    t.index ["status"], name: "index_freelance_mission_applications_on_status"
   end
 
   create_table "freelance_mission_preferences", force: :cascade do |t|
@@ -236,6 +253,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_12_133000) do
   add_foreign_key "client_contacts", "clients"
   add_foreign_key "client_contacts", "users"
   add_foreign_key "commissions", "placements"
+  add_foreign_key "freelance_mission_applications", "freelancer_profiles"
+  add_foreign_key "freelance_mission_applications", "missions"
   add_foreign_key "freelance_mission_preferences", "freelancer_profiles"
   add_foreign_key "freelance_mission_preferences", "missions"
   add_foreign_key "freelancer_profiles", "regions"

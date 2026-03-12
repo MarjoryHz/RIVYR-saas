@@ -1,0 +1,164 @@
+<% surface_card_class = "rounded-[1.45rem] border border-base-100/70 bg-base-100/88 shadow-lg" %>
+
+<div class="mx-auto max-w-7xl p-4 md:p-6">
+  <section class="space-y-6">
+    <div class="missions-summary-sticky">
+      <header class="space-y-5">
+        <div class="space-y-5">
+          <div class="space-y-2">
+            <h1 class="text-3xl font-semibold tracking-tight text-base-content md:text-4xl">Mes missions</h1>
+          </div>
+
+          <div class="inline-flex flex-wrap items-center rounded-full border border-base-200/80 bg-base-100/72 p-1 text-[#7f5260] shadow-sm">
+            <%= link_to my_missions_missions_path, class: "px-7 py-3 text-base font-medium text-base-content/75 transition hover:text-base-content" do %>
+              En cours (<%= @current_missions_count.to_i %>)
+            <% end %>
+            <span class="inline-flex items-center rounded-full bg-[#f4a58a] px-7 py-3 text-base font-semibold text-white">
+              En attente de validation (<%= @pending_validation_count.to_i %>)
+            </span>
+            <span class="text-base-content/20">|</span>
+            <%= link_to placements_path(scope: "closed_missions"), class: "px-6 py-3 text-base font-medium text-base-content/75 transition hover:text-base-content" do %>
+              Terminées (<%= @closed_missions_count.to_i %>)
+            <% end %>
+          </div>
+
+          <div class="grid min-w-0 overflow-hidden md:grid-cols-2 <%= surface_card_class %>">
+            <div class="p-4 md:border-r md:border-base-200/80 md:pr-6">
+              <p class="text-3xl font-semibold text-base-content"><%= number_to_currency(@pending_total_potential_cents / 100.0, unit: "€", precision: 0) %></p>
+              <p class="mt-1 text-base text-base-content/60">Potentiel en attente</p>
+            </div>
+            <div class="p-4 md:px-6">
+              <p class="text-3xl font-semibold text-base-content"><%= @pending_average_days %> jours</p>
+              <p class="mt-1 text-base text-base-content/60">Attente moyenne</p>
+            </div>
+          </div>
+        </div>
+      </header>
+    </div>
+
+    <div class="missions-content-scroll space-y-6">
+      <div class="<%= surface_card_class %> overflow-hidden">
+        <div class="border-b border-base-200/70 px-6 py-4">
+          <div class="relative">
+            <div class="flex flex-wrap gap-3">
+              <button
+                type="button"
+                class="inline-flex items-center gap-2 rounded-2xl border border-base-200 bg-base-100/75 px-5 py-3 text-base font-medium text-base-content/70 shadow-sm transition hover:bg-base-100/95"
+                aria-controls="pending-missions-filtres"
+                aria-expanded="false"
+                onclick="document.getElementById('pending-missions-filtres').classList.toggle('hidden'); this.setAttribute('aria-expanded', String(!document.getElementById('pending-missions-filtres').classList.contains('hidden')));">
+                <i class="fa-solid fa-sliders"></i>
+                Filtres
+                <i class="fa-solid fa-angle-down text-xs"></i>
+              </button>
+            </div>
+
+            <div id="pending-missions-filtres" class="absolute inset-x-0 top-full z-30 mt-3 hidden rounded-[1.45rem] border border-base-200 bg-base-100 p-4 shadow-xl">
+              <%= form_with url: pending_missions_missions_path, method: :get, class: "grid gap-3 md:grid-cols-2 xl:grid-cols-4", html: { onsubmit: "document.getElementById('pending-missions-filtres').classList.add('hidden')" } do %>
+                <div>
+                  <label for="pending-company-filter" class="mb-1 block text-sm font-medium text-base-content/70">Entreprise</label>
+                  <%= select_tag :company,
+                    options_for_select([["Toutes les entreprises", ""]] + @company_options.map { |company| [company, company] }, @company_filter),
+                    id: "pending-company-filter",
+                    class: "select select-bordered w-full" %>
+                </div>
+
+                <div>
+                  <label for="pending-amount-filter" class="mb-1 block text-sm font-medium text-base-content/70">Montant</label>
+                  <%= select_tag :amount,
+                    options_for_select(
+                      [
+                        ["Tous les montants", ""],
+                        ["Moins de 5 000 €", "under_5000"],
+                        ["5 000 € à 10 000 €", "5000_10000"],
+                        ["10 000 € à 20 000 €", "10000_20000"],
+                        ["Plus de 20 000 €", "over_20000"]
+                      ],
+                      @amount_filter
+                    ),
+                    id: "pending-amount-filter",
+                    class: "select select-bordered w-full" %>
+                </div>
+
+                <div>
+                  <label for="pending-region-filter" class="mb-1 block text-sm font-medium text-base-content/70">Ville</label>
+                  <%= select_tag :region,
+                    options_for_select([["Toutes les villes", ""]] + @region_options.map { |region| [region, region] }, @region_filter),
+                    id: "pending-region-filter",
+                    class: "select select-bordered w-full" %>
+                </div>
+
+                <div class="flex items-end gap-2">
+                  <%= submit_tag "Appliquer", class: "btn btn-primary flex-1" %>
+                  <%= link_to "Réinitialiser", pending_missions_missions_path, class: "btn btn-ghost" %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <% if @pending_mission_rows.any? %>
+          <div class="divide-y divide-base-200/70">
+            <% @pending_mission_rows.each do |row| %>
+              <% mission = row[:mission] %>
+              <article class="px-6 py-5">
+                <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+                  <div class="space-y-4">
+                    <div class="min-w-0 flex items-center gap-3">
+                      <h2 class="min-w-0 truncate whitespace-nowrap text-xl font-semibold leading-tight text-base-content md:text-2xl"><%= mission.title %></h2>
+                      <% if row[:region_name].present? %>
+                        <span class="shrink-0 text-base-content/30">|</span>
+                        <span class="shrink-0 whitespace-nowrap text-sm font-medium text-base-content/55 md:text-base"><%= row[:region_name] %></span>
+                      <% end %>
+                    </div>
+
+                    <div class="flex min-h-[3.25rem] items-center gap-4 text-base text-base-content/75">
+                      <% if row[:company_logo].present? %>
+                        <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-base-200 bg-base-100">
+                          <%= image_tag row[:company_logo], alt: row[:company_name], class: "h-full w-full object-cover" %>
+                        </div>
+                      <% else %>
+                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/18 text-primary">
+                          <i class="fa-regular fa-building text-lg"></i>
+                        </div>
+                      <% end %>
+
+                      <div class="space-y-1">
+                        <p class="font-medium text-base-content"><%= row[:company_name] %></p>
+                        <p class="text-sm text-base-content/55"><%= row[:client_contact_name].presence || "Contact client" %></p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex flex-wrap items-center gap-3 xl:justify-end">
+                    <span class="inline-flex items-center rounded-full border border-[#f6d6db] bg-[#ffe8ec] px-4 py-2 text-sm font-medium text-[#8c5665]">
+                      <%= row[:status_label] %>
+                    </span>
+
+                    <span class="text-sm font-medium text-base-content/55">
+                      <%= row[:waiting_days] %> jours
+                    </span>
+
+                    <p class="min-w-[8rem] text-xl font-semibold md:text-2xl xl:text-right"><%= number_to_currency(row[:potential_cents] / 100.0, unit: "€", precision: 0) %></p>
+
+                    <button type="button" class="inline-flex min-w-[14rem] items-center justify-center gap-2 rounded-full border border-[#ead7dc] bg-base-100/82 px-4 py-2.5 text-sm font-medium text-[#8c5665]">
+                      Suivre <%= row[:sent_candidates_count] %> candidats envoyés
+                    </button>
+
+                    <%= link_to mission_path(mission), class: "inline-flex min-w-[11rem] items-center justify-center rounded-full border border-[#f1a38b] bg-[#f4a58a] px-6 py-2.5 text-base font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" do %>
+                      Voir la mission
+                    <% end %>
+                  </div>
+                </div>
+              </article>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="p-8 text-center text-base-content/65">
+            Aucune mission en attente de validation pour le moment.
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </section>
+</div>

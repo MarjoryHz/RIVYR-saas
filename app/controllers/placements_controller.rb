@@ -7,10 +7,15 @@ class PlacementsController < ApplicationController
     @q = params[:q].to_s.strip
     @status = params[:status].to_s.strip
     @scope = params[:scope].to_s.strip
+    @company_filter = params[:company].to_s.strip
+    @region_filter = params[:region].to_s.strip
+    @amount_filter = params[:amount].to_s.strip
     scope = policy_scope(Placement).includes(:mission, :candidate).order(created_at: :desc).search(@q).with_status(@status)
 
     if current_user.role_freelance? && @scope == "closed_missions"
       scope = scope.joins(:mission).where(missions: { status: "closed" })
+      load_closed_missions_dashboard(scope)
+      return
     end
 
     @placements = paginate(scope)
@@ -307,6 +312,70 @@ class PlacementsController < ApplicationController
       [
         { label: "Voir détails mission", path: mission_path(@mission), kind: :link, style: "btn-outline" }
       ]
+    end
+  end
+
+  def load_closed_missions_dashboard(scope)
+    placements = scope.to_a
+    all_rows = placements.map do |placement|
+      mission = placement.mission
+      client = mission.client_contact.client
+      started_on = mission.started_at || mission.opened_at || mission.created_at.to_date
+      ended_on = mission.closed_at || placement.hired_at || Date.current
+
+      {
+        placement: placement,
+        mission: mission,
+        company_name: client.brand_name.presence || client.legal_name,
+        company_logo: client.logo,
+        client_contact_name: [ mission.client_contact.first_name, mission.client_contact.last_name ].compact.join(" "),
+        region_name: mission.region&.name,
+        potential_cents: placement.commission&.freelancer_share_cents.to_i,
+        duration_days: [ (ended_on - started_on).to_i, 0 ].max,
+        candidate_name: [ placement.candidate.first_name, placement.candidate.last_name ].compact.join(" "),
+        closed_steps: [
+          { label: "Entretien client", done: true },
+          { label: "Recruté", done: true },
+          { label: "Validé", done: true }
+        ]
+      }
+    end
+
+    @company_options = all_rows.map { |row| row[:company_name] }.compact.uniq.sort
+    @region_options = all_rows.map { |row| row[:region_name] }.compact.uniq.sort
+    @closed_missions_count = all_rows.size
+    @closed_placement_rows = filter_closed_mission_rows(all_rows)
+    @closed_total_cents = @closed_placement_rows.sum { |row| row[:potential_cents] }
+    @closed_average_days = if @closed_placement_rows.any?
+      (@closed_placement_rows.sum { |row| row[:duration_days] } / @closed_placement_rows.size.to_f).round
+    else
+      0
+    end
+    @closed_candidates_count = @closed_placement_rows.count { |row| row[:candidate_name].present? }
+  end
+
+  def filter_closed_mission_rows(rows)
+    rows.select do |row|
+      matches_company = @company_filter.blank? || row[:company_name] == @company_filter
+      matches_region = @region_filter.blank? || row[:region_name] == @region_filter
+      matches_amount = if @amount_filter.blank?
+        true
+      else
+        amount_cents = row[:potential_cents]
+
+        case @amount_filter
+        when "lt_5000"
+          amount_cents < 500_000
+        when "between_5000_10000"
+          amount_cents >= 500_000 && amount_cents <= 1_000_000
+        when "gt_10000"
+          amount_cents > 1_000_000
+        else
+          true
+        end
+      end
+
+      matches_company && matches_region && matches_amount
     end
   end
 end

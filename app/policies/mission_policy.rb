@@ -7,8 +7,16 @@ class MissionPolicy < ApplicationPolicy
     index?
   end
 
+  def pending_missions?
+    index?
+  end
+
+  def apply?
+    freelance?
+  end
+
   def show?
-    admin? || mission_owned_by_freelance? || mission_owned_by_client? || candidate?
+    admin? || mission_owned_by_freelance? || mission_owned_by_client? || mission_applied_by_freelance? || candidate?
   end
 
   def create?
@@ -51,5 +59,9 @@ class MissionPolicy < ApplicationPolicy
 
   def mission_owned_by_client?
     client? && record.client_contact&.user_id == user.id
+  end
+
+  def mission_applied_by_freelance?
+    freelance? && user.freelancer_profile&.freelance_mission_applications&.exists?(mission_id: record.id)
   end
 end

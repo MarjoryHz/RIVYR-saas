@@ -1,4 +1,5 @@
 <% hide_search = controller_name == "missions" && action_name == "index" %>
+<% show_my_missions_nav = controller_name == "missions" && action_name == "my_missions" %>
 
 <nav class="pt-5 pr-5">
   <div class="flex w-full items-center gap-4">
@@ -11,8 +12,8 @@
       <div class="pointer-events-none absolute inset-0 rounded-r-2xl rounded-l-none  from-transparent via-[72%] via-base-100/38 to-base-100/92"></div>
 
       <% unless hide_search %>
-        <div class="relative hidden flex-1 justify-center lg:flex">
-          <label class="flex w-full max-w-md items-center gap-3 rounded-full border border-rose-100 bg-rose-50/85 px-5 py-2 text-[#c48797] shadow-inner">
+        <div class="relative hidden flex-1 items-center justify-center lg:flex">
+          <label class="flex w-full max-w-xl items-center gap-3 rounded-full border border-rose-100 bg-rose-50/85 px-5 py-2 text-[#c48797] shadow-inner">
             <i class="fa-solid fa-magnifying-glass text-sm"></i>
             <input type="text" placeholder="Rechercher" class="w-full bg-transparent text-sm text-[#7f5260] outline-none placeholder:text-[#c48797]">
           </label>
@@ -24,7 +25,7 @@
           <i class="fa-regular fa-bell text-base"></i>
         </button>
         <button type="button" class="hidden h-10 w-10 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-primary shadow-sm sm:inline-flex">
-          <i class="fa-solid fa-robot text-base"></i>
+          <i class="fa-solid <%= show_my_missions_nav ? 'fa-gear' : 'fa-robot' %> text-base"></i>
         </button>
       </div>
     </div>

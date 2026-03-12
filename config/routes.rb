@@ -6,7 +6,9 @@ Rails.application.routes.draw do
   resources :freelancer_profiles
   resources :missions do
     get :my_missions, on: :collection
+    get :pending_missions, on: :collection
     patch :toggle_freelance_urgent, on: :member
+    post :apply, on: :member
   end
   resources :candidates
   resources :placements
