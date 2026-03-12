@@ -73,3 +73,5 @@ group :test do
 end
 
 gem 'faker'
+
+gem "inline_svg", "~> 1.10"
