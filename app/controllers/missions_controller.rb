@@ -315,7 +315,6 @@ class MissionsController < ApplicationController
       .limit(3)
   end
 
-<<<<<<< mes_missions
   def build_my_mission_row(mission, preference = nil)
     seed = mission.reference.to_s.hash.abs
     actual_commission_cents = mission.placement&.commission&.freelancer_share_cents
@@ -443,7 +442,6 @@ class MissionsController < ApplicationController
       matches_company && matches_region && matches_amount
     end
   end
-=======
   def library_scope
     MissionPolicy::Scope.new(current_user, Mission).resolve_for_library
   end
@@ -868,5 +866,4 @@ class MissionsController < ApplicationController
     size = mission_company_segment(mission)
     "#{size} du secteur #{sector}, environnement exigeant et evolutif."
   end
->>>>>>> master
 end
