@@ -9,6 +9,12 @@ Rails.application.routes.draw do
     get :pending_missions, on: :collection
     patch :toggle_freelance_urgent, on: :member
     post :apply, on: :member
+    collection do
+      get :library, as: :library
+    end
+    member do
+      post :toggle_favorite
+    end
   end
   resources :candidates
   resources :placements

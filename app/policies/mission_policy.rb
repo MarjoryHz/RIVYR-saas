@@ -3,6 +3,7 @@ class MissionPolicy < ApplicationPolicy
     admin? || freelance? || client? || candidate?
   end
 
+<<<<<<< mes_missions
   def my_missions?
     index?
   end
@@ -17,6 +18,14 @@ class MissionPolicy < ApplicationPolicy
 
   def show?
     admin? || mission_owned_by_freelance? || mission_owned_by_client? || mission_applied_by_freelance? || candidate?
+=======
+  def library?
+    index?
+  end
+
+  def show?
+    admin? || mission_owned_by_freelance? || mission_owned_by_client? || candidate? || freelance_can_view_open_library_mission?
+>>>>>>> master
   end
 
   def create?
@@ -36,7 +45,10 @@ class MissionPolicy < ApplicationPolicy
   end
 
   def view_client_identity?
-    !candidate?
+    return true if admin? || client?
+    return false unless record.is_a?(Mission)
+
+    mission_owned_by_freelance?
   end
 
   class Scope < Scope
@@ -48,6 +60,15 @@ class MissionPolicy < ApplicationPolicy
       return scope.all if user&.status == "active" && user.role_candidate?
 
       scope.none
+    end
+
+    def resolve_for_library
+      return scope.none unless user&.status == "active" && user.role_freelance?
+
+      scope
+        .joins(freelancer_profile: :user)
+        .where(status: "open")
+        .where(users: { role: "admin" })
     end
   end
 
@@ -61,7 +82,12 @@ class MissionPolicy < ApplicationPolicy
     client? && record.client_contact&.user_id == user.id
   end
 
+<<<<<<< mes_missions
   def mission_applied_by_freelance?
     freelance? && user.freelancer_profile&.freelance_mission_applications&.exists?(mission_id: record.id)
+=======
+  def freelance_can_view_open_library_mission?
+    freelance? && record.status == "open"
+>>>>>>> master
   end
 end
