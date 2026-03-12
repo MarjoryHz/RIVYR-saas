@@ -11,6 +11,8 @@ class Mission < ApplicationRecord
   belongs_to :specialty
 
   has_one :placement, dependent: :destroy
+  has_many :freelance_mission_preferences, dependent: :destroy
+  has_many :freelance_mission_applications, dependent: :destroy
 
   validates :title, presence: true
   validates :reference, presence: true

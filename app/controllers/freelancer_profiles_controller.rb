@@ -27,7 +27,7 @@ class FreelancerProfilesController < ApplicationController
     authorize @freelancer_profile
 
     if @freelancer_profile.save
-      redirect_to @freelancer_profile, notice: "Profil freelancer cree avec succes."
+      redirect_to @freelancer_profile, notice: "Profil freelance créé avec succès."
     else
       render :new, status: :unprocessable_entity
     end
@@ -41,7 +41,7 @@ class FreelancerProfilesController < ApplicationController
     authorize @freelancer_profile
 
     if @freelancer_profile.update(freelancer_profile_params)
-      redirect_to @freelancer_profile, notice: "Profil freelancer mis a jour avec succes."
+      redirect_to @freelancer_profile, notice: "Profil freelance mis à jour avec succès."
     else
       render :edit, status: :unprocessable_entity
     end
@@ -51,9 +51,9 @@ class FreelancerProfilesController < ApplicationController
     authorize @freelancer_profile
 
     if @freelancer_profile.destroy
-      redirect_to freelancer_profiles_path, status: :see_other, notice: "Profil freelancer supprime avec succes."
+      redirect_to freelancer_profiles_path, status: :see_other, notice: "Profil freelance supprimé avec succès."
     else
-      redirect_to @freelancer_profile, alert: "Impossible de supprimer ce profil freelancer."
+      redirect_to @freelancer_profile, alert: "Impossible de supprimer ce profil freelance."
     end
   end
 

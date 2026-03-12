@@ -2,7 +2,7 @@
   <% if client_contact.errors.any? %>
     <div class="alert alert-error">
       <div>
-        <p><strong><%= pluralize(client_contact.errors.count, "erreur") %> ont empeche l'enregistrement :</strong></p>
+        <p><strong><%= pluralize(client_contact.errors.count, "erreur") %> ont empêché l'enregistrement :</strong></p>
         <ul class="list-disc ml-6 mt-2">
           <% client_contact.errors.full_messages.each do |message| %>
             <li><%= message %></li>
@@ -14,12 +14,12 @@
 
   <div>
     <%= f.label :client_id, "Client", class: "block font-medium" %>
-    <%= f.collection_select :client_id, @clients, :id, :legal_name, { prompt: "Selectionner un client" }, { class: "select select-bordered w-full" } %>
+    <%= f.collection_select :client_id, @clients, :id, :legal_name, { prompt: "Sélectionner un client" }, { class: "select select-bordered w-full" } %>
   </div>
 
   <div class="grid md:grid-cols-2 gap-4">
     <div>
-      <%= f.label :first_name, "Prenom", class: "block font-medium" %>
+      <%= f.label :first_name, "Prénom", class: "block font-medium" %>
       <%= f.text_field :first_name, class: "input input-bordered w-full" %>
     </div>
 
@@ -35,7 +35,7 @@
   </div>
 
   <div>
-    <%= f.label :phone, "Telephone", class: "block font-medium" %>
+    <%= f.label :phone, "Téléphone", class: "block font-medium" %>
     <%= f.telephone_field :phone, class: "input input-bordered w-full" %>
   </div>
 

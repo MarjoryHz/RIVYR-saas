@@ -1,0 +1,48 @@
+@layer components {
+  .missions-summary-sticky {
+    position: sticky;
+    top: 1.25rem;
+    z-index: 20;
+  }
+
+  .missions-content-scroll {
+    max-height: calc(100vh - 18rem);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 0.5rem;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(244, 165, 138, 0.95) rgba(255, 255, 255, 0.72);
+  }
+
+  .missions-content-scroll::-webkit-scrollbar {
+    width: 0.7rem;
+  }
+
+  .missions-content-scroll::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+  }
+
+  .missions-content-scroll::-webkit-scrollbar-thumb {
+    border: 2px solid rgba(255, 255, 255, 0.72);
+    border-radius: 999px;
+    background: #f4a58a;
+  }
+
+  .missions-content-scroll::-webkit-scrollbar-thumb:hover {
+    background: #ee977c;
+  }
+
+  @media (max-width: 1024px) {
+    .missions-summary-sticky {
+      position: static;
+    }
+
+    .missions-content-scroll {
+      max-height: none;
+      overflow: visible;
+      padding-right: 0;
+    }
+  }
+}

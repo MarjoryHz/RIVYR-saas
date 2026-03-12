@@ -1,46 +1,224 @@
-<div class="max-w-6xl mx-auto p-6 space-y-6">
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-bold">Placements</h1>
-    <% if policy(Placement).new? %>
-      <%= link_to "Nouveau placement", new_placement_path, class: "btn btn-primary" %>
-    <% end %>
-  </div>
-  <%= render "shared/index_filters", path: placements_path, q: @q, status: @status, status_options: Placement.statuses.keys, status_param: :status %>
+<% if current_user.role_freelance? && @scope == "closed_missions" %>
+  <% surface_card_class = "rounded-[1.45rem] border border-base-100/70 bg-base-100/88 shadow-lg" %>
 
-  <div class="overflow-x-auto bg-base-100 rounded-lg">
-    <% if @placements.any? %>
-      <table class="table w-full">
-        <thead>
-          <tr>
-            <th>Mission</th>
-            <th>Candidat</th>
-            <th>Statut</th>
-            <th>Date embauche</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @placements.each do |placement| %>
-            <tr>
-              <td><%= placement.mission.reference %></td>
-              <td><%= [placement.candidate.first_name, placement.candidate.last_name].join(" ") %></td>
-              <td><%= placement.status %></td>
-              <td><%= placement.hired_at.presence || "-" %></td>
-              <td class="text-right">
-                <%= link_to "Voir", placement_path(placement), class: "btn btn-sm" %>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    <% else %>
-      <div class="p-8 text-center space-y-3">
-        <p class="text-lg font-medium">Aucun placement pour le moment</p>
-        <% if policy(Placement).new? %>
-          <%= link_to "Creer le premier placement", new_placement_path, class: "btn btn-primary" %>
-        <% end %>
+  <div class="mx-auto max-w-7xl p-4 md:p-6">
+    <section class="space-y-6">
+      <div class="missions-summary-sticky">
+        <header class="space-y-5">
+          <div class="space-y-5">
+            <div class="space-y-2">
+              <h1 class="text-3xl font-semibold tracking-tight text-base-content md:text-4xl">Mes missions</h1>
+            </div>
+
+            <div class="inline-flex flex-wrap items-center rounded-full border border-base-200/80 bg-base-100/72 p-1 text-[#7f5260] shadow-sm">
+              <%= link_to my_missions_missions_path, class: "px-7 py-3 text-base font-medium text-base-content/75 transition hover:text-base-content" do %>
+                En cours (<%= Mission.joins(:freelancer_profile).where(freelancer_profiles: { user_id: current_user.id }, status: %w[open in_progress]).count %>)
+              <% end %>
+              <%= link_to pending_missions_missions_path, class: "px-6 py-3 text-base font-medium text-base-content/75 transition hover:text-base-content" do %>
+                En attente de validation (<%= current_user.freelancer_profile&.freelance_mission_applications&.pending_validation&.count.to_i %>)
+              <% end %>
+              <span class="text-base-content/20">|</span>
+              <span class="inline-flex items-center rounded-full bg-[#f4a58a] px-7 py-3 text-base font-semibold text-white">
+                Terminées (<%= @closed_missions_count %>)
+              </span>
+            </div>
+
+            <div class="grid min-w-0 overflow-hidden md:grid-cols-3 <%= surface_card_class %>">
+              <div class="p-4 md:border-r md:border-base-200/80 md:pr-6">
+                <p class="text-3xl font-semibold text-base-content"><%= number_to_currency(@closed_total_cents / 100.0, unit: "€", precision: 0) %></p>
+                <p class="mt-1 text-base text-base-content/60">Gains réalisés</p>
+              </div>
+              <div class="p-4 md:border-r md:border-base-200/80 md:px-6">
+                <p class="text-3xl font-semibold text-base-content"><%= @closed_average_days %> jours</p>
+                <p class="mt-1 text-base text-base-content/60">Durée moyenne</p>
+              </div>
+              <div class="p-4 md:px-6">
+                <p class="text-3xl font-semibold text-base-content"><%= @closed_candidates_count %></p>
+                <p class="mt-1 text-base text-base-content/60">Candidats recrutés</p>
+              </div>
+            </div>
+          </div>
+        </header>
       </div>
-    <% end %>
+
+      <div class="missions-content-scroll space-y-6">
+        <div class="<%= surface_card_class %> overflow-hidden">
+          <div class="border-b border-base-200/70 px-6 py-4">
+            <div class="relative">
+              <div class="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-2 rounded-2xl border border-base-200 bg-base-100/75 px-5 py-3 text-base font-medium text-base-content/70 shadow-sm transition hover:bg-base-100/95"
+                  aria-controls="closed-missions-filtres"
+                  aria-expanded="false"
+                  onclick="document.getElementById('closed-missions-filtres').classList.toggle('hidden'); this.setAttribute('aria-expanded', String(!document.getElementById('closed-missions-filtres').classList.contains('hidden')));">
+                <i class="fa-solid fa-sliders"></i>
+                Filtres
+                <i class="fa-solid fa-angle-down text-xs"></i>
+                </button>
+              </div>
+
+              <div id="closed-missions-filtres" class="absolute inset-x-0 top-full z-30 mt-3 hidden rounded-[1.45rem] border border-base-200 bg-base-100 p-4 shadow-xl">
+                <%= form_with url: placements_path, method: :get, class: "grid gap-3 md:grid-cols-2 xl:grid-cols-4", html: { onsubmit: "document.getElementById('closed-missions-filtres').classList.add('hidden')" } do %>
+                  <%= hidden_field_tag :scope, "closed_missions" %>
+
+                  <div>
+                    <label for="closed-company-filter" class="mb-1 block text-sm font-medium text-base-content/70">Entreprise</label>
+                    <%= select_tag :company,
+                      options_for_select([["Toutes les entreprises", ""]] + @company_options.map { |company| [company, company] }, @company_filter),
+                      id: "closed-company-filter",
+                      class: "select select-bordered w-full" %>
+                  </div>
+
+                  <div>
+                    <label for="closed-amount-filter" class="mb-1 block text-sm font-medium text-base-content/70">Montant</label>
+                    <%= select_tag :amount,
+                      options_for_select(
+                        [
+                          ["Tous les montants", ""],
+                          ["Moins de 5 000 €", "lt_5000"],
+                          ["Entre 5 000 € et 10 000 €", "between_5000_10000"],
+                          ["Plus de 10 000 €", "gt_10000"]
+                        ],
+                        @amount_filter
+                      ),
+                      id: "closed-amount-filter",
+                      class: "select select-bordered w-full" %>
+                  </div>
+
+                  <div>
+                    <label for="closed-region-filter" class="mb-1 block text-sm font-medium text-base-content/70">Ville</label>
+                    <%= select_tag :region,
+                      options_for_select([["Toutes les villes", ""]] + @region_options.map { |region| [region, region] }, @region_filter),
+                      id: "closed-region-filter",
+                      class: "select select-bordered w-full" %>
+                  </div>
+
+                  <div class="flex items-end gap-2">
+                    <%= submit_tag "Appliquer", class: "btn btn-primary flex-1" %>
+                    <%= link_to "Réinitialiser", placements_path(scope: "closed_missions"), class: "btn btn-ghost" %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+
+          <% if @closed_placement_rows.any? %>
+            <div class="divide-y divide-base-200/70">
+              <% @closed_placement_rows.each do |row| %>
+                <article class="px-6 py-5">
+                  <div class="space-y-4">
+                    <div class="grid items-center gap-4 xl:grid-cols-[minmax(0,1fr)_auto]">
+                      <div class="min-w-0 flex items-center gap-3">
+                        <h2 class="min-w-0 truncate whitespace-nowrap text-xl font-semibold leading-tight text-base-content md:text-2xl"><%= row[:mission].title %></h2>
+                        <% if row[:region_name].present? %>
+                          <span class="shrink-0 text-base-content/30">|</span>
+                          <span class="shrink-0 whitespace-nowrap text-sm font-medium text-base-content/55 md:text-base"><%= row[:region_name] %></span>
+                        <% end %>
+                      </div>
+
+                      <div class="flex items-center justify-self-end gap-5">
+                        <ul class="steps steps-horizontal text-xs md:text-sm">
+                          <% row[:closed_steps].each_with_index do |step, index| %>
+                            <li class="step step-primary" data-content="<%= index + 1 %>"><%= step[:label] %></li>
+                          <% end %>
+                        </ul>
+
+                        <span class="text-sm font-medium text-base-content/55">
+                          <%= row[:duration_days] %> jours
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_auto] xl:items-center">
+                      <div class="flex min-h-[3.25rem] items-center gap-4 text-base text-base-content/75">
+                        <% if row[:company_logo].present? %>
+                          <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-base-200 bg-base-100">
+                            <%= image_tag row[:company_logo], alt: row[:company_name], class: "h-full w-full object-cover" %>
+                          </div>
+                        <% else %>
+                          <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/18 text-primary">
+                            <i class="fa-regular fa-building text-lg"></i>
+                          </div>
+                        <% end %>
+
+                        <div class="space-y-1">
+                          <p class="font-medium text-base-content"><%= row[:company_name] %></p>
+                          <p class="text-sm text-base-content/55"><%= row[:client_contact_name].presence || row[:candidate_name] %></p>
+                        </div>
+                      </div>
+
+                      <div class="flex flex-wrap items-center gap-3 xl:justify-end">
+                        <p class="min-w-[8rem] text-xl font-semibold md:text-2xl xl:text-right"><%= number_to_currency(row[:potential_cents] / 100.0, unit: "€", precision: 0) %></p>
+
+                        <button type="button" class="inline-flex min-w-[12rem] items-center justify-center gap-2 rounded-full border border-[#f6d6db] bg-[#ffe8ec] px-4 py-2.5 text-sm font-medium text-[#8c5665]">
+                          <i class="fa-regular fa-circle-check text-[#ef8a73]"></i>
+                          Placement réalisé
+                        </button>
+
+                        <%= link_to placement_path(row[:placement]), class: "inline-flex min-w-[11rem] items-center justify-center rounded-full border border-[#f1a38b] bg-[#f4a58a] px-6 py-2.5 text-base font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" do %>
+                          Voir le placement
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="p-8 text-center text-base-content/65">
+              Aucune mission terminée pour le moment.
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </section>
   </div>
-  <%= render "shared/pagination", page: @page, total_pages: @total_pages, extra_params: { q: @q, status: @status }, path: ->(params) { placements_path(params) } %>
-</div>
+<% else %>
+  <div class="max-w-6xl mx-auto p-6 space-y-6">
+    <div class="flex items-center justify-between">
+      <h1 class="text-2xl font-bold">Placements</h1>
+      <% if policy(Placement).new? %>
+        <%= link_to "Nouveau placement", new_placement_path, class: "btn btn-primary" %>
+      <% end %>
+    </div>
+    <%= render "shared/index_filters", path: placements_path, q: @q, status: @status, status_options: Placement.statuses.keys, status_param: :status, extra_params: { scope: @scope.presence } %>
+
+    <div class="overflow-x-auto bg-base-100 rounded-lg">
+      <% if @placements.any? %>
+        <table class="table w-full">
+          <thead>
+            <tr>
+              <th>Mission</th>
+              <th>Candidat</th>
+              <th>Statut</th>
+              <th>Date d'embauche</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @placements.each do |placement| %>
+              <tr>
+                <td><%= placement.mission.reference %></td>
+                <td><%= [placement.candidate.first_name, placement.candidate.last_name].join(" ") %></td>
+                <td><%= placement.status %></td>
+                <td><%= placement.hired_at.presence || "-" %></td>
+                <td class="text-right">
+                  <%= link_to "Voir", placement_path(placement), class: "btn btn-sm" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <div class="p-8 text-center space-y-3">
+          <p class="text-lg font-medium">Aucun placement pour le moment</p>
+          <% if policy(Placement).new? %>
+            <%= link_to "Créer le premier placement", new_placement_path, class: "btn btn-primary" %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    <%= render "shared/pagination", page: @page, total_pages: @total_pages, extra_params: { q: @q, status: @status, scope: @scope.presence }, path: ->(params) { placements_path(params) } %>
+  </div>
+<% end %>

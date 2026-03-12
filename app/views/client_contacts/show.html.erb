@@ -11,9 +11,9 @@
     <p><strong>Client:</strong> <%= link_to @client_contact.client.legal_name, client_path(@client_contact.client), class: "link link-primary" %></p>
     <p><strong>Poste:</strong> <%= @client_contact.job_title.presence || "-" %></p>
     <p><strong>Email:</strong> <%= @client_contact.email.presence || "-" %></p>
-    <p><strong>Telephone:</strong> <%= @client_contact.phone.presence || "-" %></p>
+    <p><strong>Téléphone :</strong> <%= @client_contact.phone.presence || "-" %></p>
     <p><strong>Contact principal:</strong> <%= @client_contact.primary_contact ? "Oui" : "Non" %></p>
   </div>
 
-  <%= link_to "Retour a la liste", client_contacts_path, class: "btn" %>
+  <%= link_to "Retour à la liste", client_contacts_path, class: "btn" %>
 </div>

@@ -22,7 +22,7 @@ class ClientsController < ApplicationController
     authorize @client
 
     if @client.save
-      redirect_to @client, notice: "Client cree avec succes."
+      redirect_to @client, notice: "Client créé avec succès."
     else
       render :new, status: :unprocessable_entity
     end
@@ -36,7 +36,7 @@ class ClientsController < ApplicationController
     authorize @client
 
     if @client.update(client_params)
-      redirect_to @client, notice: "Client mis a jour avec succes."
+      redirect_to @client, notice: "Client mis à jour avec succès."
     else
       render :edit, status: :unprocessable_entity
     end
@@ -46,7 +46,7 @@ class ClientsController < ApplicationController
     authorize @client
 
     if @client.destroy
-      redirect_to clients_path, status: :see_other, notice: "Client supprime avec succes."
+      redirect_to clients_path, status: :see_other, notice: "Client supprimé avec succès."
     else
       redirect_to @client, alert: "Impossible de supprimer ce client."
     end
@@ -63,6 +63,7 @@ class ClientsController < ApplicationController
       :ownership_type,
       :legal_name,
       :brand_name,
+      :logo,
       :sector,
       :website_url,
       :location,

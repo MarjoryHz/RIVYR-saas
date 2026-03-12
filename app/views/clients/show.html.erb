@@ -10,6 +10,7 @@
 
   <div class="grid md:grid-cols-2 gap-4">
     <p><strong>Nom commercial:</strong> <%= @client.brand_name.presence || "-" %></p>
+    <p><strong>Logo:</strong> <%= @client.logo.presence || "-" %></p>
     <p><strong>Secteur:</strong> <%= @client.sector.presence || "-" %></p>
     <p><strong>Type de propriete:</strong> <%= @client.ownership_type.presence || "-" %></p>
     <p><strong>Taille:</strong> <%= @client.company_size.presence || "-" %></p>

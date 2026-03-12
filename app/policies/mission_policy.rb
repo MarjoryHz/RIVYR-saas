@@ -3,12 +3,29 @@ class MissionPolicy < ApplicationPolicy
     admin? || freelance? || client? || candidate?
   end
 
+<<<<<<< mes_missions
+  def my_missions?
+    index?
+  end
+
+  def pending_missions?
+    index?
+  end
+
+  def apply?
+    freelance?
+  end
+
+  def show?
+    admin? || mission_owned_by_freelance? || mission_owned_by_client? || mission_applied_by_freelance? || candidate?
+=======
   def library?
     index?
   end
 
   def show?
     admin? || mission_owned_by_freelance? || mission_owned_by_client? || candidate? || freelance_can_view_open_library_mission?
+>>>>>>> master
   end
 
   def create?
@@ -65,7 +82,12 @@ class MissionPolicy < ApplicationPolicy
     client? && record.client_contact&.user_id == user.id
   end
 
+<<<<<<< mes_missions
+  def mission_applied_by_freelance?
+    freelance? && user.freelancer_profile&.freelance_mission_applications&.exists?(mission_id: record.id)
+=======
   def freelance_can_view_open_library_mission?
     freelance? && record.status == "open"
+>>>>>>> master
   end
 end

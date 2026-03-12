@@ -27,7 +27,7 @@ class PaymentsController < ApplicationController
     authorize @payment
 
     if @payment.save
-      redirect_to @payment, notice: "Paiement cree avec succes."
+      redirect_to @payment, notice: "Paiement créé avec succès."
     else
       render :new, status: :unprocessable_entity
     end
@@ -41,7 +41,7 @@ class PaymentsController < ApplicationController
     authorize @payment
 
     if @payment.update(payment_params)
-      redirect_to @payment, notice: "Paiement mis a jour avec succes."
+      redirect_to @payment, notice: "Paiement mis à jour avec succès."
     else
       render :edit, status: :unprocessable_entity
     end
@@ -51,7 +51,7 @@ class PaymentsController < ApplicationController
     authorize @payment
 
     if @payment.destroy
-      redirect_to payments_path, status: :see_other, notice: "Paiement supprime avec succes."
+      redirect_to payments_path, status: :see_other, notice: "Paiement supprimé avec succès."
     else
       redirect_to @payment, alert: "Impossible de supprimer ce paiement."
     end

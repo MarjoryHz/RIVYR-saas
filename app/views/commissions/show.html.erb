@@ -10,18 +10,18 @@
   <div class="grid md:grid-cols-2 gap-4">
     <p><strong>Placement:</strong> <%= link_to "##{@commission.placement_id}", placement_path(@commission.placement), class: "link link-primary" %></p>
     <p><strong>Mission:</strong> <%= @commission.placement.mission.reference %></p>
-    <p><strong>Regle:</strong> <%= @commission.commission_rule %></p>
+    <p><strong>Règle :</strong> <%= @commission.commission_rule %></p>
     <p><strong>Statut:</strong> <%= @commission.status %></p>
     <p><strong>Brut (cents):</strong> <%= @commission.gross_amount_cents %></p>
     <p><strong>Part Rivyr (cents):</strong> <%= @commission.rivyr_share_cents %></p>
-    <p><strong>Part freelancer (cents):</strong> <%= @commission.freelancer_share_cents %></p>
-    <p><strong>Paiement client requis:</strong> <%= @commission.client_payment_required ? "Oui" : "Non" %></p>
-    <p><strong>Eligible facturation:</strong> <%= @commission.eligible_for_invoicing_at.presence || "-" %></p>
+    <p><strong>Part freelance (cents) :</strong> <%= @commission.freelancer_share_cents %></p>
+    <p><strong>Paiement client requis :</strong> <%= @commission.client_payment_required ? "Oui" : "Non" %></p>
+    <p><strong>Éligible à la facturation :</strong> <%= @commission.eligible_for_invoicing_at.presence || "-" %></p>
   </div>
 
   <div class="flex gap-2">
-    <%= link_to "Nouveau payment", new_payment_path(commission_id: @commission.id), class: "btn" %>
+    <%= link_to "Nouveau paiement", new_payment_path(commission_id: @commission.id), class: "btn" %>
   </div>
 
-  <%= link_to "Retour a la liste", commissions_path, class: "btn" %>
+  <%= link_to "Retour à la liste", commissions_path, class: "btn" %>
 </div>

@@ -24,7 +24,7 @@ class InvoicesController < ApplicationController
     authorize @invoice
 
     if @invoice.save
-      redirect_to @invoice, notice: "Facture creee avec succes."
+      redirect_to @invoice, notice: "Facture créée avec succès."
     else
       render :new, status: :unprocessable_entity
     end
@@ -38,7 +38,7 @@ class InvoicesController < ApplicationController
     authorize @invoice
 
     if @invoice.update(invoice_params)
-      redirect_to @invoice, notice: "Facture mise a jour avec succes."
+      redirect_to @invoice, notice: "Facture mise à jour avec succès."
     else
       render :edit, status: :unprocessable_entity
     end
@@ -48,7 +48,7 @@ class InvoicesController < ApplicationController
     authorize @invoice
 
     if @invoice.destroy
-      redirect_to invoices_path, status: :see_other, notice: "Facture supprimee avec succes."
+      redirect_to invoices_path, status: :see_other, notice: "Facture supprimée avec succès."
     else
       redirect_to @invoice, alert: "Impossible de supprimer cette facture."
     end
@@ -60,7 +60,7 @@ class InvoicesController < ApplicationController
 
     note = @invoice.invoice_notes.new(invoice_note_params.merge(user: current_user))
     if note.save
-      redirect_to @invoice, notice: "Note de suivi ajoutee."
+      redirect_to @invoice, notice: "Note de suivi ajoutée."
     else
       redirect_to @invoice, alert: note.errors.full_messages.to_sentence
     end

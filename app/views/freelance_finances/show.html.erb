@@ -35,7 +35,7 @@
         <div class="stat">
           <div class="stat-title">Paiements clients en attente</div>
           <div class="stat-value text-error"><%= number_to_currency(@waiting_client_payments_cents / 100.0, unit: "€", precision: 0) %></div>
-          <div class="stat-desc">Factures client non encaissees</div>
+          <div class="stat-desc">Factures client non encaissées</div>
         </div>
       </div>
 
@@ -49,8 +49,8 @@
               </div>
 
               <%= form_with url: freelance_finance_path, method: :get, class: "grid gap-2 md:grid-cols-5" do %>
-                <%= text_field_tag :q, @q, placeholder: "Mission ou reference", class: "input input-bordered input-sm w-full md:col-span-2" %>
-                <%= select_tag :client_invoice_status, options_for_select([["Facture client", ""], ["Sans facture", "none"], ["Emise", "issued"], ["Payee", "paid"], ["Annulee", "canceled"]], @client_invoice_status), class: "select select-bordered select-sm w-full" %>
+                <%= text_field_tag :q, @q, placeholder: "Mission ou référence", class: "input input-bordered input-sm w-full md:col-span-2" %>
+                <%= select_tag :client_invoice_status, options_for_select([["Facture client", ""], ["Sans facture", "none"], ["Émise", "issued"], ["Payée", "paid"], ["Annulée", "canceled"]], @client_invoice_status), class: "select select-bordered select-sm w-full" %>
                 <%= select_tag :payout_status, options_for_select([["Virement", ""], ["Sans demande", "none"], ["Pending", "pending"], ["Approved", "approved"], ["Paid", "paid"], ["Rejected", "rejected"]], @payout_status), class: "select select-bordered select-sm w-full" %>
                 <%= submit_tag "Filtrer", class: "btn btn-sm btn-primary" %>
               <% end %>
@@ -62,7 +62,7 @@
                       <th>Mission</th>
                       <th>Client</th>
                       <th>Montant</th>
-                      <th>Paiement estime</th>
+                      <th>Paiement estimé</th>
                       <th>Statut</th>
                       <th></th>
                     </tr>
@@ -81,7 +81,7 @@
                       <% end %>
                     <% else %>
                       <tr>
-                        <td colspan="6" class="py-6 text-center text-base-content/60">Aucun resultat pour les filtres selectionnes.</td>
+                        <td colspan="6" class="py-6 text-center text-base-content/60">Aucun résultat pour les filtres sélectionnés.</td>
                       </tr>
                     <% end %>
                   </tbody>
@@ -97,7 +97,7 @@
               <h2 class="text-2xl font-semibold text-base-content">Revenus RIVYR</h2>
               <p class="text-4xl font-semibold text-base-content"><%= @yearly_revenue[:year] %></p>
               <p class="text-base-content/80">Placements: <span class="font-semibold"><%= @yearly_revenue[:placements_count] %></span></p>
-              <p class="text-base-content/80">Gains realises: <span class="font-semibold"><%= number_to_currency(@yearly_revenue[:realized_cents] / 100.0, unit: "€") %></span></p>
+              <p class="text-base-content/80">Gains réalisés : <span class="font-semibold"><%= number_to_currency(@yearly_revenue[:realized_cents] / 100.0, unit: "€") %></span></p>
               <p class="text-base-content/80">Gains en attente: <span class="font-semibold"><%= number_to_currency(@yearly_revenue[:pending_cents] / 100.0, unit: "€") %></span></p>
               <p class="text-base-content/80">Projection: <span class="font-semibold"><%= number_to_currency(@yearly_revenue[:projected_cents] / 100.0, unit: "€") %></span></p>
             </div>
@@ -106,7 +106,7 @@
           <div class="card border border-base-100/70 bg-base-100/90 shadow">
             <div class="card-body space-y-3 p-4 md:p-5">
               <h2 class="text-2xl font-semibold text-base-content">Actions rapides</h2>
-              <p class="text-sm text-base-content/70">Les actions detaillees sont aussi disponibles mission par mission ci-dessous.</p>
+              <p class="text-sm text-base-content/70">Les actions détaillées sont aussi disponibles mission par mission ci-dessous.</p>
               <div class="flex flex-wrap gap-2">
                 <%= link_to "Voir mes placements", placements_path, class: "btn btn-sm btn-outline" %>
                 <%= link_to "Voir mes factures", invoices_path, class: "btn btn-sm btn-outline" %>
@@ -146,10 +146,10 @@
                     <div class="mt-4 flex flex-wrap gap-2">
                       <%= link_to "Voir placement", placement_path(row[:placement]), class: "btn btn-sm btn-outline" %>
                       <% if row[:placement].client_invoice.blank? %>
-                        <%= button_to "Generer facture client", create_client_invoice_freelance_finance_path, params: { placement_id: row[:placement].id }, class: "btn btn-sm btn-primary" %>
+                          <%= button_to "Générer facture client", create_client_invoice_freelance_finance_path, params: { placement_id: row[:placement].id }, class: "btn btn-sm btn-primary" %>
                       <% end %>
                       <% if row[:placement].client_invoice&.status_paid? && row[:placement].freelancer_invoice.blank? %>
-                        <%= button_to "Creer facture freelance", create_freelancer_invoice_freelance_finance_path, params: { placement_id: row[:placement].id }, class: "btn btn-sm btn-secondary" %>
+                        <%= button_to "Créer facture freelance", create_freelancer_invoice_freelance_finance_path, params: { placement_id: row[:placement].id }, class: "btn btn-sm btn-secondary" %>
                       <% end %>
                       <% if row[:placement].freelancer_invoice.present? %>
                         <%= form_with url: create_payout_request_freelance_finance_path, method: :post, class: "inline-flex" do %>
@@ -200,7 +200,7 @@
                 <% end %>
               </ul>
             <% else %>
-              <p class="text-base-content/60">Pas encore d'evenement de suivi.</p>
+              <p class="text-base-content/60">Pas encore d'événement de suivi.</p>
             <% end %>
           </div>
         </div>

@@ -2,7 +2,7 @@
   <% if commission.errors.any? %>
     <div class="alert alert-error">
       <div>
-        <p><strong><%= pluralize(commission.errors.count, "erreur") %> ont empeche l'enregistrement :</strong></p>
+        <p><strong><%= pluralize(commission.errors.count, "erreur") %> ont empêché l'enregistrement :</strong></p>
         <ul class="list-disc ml-6 mt-2">
           <% commission.errors.full_messages.each do |message| %>
             <li><%= message %></li>
@@ -14,12 +14,12 @@
 
   <div>
     <%= f.label :placement_id, "Placement", class: "block font-medium" %>
-    <%= f.collection_select :placement_id, @placements, :id, ->(p) { "Placement ##{p.id} - #{p.mission.reference}" }, { prompt: "Selectionner un placement" }, { class: "select select-bordered w-full" } %>
+    <%= f.collection_select :placement_id, @placements, :id, ->(p) { "Placement ##{p.id} - #{p.mission.reference}" }, { prompt: "Sélectionner un placement" }, { class: "select select-bordered w-full" } %>
   </div>
 
   <div class="grid md:grid-cols-2 gap-4">
     <div>
-      <%= f.label :commission_rule, "Regle", class: "block font-medium" %>
+      <%= f.label :commission_rule, "Règle", class: "block font-medium" %>
       <%= f.text_field :commission_rule, class: "input input-bordered w-full" %>
     </div>
     <div>
@@ -38,14 +38,14 @@
       <%= f.number_field :rivyr_share_cents, min: 0, class: "input input-bordered w-full" %>
     </div>
     <div>
-      <%= f.label :freelancer_share_cents, "Part freelancer (cents)", class: "block font-medium" %>
+      <%= f.label :freelancer_share_cents, "Part freelance (cents)", class: "block font-medium" %>
       <%= f.number_field :freelancer_share_cents, min: 0, class: "input input-bordered w-full" %>
     </div>
   </div>
 
   <div class="grid md:grid-cols-2 gap-4">
     <div>
-      <%= f.label :eligible_for_invoicing_at, "Eligible facturation", class: "block font-medium" %>
+      <%= f.label :eligible_for_invoicing_at, "Éligible à la facturation", class: "block font-medium" %>
       <%= f.date_field :eligible_for_invoicing_at, class: "input input-bordered w-full" %>
     </div>
 

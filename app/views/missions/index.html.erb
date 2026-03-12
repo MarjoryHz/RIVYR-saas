@@ -9,12 +9,12 @@
       <header class="space-y-3">
         <h1 class="text-3xl font-semibold tracking-tight text-base-content md:text-4xl">Missions</h1>
         <p class="max-w-3xl text-base text-base-content/70 md:text-lg">
-          Accedez a vos missions en cours et decouvrez de nouvelles missions.
+          Accédez à vos missions en cours et découvrez de nouvelles missions.
         </p>
       </header>
 
       <div class="grid gap-6 xl:grid-cols-2">
-        <%= link_to missions_path(scope: "my_missions"), class: "group flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-base-100/70 bg-base-100/88 shadow-lg transition hover:-translate-y-1 hover:shadow-xl" do %>
+        <div class="group flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-base-100/70 bg-base-100/88 shadow-lg">
           <div class="h-40 bg-gradient-to-br from-rose-100 via-pink-50 to-orange-50">
             <%= image_tag "img_mes_missions.svg", alt: "Mes missions", class: "h-full w-full object-cover" %>
           </div>
@@ -24,9 +24,9 @@
               <div class="space-y-1 text-base-content/70">
                 <p><span class="text-3xl font-semibold text-primary"><%= current_missions_count %></span> missions en cours</p>
                 <p>
-                  <span class="font-semibold text-primary"><%= pending_response_count %></span> en attente de reponse
+                  <span class="font-semibold text-primary"><%= pending_response_count %></span> en attente de réponse
                   <span class="mx-2 text-base-content/30">|</span>
-                  <span class="font-semibold text-secondary"><%= accepted_offers_count %></span> offres acceptees
+                  <span class="font-semibold text-secondary"><%= accepted_offers_count %></span> offres acceptées
                 </p>
               </div>
             </div>
@@ -56,13 +56,13 @@
             </div>
 
             <div class="mt-auto flex justify-end pt-1">
-              <span class="inline-flex items-center gap-2 rounded-full border border-[#f1a38b] bg-[#f4a58a] px-5 py-3 text-base font-semibold text-white shadow-sm">
+              <%= link_to my_missions_missions_path, class: "inline-flex items-center gap-2 rounded-full border border-[#f1a38b] bg-[#f4a58a] px-5 py-3 text-base font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" do %>
                 <i class="fa-solid fa-circle-check"></i>
                 Voir mes missions
-              </span>
+              <% end %>
             </div>
           </div>
-        <% end %>
+        </div>
 
         <div class="group flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-base-100/70 bg-base-100/88 shadow-lg transition hover:-translate-y-1 hover:shadow-xl">
           <div class="h-40 bg-gradient-to-br from-rose-100 via-pink-50 to-orange-50">
@@ -93,7 +93,7 @@
                 <% end %>
               <% else %>
                 <div class="rounded-2xl border border-base-200 bg-base-100/80 px-4 py-5 text-sm text-base-content/65">
-                  Aucune mission disponible dans la bibliotheque pour l'instant.
+                  Aucune mission disponible dans la bibliothèque pour l'instant.
                 </div>
               <% end %>
             </div>
@@ -101,8 +101,13 @@
             <div class="mt-auto flex justify-end pt-1">
               <%= link_to library_missions_path(status: "open"), class: "inline-flex items-center gap-2 rounded-full border border-[#f1a38b] bg-[#f4a58a] px-5 py-3 text-base font-semibold text-white shadow-sm" do %>
                 <i class="fa-solid fa-star"></i>
+<<<<<<< mes_missions
+                Accéder à la bibliothèque
+              </span>
+=======
                 Acceder a la bibliotheque
               <% end %>
+>>>>>>> master
             </div>
           </div>
         </div>
@@ -153,7 +158,7 @@
         <div class="p-8 text-center space-y-3">
           <p class="text-lg font-medium">Aucune mission pour le moment</p>
           <% if policy(Mission).new? %>
-            <%= link_to "Creer la premiere mission", new_mission_path, class: "btn btn-primary" %>
+            <%= link_to "Créer la première mission", new_mission_path, class: "btn btn-primary" %>
           <% end %>
         </div>
       <% end %>
