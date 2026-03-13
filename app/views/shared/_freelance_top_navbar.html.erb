@@ -1,33 +1,30 @@
 <% hide_search = controller_name == "missions" && action_name == "index" %>
 <% show_my_missions_nav = controller_name == "missions" && action_name == "my_missions" %>
 
-<nav class="pt-5 pr-5">
-  <div class="flex w-full items-center gap-4">
-    <div class="flex shrink-0 items-center pl-8">
-      <%= inline_svg_tag("icon_pers.svg", options={class: "text-white h-10 w-auto object-contain -ml-1"}) %>
-      <%= inline_svg_tag("icon_rivyr.svg", options={class: "text-secondary h-8 w-auto object-contain -ml-1"}) %>
+<nav class="py-7 px-9 sticky top-0 z-100">
+  <div class="flex items-center justify-between">
+
+    <div class="flex items-center">
+      <%= inline_svg_tag("icon_pers.svg", options={class: "text-white h-10 w-auto object-contain"}) %>
+      <%= inline_svg_tag("icon_rivyr.svg", options={class: "text-secondary h-8 w-auto object-contain"}) %>
     </div>
 
-    <div class="relative flex min-w-0 flex-1 items-center rounded-r-2xl rounded-l-none px-5 py-2.5">
-      <div class="pointer-events-none absolute inset-0 rounded-r-2xl rounded-l-none  from-transparent via-[72%] via-base-100/38 to-base-100/92"></div>
-
       <% unless hide_search %>
-        <div class="relative hidden flex-1 items-center justify-center lg:flex">
-          <label class="flex w-full max-w-xl items-center gap-3 rounded-full border border-rose-100 bg-rose-50/85 px-5 py-2 text-[#c48797] shadow-inner">
+        <div class="flex-1 items-center justify-center flex">
+          <label class="flex w-full max-w-xl items-center gap-3 rounded-full border border-rose-100 bg-rose-50/85 px-5 py-2 text-[#c48797] shadow-sm">
             <i class="fa-solid fa-magnifying-glass text-sm"></i>
-            <input type="text" placeholder="Rechercher" class="w-full bg-transparent text-sm text-[#7f5260] outline-none placeholder:text-[#c48797]">
+            <input type="text" placeholder="Rechercher" class="w-full text-sm text-[#7f5260] outline-none placeholder:text-[#c48797]">
           </label>
         </div>
       <% end %>
 
-      <div class="relative ml-auto flex shrink-0 items-center gap-2 pr-1">
-        <button type="button" class="hidden h-10 w-10 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-primary shadow-sm sm:inline-flex">
+      <div class="flex shrink-0 items-center gap-2">
+        <button type="button" class="h-10 w-10 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-primary shadow-sm sm:inline-flex">
           <i class="fa-regular fa-bell text-base"></i>
         </button>
-        <button type="button" class="hidden h-10 w-10 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-primary shadow-sm sm:inline-flex">
+        <button type="button" class="h-10 w-10 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-primary shadow-sm sm:inline-flex">
           <i class="fa-solid <%= show_my_missions_nav ? 'fa-gear' : 'fa-robot' %> text-base"></i>
         </button>
       </div>
     </div>
-  </div>
 </nav>
