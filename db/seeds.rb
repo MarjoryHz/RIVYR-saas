@@ -1079,6 +1079,9 @@ demo_rows.each_with_index do |row, index|
   rivyr_share_cents = gross_amount_cents - row[:freelancer_share_cents]
   hired_date = Date.current - (45 - index * 3)
   mission_ref = "MIS-CL-2026-#{format('%02d', index + 1)}"
+  mission_seed_data = { reference: mission_ref, title: row[:title] }
+  mission_brief = mission_brief_for(mission_seed_data, contact.client, index)
+  mission_constraints = mission_constraints_for(mission_seed_data, contact.client, index)
 
   mission = Mission.create!(
     reference: mission_ref,
@@ -1093,9 +1096,9 @@ demo_rows.each_with_index do |row, index|
     opened_at: hired_date - 30,
     started_at: hired_date - 25,
     priority_level: index.even? ? "high" : "critical",
-    brief_summary: MISSION_SUMMARIES[index % MISSION_SUMMARIES.size],
+    brief_summary: mission_brief,
     compensation_summary: COMPENSATION_SUMMARIES[index % COMPENSATION_SUMMARIES.size],
-    search_constraints: SEARCH_CONSTRAINTS[index % SEARCH_CONSTRAINTS.size],
+    search_constraints: mission_constraints,
     origin_type: "freelancer",
     specialty: demo_specialty
   )
