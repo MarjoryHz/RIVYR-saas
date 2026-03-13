@@ -51,13 +51,13 @@
                 aria-controls="missions-filtres"
                 aria-expanded="false"
                 onclick="document.getElementById('missions-filtres').classList.toggle('hidden'); this.setAttribute('aria-expanded', String(!document.getElementById('missions-filtres').classList.contains('hidden')));">
-                <i class="fa-solid fa-sliders"></i>
+                <i class="fa-solid fa-sliders text-[#ed0e64]"></i>
                 Filtres
-                <i class="fa-solid fa-angle-down text-xs"></i>
+                <i class="fa-solid fa-angle-down text-xs text-[#ed0e64]"></i>
               </button>
 
               <button type="button" class="inline-flex items-center gap-2 rounded-full border border-[#f1a38b] bg-[#f4a58a] px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]">
-                <i class="fa-solid fa-plus"></i>
+                <i class="fa-solid fa-plus text-[#ed0e64]"></i>
                 Créer une mission
               </button>
             </div>
@@ -141,14 +141,17 @@
                       </span>
 
                       <%= form_with url: toggle_freelance_urgent_mission_path(mission), method: :patch, local: true do |form| %>
-                        <%= form.check_box :urgent,
-                          {
-                            checked: row[:urgent],
-                            class: "toggle toggle-md border-[#ef8a73] bg-white [--tglbg:#ffffff] checked:border-[#ef8a73] checked:bg-[#ef8a73] checked:text-white",
-                            onchange: "this.form.requestSubmit()"
-                          },
-                          "true",
-                          "false" %>
+                        <label class="<%= row[:urgent] ? 'border-[#ed0e64] bg-[#ed0e64] text-white' : 'border-[#f3c1d4] bg-[#ffe3ed] text-[#8c5665]' %> inline-flex items-center gap-2 rounded-full border px-3 py-1.5 shadow-sm transition">
+                          <%= form.check_box :urgent,
+                            {
+                              checked: row[:urgent],
+                              class: "toggle toggle-sm border-white/70 bg-white/35 text-white [--tglbg:#ffffff] checked:border-white checked:bg-white/25 checked:text-[#ed0e64]",
+                              onchange: "this.form.requestSubmit()"
+                            },
+                            "true",
+                            "false" %>
+                          <span class="text-sm font-semibold">Urgent</span>
+                        </label>
                       <% end %>
                     </div>
                   </div>
@@ -160,7 +163,7 @@
                           <%= image_tag row[:company_logo], alt: row[:company_name], class: "h-full w-full object-cover" %>
                         </div>
                       <% else %>
-                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/18 text-primary">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/18 text-[#ed0e64]">
                           <i class="fa-regular fa-building text-lg"></i>
                         </div>
                       <% end %>
@@ -175,7 +178,7 @@
                       <p class="min-w-[8rem] text-xl font-semibold md:text-2xl xl:text-right"><%= number_to_currency(row[:potential_cents] / 100.0, unit: "€", precision: 0) %></p>
 
                       <button type="button" class="inline-flex min-w-[12rem] items-center justify-center gap-2 rounded-full border border-[#f6d6db] bg-[#ffe8ec] px-4 py-2.5 text-sm font-medium text-[#8c5665]">
-                        <i class="fa-regular fa-comment-dots text-[#ef8a73]"></i>
+                        <i class="fa-regular fa-comment-dots text-[#ed0e64]"></i>
                         Envoyer un candidat
                       </button>
 
