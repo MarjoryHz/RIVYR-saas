@@ -41,10 +41,10 @@
           <% end %>
         </li>
         <li class="freelance-sidebar__menu-item">
-          <span class="freelance-sidebar__item freelance-sidebar__item--disabled">
+          <%= link_to todo_list_path, class: ["freelance-sidebar__item", ("freelance-sidebar__item--active" if active_controller == "todo_lists")] do %>
             <i class="fa-solid fa-list-check"></i>
             <span>To-do list</span>
-          </span>
+          <% end %>
         </li>
         <li class="freelance-sidebar__menu-item">
           <span class="freelance-sidebar__item freelance-sidebar__item--disabled">

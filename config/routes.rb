@@ -26,6 +26,9 @@ Rails.application.routes.draw do
   end
   resources :commissions
   resources :payments
+  resource :todo_list, only: [ :show ]
+  resources :todo_tasks, only: [ :create, :update, :destroy ]
+  resources :todo_categories, only: [ :create, :update, :destroy ]
   resource :freelance_finance, only: [ :show ] do
     post :create_client_invoice
     post :create_freelancer_invoice
