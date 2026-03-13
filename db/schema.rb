@@ -159,6 +159,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_13_170000) do
     t.string "mission_type"
     t.date "opened_at"
     t.string "origin_type"
+    t.string "pipeline_stage", default: "sourcing_candidates", null: false
     t.string "priority_level"
     t.string "reference"
     t.bigint "region_id", null: false
