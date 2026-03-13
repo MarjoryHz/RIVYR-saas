@@ -325,11 +325,11 @@ class MissionsController < ApplicationController
 
     open_days_tone =
       if open_days > 45
-        "text-error"
+        "text-[#ed0e64]"
       elsif open_days >= 31
-        "text-[#ef8a73]"
+        "text-[#ed0e64]"
       elsif open_days >= 21 && sent_candidates_count < 3
-        "text-[#ef8a73]"
+        "text-[#ed0e64]"
       else
         "text-base-content/55"
       end
