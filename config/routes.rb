@@ -1,6 +1,8 @@
 Rails.application.routes.draw do
   devise_for :users
   root to: "pages#home"
+  get "/contact", to: "pages#contact", as: :contact
+  post "/contact", to: "pages#create_contact"
   resources :clients
   resources :client_contacts
   resources :freelancer_profiles
