@@ -1,9 +1,9 @@
 class MissionsController < ApplicationController
-  helper_method :mission_company_segment, :mission_company_masked, :mission_available_since_label, :mission_score_for, :mission_score_tone_class, :mission_score_breakdown_for, :mission_level_for, :mission_pitch_points, :mission_origin_badge, :favorite_mission?, :mission_approx_fee_label, :mission_client_insight, :mission_client_label, :mission_positionings_label, :mission_fee_label, :mission_fee_breakdown_for, :format_amount
+  helper_method :mission_company_segment, :mission_company_masked, :mission_available_since_label, :mission_score_for, :mission_score_tone_class, :mission_score_breakdown_for, :mission_level_for, :mission_pitch_points, :mission_origin_badge, :favorite_mission?, :mission_approx_fee_label, :mission_client_insight, :mission_client_label, :mission_positionings_label, :mission_fee_label, :mission_fee_breakdown_for, :format_amount, :mission_priority_badge, :mission_already_applied?
 
   before_action :set_mission, only: [ :show, :edit, :update, :destroy, :toggle_favorite ]
   before_action :set_form_collections, only: [ :new, :create, :edit, :update ]
-  before_action :set_mission, only: [ :toggle_freelance_urgent, :apply ]
+  before_action :set_mission, only: [ :toggle_freelance_urgent, :apply, :withdraw ]
 
   def index
     authorize Mission
@@ -182,6 +182,25 @@ class MissionsController < ApplicationController
     application.save!
 
     redirect_to pending_missions_missions_path, notice: "Mission ajoutée à vos validations en attente."
+  end
+
+  def withdraw
+    authorize @mission, :apply?
+
+    freelancer_profile = current_user.freelancer_profile
+    return redirect_to mission_path(@mission), alert: "Profil freelance introuvable." if freelancer_profile.blank?
+
+    application = FreelanceMissionApplication.find_by(
+      freelancer_profile: freelancer_profile,
+      mission: @mission
+    )
+
+    if application.present?
+      application.destroy!
+      redirect_to mission_path(@mission), notice: "Vous vous etes retire de cette mission."
+    else
+      redirect_to mission_path(@mission), alert: "Aucun positionnement a retirer."
+    end
   end
 
   def toggle_freelance_urgent
@@ -536,6 +555,12 @@ class MissionsController < ApplicationController
     favorite_mission_ids.include?(mission.id)
   end
 
+  def mission_already_applied?(mission)
+    return false unless current_user&.role_freelance?
+
+    applied_library_mission_ids.include?(mission.id)
+  end
+
   def recruited_specialty_ids_for_year(freelance_profile)
     return [] if freelance_profile.blank?
 
@@ -686,6 +711,23 @@ class MissionsController < ApplicationController
     "Responsable"
   end
 
+  def mission_priority_badge(mission)
+    level = mission.priority_level.to_s.downcase
+
+    case level
+    when "critical"
+      { label: "CRITICAL", classes: "bg-[#a84b4f] text-white" }
+    when "high"
+      { label: "HIGH", classes: "bg-[#dc7b67] text-white" }
+    when "medium"
+      { label: "MEDIUM", classes: "bg-[#f09a6f] text-white" }
+    when "low"
+      { label: "LOW", classes: "bg-[#f4d0c5] text-[#7f2f2a]" }
+    else
+      { label: mission.priority_level.presence&.upcase || "PRIORITE", classes: "bg-[#f4d0c5] text-[#7f2f2a]" }
+    end
+  end
+
   def mission_pitch_points(mission)
     [
       "Contexte: #{truncate_sentence(mission.brief_summary, fallback: "enjeu de structuration avec forte visibilite.")}",
@@ -697,6 +739,13 @@ class MissionsController < ApplicationController
   def favorite_mission_ids
     session[:favorite_library_mission_ids] ||= []
     session[:favorite_library_mission_ids].map(&:to_i)
+  end
+
+  def applied_library_mission_ids
+    return [] unless current_user&.role_freelance?
+    return [] if current_user.freelancer_profile.blank?
+
+    @applied_library_mission_ids ||= current_user.freelancer_profile.freelance_mission_applications.pluck(:mission_id)
   end
 
   def build_client_insights(client_ids)

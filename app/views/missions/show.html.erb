@@ -1,59 +1,434 @@
-<div class="max-w-5xl mx-auto p-6 space-y-6">
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-bold"><%= @mission.title %></h1>
-    <div class="flex gap-2">
+<% origin_badge = mission_origin_badge(@mission) %>
+<% client = @mission.client_contact.client %>
+<% client_name = client.brand_name.presence || client.legal_name %>
+<% contact_name = [@mission.client_contact.first_name, @mission.client_contact.last_name].compact.join(" ") %>
+<% freelancer_name = [@mission.freelancer_profile.user.first_name, @mission.freelancer_profile.user.last_name].compact.join(" ") %>
+<% fee_breakdown = mission_fee_breakdown_for(@mission) %>
+<% current_application = current_user&.role_freelance? ? current_user.freelancer_profile&.freelance_mission_applications&.find_by(mission_id: @mission.id) : nil %>
+<% already_applied = current_application.present? %>
+<% priority_label = @mission.priority_level.to_s.upcase.presence || "MEDIUM" %>
+<% positioned_count = FreelanceMissionApplication.where(mission_id: @mission.id).count %>
+<% presented_count = Candidate.joins(:placements).where(placements: { mission_id: @mission.id }).distinct.count %>
+<% mission_assigned = @mission.freelancer_profile.user.role != "admin" %>
+<% client_visible = mission_assigned || policy(@mission).view_client_identity? %>
+<% masked_client = "************" %>
+<% masked_sector = "********" %>
+
+<%
+  parse_meta = lambda do |raw|
+    raw.to_s.split("||").each_with_object({}) do |chunk, hash|
+      key, value = chunk.split("=", 2)
+      next if key.blank? || value.blank?
+
+      hash[key.strip] = value.strip
+    end
+  end
+
+  to_list = lambda do |value|
+    value.to_s.split(";").map { |item| item.to_s.strip }.reject(&:blank?)
+  end
+
+  brief_meta = parse_meta.call(@mission.brief_summary)
+  search_meta = parse_meta.call(@mission.search_constraints)
+
+  why_items = to_list.call(brief_meta["why"])
+  enjeux_items = to_list.call(brief_meta["enjeux"])
+  mission_items = to_list.call(search_meta["details"])
+  must_have_items = to_list.call(search_meta["must_have"])
+  nice_to_have_items = to_list.call(search_meta["nice_to_have"])
+  resources_items = to_list.call(search_meta["resources"])
+  constraints_items = to_list.call(search_meta["constraints"])
+
+  why_items = [ brief_meta["context"].presence || "Contexte non renseigne." ] if why_items.empty?
+  enjeux_items = [ "Structurer l execution", "Securiser le delivery", "Ameliorer la performance" ] if enjeux_items.empty?
+  mission_items = [ @mission.search_constraints.to_s.presence || "Mission non renseignee." ] if mission_items.empty?
+  must_have_items = [ search_meta["profil"].presence || "Experience comparable obligatoire" ] if must_have_items.empty?
+  nice_to_have_items = [ "Transformation d organisation", "Leadership transverse" ] if nice_to_have_items.empty?
+  resources_items = [ "Job description complete", "Presentation entreprise" ] if resources_items.empty?
+  constraints_items = [ "Mobilite", "Disponibilite", "Niveau de package" ] if constraints_items.empty?
+
+  job_type = case @mission.mission_type.to_s
+  when "retained" then "CDI"
+  when "exclusive" then "Management de transition"
+  when "contingency" then "Freelance"
+  else "CDI"
+  end
+
+  hierarchy_level = brief_meta["hierarchy_level"].presence || mission_level_for(@mission)
+  company_size_label = brief_meta["company_size"].presence || client.company_size
+  company_headcount = brief_meta["company_headcount"].presence || "-"
+  company_revenue = brief_meta["company_revenue_meur"].presence || "-"
+  max_freelancers = search_meta["collab_max_freelancers"].presence || "3"
+  closing_probability = search_meta["closing_probability"].to_i
+  closing_probability = 65 if closing_probability.zero?
+  client_relation = search_meta["client_relation"].presence || "Nouveau client RIVYR"
+  difficulty_level = search_meta["difficulty"].presence || "Elevee"
+  exigence_level = search_meta["client_exigence"].presence || "Elevee"
+  shortlist_deadline_days = search_meta["collab_deadline_days"].to_i
+  shortlist_deadline_days = 14 if shortlist_deadline_days.zero?
+  position_deadline = (@mission.opened_at || Date.current) + shortlist_deadline_days
+
+  quality_score = client_relation.include?("historique") ? 8.8 : 7.2
+  difficulty_score = { "Moyenne" => 7.0, "Elevee" => 8.0, "Tres elevee" => 8.6, "Critique" => 9.0 }[difficulty_level] || 8.0
+  attractiveness_score = @mission.priority_level.to_s.downcase == "critical" ? 8.9 : 8.1
+  closing_score = (closing_probability / 10.0).round(1)
+  rivyr_index = ((quality_score + difficulty_score + attractiveness_score + closing_score) / 4.0).round(1)
+
+  timeline_start_date = @mission.opened_at || Date.current
+  timeline_steps = [
+    { title: "Mission publiee", desc: "La mission est ouverte aux freelances RIVYR.", offset_days: 0 },
+    { title: "Positionnement des freelances", desc: "Les recruteurs se positionnent sur la mission.", offset_days: 3 },
+    { title: "Briefing mission", desc: "Brief detaille avec RIVYR et le client.", offset_days: 5 },
+    { title: "Phase de sourcing", desc: "Recherche et qualification des candidats (2 semaines).", offset_days: 19 },
+    { title: "Preselection RIVYR", desc: "Entretiens freelance et validation interne (1 semaine).", offset_days: 26 },
+    { title: "Shortlist envoyee", desc: "Presentation des meilleurs candidats au client.", offset_days: 27 },
+    { title: "Entretiens client", desc: "Rencontres entre le client et les candidats.", offset_days: 34 },
+    { title: "Choix du candidat", desc: "Le client selectionne le candidat final.", offset_days: 38 },
+    { title: "Offre et negociation", desc: "Finalisation des conditions d embauche.", offset_days: 42 },
+    { title: "Placement valide", desc: "Candidat et client confirment l accord.", offset_days: 46 },
+    { title: "Signature du contrat", desc: "Le contrat est signe.", offset_days: 49 },
+    { title: "Demarrage du candidat", desc: "Prise de poste confirmee.", offset_days: 52 }
+  ]
+
+  filled_steps = case @mission.status.to_s
+  when "open" then 3
+  when "in_progress" then 8
+  when "closed" then 12
+  else 3
+  end
+
+  current_step_index = [ [ filled_steps - 1, 0 ].max, timeline_steps.size - 1 ].min
+  timeline_start = [ current_step_index - 1, 0 ].max
+  timeline_end = [ timeline_start + 3, timeline_steps.size - 1 ].min
+  timeline_start = [ timeline_end - 3, 0 ].max if (timeline_end - timeline_start + 1) < 4
+  visible_timeline_steps = timeline_steps[timeline_start..timeline_end]
+
+  can_apply = policy(@mission).apply? && @mission.status == "open"
+  show_withdraw = can_apply && already_applied
+  show_apply = can_apply && !already_applied
+  show_closed = @mission.status != "open"
+
+  assigned_and_accepted =
+    current_user&.role_freelance? &&
+    (
+      @mission.freelancer_profile_id == current_user.freelancer_profile&.id ||
+      current_application&.status_accepted?
+    )
+
+  contract_transmitted_on = (@mission.opened_at || Date.current) + 31.days
+  contract_status = @mission.contract_signed? ? "signe" : "modification"
+
+  months_fr = %w[Janvier Fevrier Mars Avril Mai Juin Juillet Aout Septembre Octobre Novembre Decembre]
+  format_fr_date = lambda { |date| "#{date.day} #{months_fr[date.month - 1]} #{date.year}" }
+%>
+
+<div class="w-full max-w-none px-6 py-5 md:px-11 lg:px-10">
+  <div class="space-y-5">
+    <section class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4 md:p-5">
+      <div class="grid gap-4 xl:grid-cols-[2.1fr_1fr]">
+        <div class="space-y-4">
+          <div>
+            <h1 class="text-3xl font-semibold tracking-tight text-[#4c1f2a] md:text-4xl"><%= @mission.title %></h1>
+            <div class="mt-2 flex flex-wrap items-center gap-2 text-[14px] font-medium text-[#7b4b5a]">
+              <% if client_visible %>
+                <span><%= client_name %> <%= client.sector %></span>
+              <% else %>
+                <span class="relative inline-flex cursor-help items-center gap-1" onmouseenter="this.querySelector('.client-lock-help').classList.remove('hidden')" onmouseleave="this.querySelector('.client-lock-help').classList.add('hidden')">
+                  <span><%= masked_client %> <%= masked_sector %></span>
+                  <i class="fa-solid fa-lock text-[#b4798b]"></i>
+                  <span class="client-lock-help pointer-events-none absolute left-0 top-full z-40 mt-1 hidden w-72 rounded-xl border border-[#f2ddd6] bg-white px-2.5 py-2 text-[11px] text-[#6f332b] shadow-lg">Tant que la mission n est pas attribuee, les informations client restent masquees.</span>
+                </span>
+              <% end %>
+              <span>-</span>
+              <span><%= @mission.region.name %></span>
+            </div>
+          </div>
+
+          <div class="grid gap-3 rounded-2xl border border-[#ead2dc] bg-[#fff8fb]/95 p-3 md:grid-cols-2 xl:grid-cols-3">
+            <div><p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Localisation</p><p class="text-[14px] font-medium text-[#5c3143]"><%= @mission.region.name %></p></div>
+            <div><p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Type de poste</p><p class="text-[14px] font-medium text-[#5c3143]"><%= job_type %></p></div>
+            <div><p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Niveau hierarchique</p><p class="text-[14px] font-medium text-[#5c3143]"><%= hierarchy_level %></p></div>
+            <div><p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Package cible</p><p class="text-[14px] font-medium text-[#5c3143]"><%= @mission.compensation_summary.presence || "-" %></p></div>
+            <div><p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Honoraires RIVYR</p><p class="text-[14px] font-medium text-[#5c3143]"><%= format_amount(fee_breakdown[:gross_fee]) %>EUR</p></div>
+            <div><p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Statut mission</p><p class="text-[14px] font-medium text-[#5c3143]"><%= @mission.status.to_s.humanize %></p></div>
+          </div>
+
+          <div class="grid gap-2 rounded-2xl border border-[#ead2dc] bg-[#fff8fb]/95 p-3 lg:grid-cols-[1fr_2fr]">
+            <span class="inline-flex items-center rounded-full bg-[#f1a45c] px-4 py-1.5 text-sm font-semibold text-white">PRIORITE : <%= priority_label %></span>
+            <div class="flex flex-wrap items-center gap-3 text-sm text-[#6b3f4f]">
+              <span>Client: <strong><%= client_relation %></strong></span>
+              <span>
+                Score: <strong><%= rivyr_index %>/10</strong>
+                <button type="button" class="ml-1 text-[#8f4a58] underline" onclick="document.getElementById('rivyr_score_modal').showModal()">details</button>
+              </span>
+              <span>Shortlist attendue <strong><%= shortlist_deadline_days %> jours</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <div class="rounded-2xl border border-[#ead2dc] bg-[#fff8fb]/95 p-3">
+            <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Commission freelance estimee</p>
+            <p class="mt-1 text-2xl font-semibold text-[#5f3247]"><%= format_amount(fee_breakdown[:fee_amount]) %>EUR</p>
+            <p class="mt-1 text-sm text-[#78505f]">Signature du contrat : <%= (fee_breakdown[:contract_rate] * 100).round %>%</p>
+          </div>
+
+          <% if show_withdraw %>
+              <span class="block rounded-2xl border border-[#d2dfd4] bg-[#edf7ef] px-4 py-3 text-center text-base font-semibold text-[#3b6d4d]">Deja positionne</span>
+            <button type="button" class="btn w-full rounded-2xl border-[#e7b2bb] bg-[#fff1f3] text-[#b43e53] hover:bg-[#ffe5e9]" onclick="document.getElementById('withdraw_modal').showModal()">
+              <i class="fa-solid fa-xmark mr-1"></i>Se retirer
+            </button>
+          <% elsif show_apply %>
+            <%= button_to "Se positionner sur la mission", apply_mission_path(@mission), method: :post, class: "btn w-full rounded-2xl border-[#7ea48b] bg-[#7ea48b] text-base text-white hover:border-[#6f9680] hover:bg-[#6f9680]" %>
+          <% elsif show_closed %>
+            <span class="block rounded-2xl border border-[#e3d8de] bg-[#f7f2f5] px-4 py-3 text-center text-base font-semibold text-[#8f6c78]">Mission fermee</span>
+          <% end %>
+          <button type="button" class="btn w-full rounded-2xl border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] hover:bg-[#fdeef3]">Poser une question a RIVYR</button>
+
+          <div class="rounded-2xl border border-[#ead2dc] bg-[#fff8fb]/95 p-3">
+            <h4 class="text-lg font-semibold text-[#5b2633]">Documents utiles</h4>
+            <div class="mt-3 space-y-2 text-[14px] text-[#5f3647]">
+              <div class="flex items-center justify-between gap-2 rounded-xl border border-[#ead2dc] px-3 py-2">
+                <span>Job description complete</span>
+                <span class="flex items-center gap-1.5">
+                  <button type="button" class="btn btn-xs rounded-full border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] hover:bg-[#fdeef3]" title="Video de brief">
+                    <i class="fa-solid fa-video"></i>
+                  </button>
+                  <button type="button" class="btn btn-xs rounded-full border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] hover:bg-[#fdeef3]" title="Document">
+                    <i class="fa-solid fa-file-lines"></i>
+                  </button>
+                </span>
+              </div>
+
+              <div class="rounded-xl border border-[#ead2dc] px-3 py-2">
+                <% if assigned_and_accepted %>
+                  <%= link_to "Presentation entreprise", client_path(client), class: "text-[#8b4452] underline hover:text-[#6f2d3a]" %>
+                  <% if client.website_url.present? %>
+                    <span class="mx-1 text-[#b38795]">|</span>
+                    <%= link_to "Site client", client.website_url, class: "text-[#8b4452] underline hover:text-[#6f2d3a]", target: "_blank", rel: "noopener" %>
+                  <% end %>
+                <% else %>
+                  <span class="text-[#9a7582]">Presentation entreprise</span>
+                  <span class="ml-2 text-xs text-[#b38795]">(bloque - disponible apres affectation)</span>
+                <% end %>
+              </div>
+
+              <div class="rounded-xl border border-[#ead2dc] px-3 py-2">
+                <% if assigned_and_accepted %>
+                  <%= link_to "Contrat", mission_path(@mission), class: "text-[#8b4452] underline hover:text-[#6f2d3a]" %>
+                  <span class="ml-2 text-sm text-[#6f4a58]">transmis le <%= contract_transmitted_on.strftime("%d/%m") %> - <%= contract_status %></span>
+                <% else %>
+                  <span class="text-[#9a7582]">Contrat</span>
+                  <span class="ml-2 text-sm text-[#6f4a58]">transmis le <%= contract_transmitted_on.strftime("%d/%m") %> - <%= contract_status %></span>
+                  <span class="ml-2 text-xs text-[#b38795]">(bloque - disponible apres affectation)</span>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid gap-4 xl:grid-cols-[3fr_1fr]">
+      <div class="space-y-4">
+        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+          <h2 class="text-2xl font-semibold text-[#5b2633]">Contexte du recrutement</h2>
+          <ul class="mt-3 space-y-2 text-[15px] text-[#5f3647]">
+            <li><strong>Creation ou remplacement:</strong> <%= brief_meta["creation_or_replacement"].presence || "-" %></li>
+            <li><strong>Contexte client:</strong> <%= brief_meta["client_context"].presence || "#{client_name} - #{client.sector}" %></li>
+            <li><strong>Contexte business:</strong> <%= brief_meta["business"].presence || brief_meta["context"].presence || "-" %></li>
+            <li><strong>Organisation de l entreprise:</strong> <%= brief_meta["organisation"].presence || "-" %></li>
+            <li><strong>Taille societe / CA / effectif:</strong> <%= company_size_label %> / <%= company_revenue %> MEUR / <%= company_headcount %> collaborateurs</li>
+            <li><strong>Position du poste dans l organigramme:</strong> <%= brief_meta["org_position"].presence || "-" %></li>
+          </ul>
+
+          <div class="mt-4 border-t border-[#efdbe4] pt-3">
+            <h3 class="text-xl font-semibold text-[#5b2633]">Enjeux des 12 premiers mois</h3>
+            <ul class="mt-2 space-y-2 text-[15px] text-[#5f3647]">
+              <% enjeux_items.each do |item| %>
+                <li class="flex items-start gap-2"><span class="mt-1.5 h-2 w-2 rounded-full bg-[#9bbf9c]"></span><span><%= item %></span></li>
+              <% end %>
+            </ul>
+          </div>
+        </article>
+
+        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+          <h2 class="text-2xl font-semibold text-[#5b2633]">Mission et responsabilites</h2>
+          <ul class="mt-3 space-y-2 text-[15px] text-[#5f3647]">
+            <% mission_items.each do |item| %>
+              <li class="flex items-start gap-2"><span class="mt-1.5 h-2 w-2 rounded-full bg-[#c88ea1]"></span><span><%= item %></span></li>
+            <% end %>
+          </ul>
+        </article>
+
+        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+          <h2 class="text-2xl font-semibold text-[#5b2633]">Profil recherche</h2>
+          <div class="mt-3 grid gap-4 md:grid-cols-2">
+            <div>
+              <h3 class="text-lg font-semibold text-[#5b2633]">Indispensable</h3>
+              <ul class="mt-2 space-y-2 text-[15px] text-[#5f3647]">
+                <% must_have_items.each do |item| %>
+                  <li class="flex items-start gap-2"><span class="mt-1.5 h-2 w-2 rounded-full bg-[#e2a47f]"></span><span><%= item %></span></li>
+                <% end %>
+              </ul>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-[#5b2633]">Apprecie</h3>
+              <ul class="mt-2 space-y-2 text-[15px] text-[#5f3647]">
+                <% nice_to_have_items.each do |item| %>
+                  <li class="flex items-start gap-2"><span class="mt-1.5 h-2 w-2 rounded-full bg-[#c3b0d7]"></span><span><%= item %></span></li>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <aside class="space-y-4">
+        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4">
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="text-2xl font-semibold text-[#5b2633]">Timeline mission</h3>
+            <button type="button" class="btn btn-xs rounded-full border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] hover:bg-[#fdeef3]" onclick="document.getElementById('timeline_modal').showModal()">Voir tout</button>
+          </div>
+          <p class="mt-2 text-xs text-[#8a6170]">Projection type: recrutement finalise en 6 a 8 semaines.</p>
+          <ul class="timeline timeline-snap-icon timeline-compact timeline-vertical mt-4 w-full">
+            <% visible_timeline_steps.each_with_index do |step, local_idx| %>
+              <% idx = timeline_start + local_idx %>
+              <% step_date = timeline_start_date + step[:offset_days].days %>
+              <li>
+                <div class="timeline-middle">
+                  <span class="<%= idx < filled_steps ? 'bg-[#8fb795]/25' : 'bg-[#c9b8c3]/20' %> flex size-4.5 items-center justify-center rounded-full">
+                    <span class="<%= idx < filled_steps ? 'bg-[#8fb795]' : 'bg-[#c9b8c3]' %> size-3 rounded-full"></span>
+                  </span>
+                </div>
+                <div class="timeline-end ms-2 m-2 w-full rounded-lg border border-[#ead2dc] bg-[#fff8fb]/95 p-3">
+                  <p class="mb-1 text-xs font-semibold uppercase tracking-wide text-[#9a5a68]"><%= format_fr_date.call(step_date) %></p>
+                  <div class="mb-1 pt-0.5 text-[15px] font-semibold text-[#5b2633]"><%= idx + 1 %>. <%= step[:title] %></div>
+                  <p class="text-sm text-[#6b4653]"><%= step[:desc] %></p>
+                </div>
+                <% unless local_idx == visible_timeline_steps.size - 1 %><hr class="border-[#dcc2ce]" /><% end %>
+              </li>
+            <% end %>
+          </ul>
+        </article>
+
+        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4">
+          <h3 class="text-2xl font-semibold text-[#5b2633]">Informations operationnelles RIVYR</h3>
+          <ul class="mt-3 space-y-2 text-[15px] text-[#5f3647]">
+            <li><i class="fa-solid fa-layer-group mr-2 text-[#b47a8d]"></i>Mission <strong><%= origin_badge[:label] %></strong></li>
+            <li><i class="fa-solid fa-users mr-2 text-[#b47a8d]"></i>Freelances maximum <strong><%= max_freelancers %></strong></li>
+            <li><i class="fa-solid fa-handshake mr-2 text-[#b47a8d]"></i><%= client_relation %></li>
+            <li><i class="fa-solid fa-gauge-high mr-2 text-[#b47a8d]"></i>Niveau difficulte: <strong><%= difficulty_level %></strong></li>
+            <li><i class="fa-solid fa-bullseye mr-2 text-[#b47a8d]"></i>Niveau exigence client: <strong><%= exigence_level %></strong></li>
+            <li><i class="fa-solid fa-chart-line mr-2 text-[#b47a8d]"></i>Probabilite de closing: <strong><%= closing_probability %>%</strong></li>
+            <li><i class="fa-solid fa-check-double mr-2 text-[#b47a8d]"></i>Historique recrutement: <strong><%= search_meta["history_count"].presence || "1" %> missions</strong></li>
+          </ul>
+        </article>
+
+        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4">
+          <h3 class="text-2xl font-semibold text-[#5b2633]">Modalites de collaboration</h3>
+          <ul class="mt-3 space-y-2 text-[15px] text-[#5f3647]">
+            <li><strong>Pilotage:</strong> <%= search_meta["collab_pilot"].presence || "RIVYR" %></li>
+            <li><strong>Autonomie freelance:</strong> <%= search_meta["collab_autonomy"].presence || "Autonomie elevee" %></li>
+            <li><strong>Freelances max:</strong> <%= max_freelancers %></li>
+            <li><strong>Date limite positionnement:</strong> <%= position_deadline.strftime("%d/%m/%Y") %></li>
+            <li><strong>Partage candidats:</strong> <%= search_meta["collab_candidate_sharing"].presence || "Candidats exclusifs" %></li>
+          </ul>
+        </article>
+
+        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4">
+          <h3 class="text-2xl font-semibold text-[#5b2633]">Indicateurs dynamiques</h3>
+          <ul class="mt-3 space-y-2 text-[15px] text-[#5f3647]">
+            <li><strong><%= @mission.status.to_s.humanize %></strong></li>
+            <li><%= positioned_count %> freelances positionnes</li>
+            <li><%= presented_count %> candidats presentes</li>
+          </ul>
+
+          <% if show_withdraw %>
+              <span class="mt-4 block rounded-2xl border border-[#d2dfd4] bg-[#edf7ef] px-4 py-3 text-center text-base font-semibold text-[#3b6d4d]">Deja positionne</span>
+            <button type="button" class="btn mt-3 w-full rounded-2xl border-[#e7b2bb] bg-[#fff1f3] text-[#b43e53] hover:bg-[#ffe5e9]" onclick="document.getElementById('withdraw_modal').showModal()">
+              <i class="fa-solid fa-xmark mr-1"></i>Se retirer
+            </button>
+          <% elsif show_apply %>
+            <%= button_to "Se positionner", apply_mission_path(@mission), method: :post, class: "btn mt-4 w-full rounded-2xl border-[#7ea48b] bg-[#7ea48b] text-base text-white hover:border-[#6f9680] hover:bg-[#6f9680]" %>
+          <% elsif show_closed %>
+            <span class="mt-4 block rounded-2xl border border-[#e3d8de] bg-[#f7f2f5] px-4 py-3 text-center text-base font-semibold text-[#8f6c78]">Mission fermee</span>
+          <% end %>
+          <button type="button" class="btn mt-3 w-full rounded-2xl border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] hover:bg-[#fdeef3]">Poser une question</button>
+
+          <% if current_user&.role_freelance? %>
+            <%= button_to "Ajouter aux favoris", toggle_favorite_mission_path(@mission, return_to: request.fullpath), method: :post, class: "btn mt-3 w-full rounded-2xl border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] hover:bg-[#fdeef3]" %>
+          <% end %>
+        </article>
+      </aside>
+    </section>
+
+    <div class="flex flex-wrap gap-2">
+      <%= link_to "Retour a la liste", missions_path, class: "btn btn-ghost text-[#7a3a49] hover:bg-[#fce7ef]" %>
       <% if policy(@mission).edit? %>
-        <%= link_to "Modifier", edit_mission_path(@mission), class: "btn btn-primary" %>
-      <% end %>
-      <% if policy(@mission).destroy? %>
-        <%= link_to "Supprimer", mission_path(@mission), data: { turbo_method: :delete, turbo_confirm: "Confirmer la suppression ?" }, class: "btn btn-error" %>
+        <%= link_to "Modifier", edit_mission_path(@mission), class: "btn border-[#dfbcc9] bg-[#fff2f7] text-[#7a3a49] hover:bg-[#fce7ef]" %>
       <% end %>
     </div>
   </div>
-
-  <div class="grid md:grid-cols-2 gap-4">
-    <p><strong>Reference:</strong> <%= @mission.reference %></p>
-    <p><strong>Statut:</strong> <%= @mission.status %></p>
-    <p><strong>Type:</strong> <%= @mission.mission_type.presence || "-" %></p>
-    <p><strong>Priorite:</strong> <%= @mission.priority_level.presence || "-" %></p>
-    <% if policy(@mission).view_client_identity? %>
-      <p><strong>Client:</strong> <%= @mission.client_contact.client.legal_name %></p>
-      <p><strong>Contact:</strong> <%= [@mission.client_contact.first_name, @mission.client_contact.last_name].join(" ") %></p>
-    <% else %>
-      <p><strong>Client:</strong> <%= mission_company_segment(@mission) %></p>
-      <p><strong>Contact:</strong> Confidentiel</p>
-    <% end %>
-    <p><strong>Freelancer:</strong> <%= [@mission.freelancer_profile.user.first_name, @mission.freelancer_profile.user.last_name].join(" ") %></p>
-    <p><strong>Region:</strong> <%= @mission.region.name %></p>
-    <p><strong>Specialite:</strong> <%= @mission.specialty.name %></p>
-    <p><strong>Contrat signe:</strong> <%= @mission.contract_signed ? "Oui" : "Non" %></p>
-  </div>
-
-  <div class="grid md:grid-cols-3 gap-4">
-    <p><strong>Ouverte le:</strong> <%= @mission.opened_at.presence || "-" %></p>
-    <p><strong>Commencee le:</strong> <%= @mission.started_at.presence || "-" %></p>
-    <p><strong>Fermee le:</strong> <%= @mission.closed_at.presence || "-" %></p>
-  </div>
-
-  <div>
-    <p><strong>Localisation:</strong> <%= @mission.location.presence || "-" %></p>
-    <p><strong>Origine:</strong> <%= @mission.origin_type.presence || "-" %></p>
-  </div>
-
-  <div>
-    <p><strong>Brief:</strong></p>
-    <p><%= @mission.brief_summary.presence || "-" %></p>
-  </div>
-
-  <div>
-    <p><strong>Remuneration:</strong></p>
-    <p><%= @mission.compensation_summary.presence || "-" %></p>
-  </div>
-
-  <div>
-    <p><strong>Contraintes:</strong></p>
-    <p><%= @mission.search_constraints.presence || "-" %></p>
-  </div>
-
-  <%= link_to "Retour a la liste", missions_path, class: "btn" %>
 </div>
+
+<dialog id="rivyr_score_modal" class="modal">
+  <div class="modal-box max-w-md rounded-2xl border border-[#ead5ce] bg-white">
+    <h3 class="text-lg font-semibold text-[#6f332b]">Indice mission RIVYR : <%= rivyr_index %>/10</h3>
+    <p class="mt-2 text-sm text-[#6b3f4f]">Cet indice combine 4 dimensions pour aider le freelance a decider vite :</p>
+    <ul class="mt-3 space-y-1.5 text-sm text-[#5e3742]">
+      <li><strong>Qualite client:</strong> <%= quality_score %>/10</li>
+      <li><strong>Niveau de difficulte:</strong> <%= difficulty_score %>/10</li>
+      <li><strong>Attractivite du poste:</strong> <%= attractiveness_score %>/10</li>
+      <li><strong>Probabilite de closing:</strong> <%= closing_score %>/10</li>
+    </ul>
+    <p class="mt-3 text-xs text-[#8d5f6b]">Objectif: t aider a trancher en moins de 60 secondes.</p>
+    <div class="modal-action">
+      <form method="dialog"><button class="btn btn-sm">Fermer</button></form>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
+
+<dialog id="withdraw_modal" class="modal">
+  <div class="modal-box max-w-sm rounded-2xl border border-[#f1d3d9] bg-white">
+    <h3 class="text-lg font-semibold text-[#8a2f43]">Se retirer de la mission</h3>
+    <p class="mt-2 text-sm text-[#6b3f4f]">Voulez-vous vraiment retirer votre positionnement ?</p>
+    <div class="modal-action">
+      <form method="dialog">
+        <button class="btn btn-sm">Annuler</button>
+      </form>
+      <%= button_to "Se retirer", withdraw_mission_path(@mission), method: :delete, class: "btn btn-sm border-[#e7b2bb] bg-[#fff1f3] text-[#b43e53] hover:bg-[#ffe5e9]" %>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
+
+<dialog id="timeline_modal" class="modal">
+  <div class="modal-box max-w-2xl rounded-2xl border border-[#ead5ce] bg-white">
+    <h3 class="text-lg font-semibold text-[#6f332b]">Timeline mission complete</h3>
+    <p class="mt-1 text-xs text-[#8a6170]">Base planning: sourcing 2 semaines + preselection 1 semaine + finalisation sur 6 a 8 semaines.</p>
+    <ul class="timeline timeline-snap-icon timeline-compact timeline-vertical mt-4 w-full">
+      <% timeline_steps.each_with_index do |step, idx| %>
+        <% step_date = timeline_start_date + step[:offset_days].days %>
+        <li>
+          <div class="timeline-middle">
+            <span class="<%= idx < filled_steps ? 'bg-[#8fb795]/25' : 'bg-[#c9b8c3]/20' %> flex size-4.5 items-center justify-center rounded-full">
+              <span class="<%= idx < filled_steps ? 'bg-[#8fb795]' : 'bg-[#c9b8c3]' %> size-3 rounded-full"></span>
+            </span>
+          </div>
+          <div class="timeline-end ms-2 m-2 w-full rounded-lg border border-[#ead2dc] bg-[#fff8fb]/95 p-3">
+            <p class="mb-1 text-xs font-semibold uppercase tracking-wide text-[#9a5a68]"><%= format_fr_date.call(step_date) %></p>
+            <div class="mb-1 pt-0.5 text-[15px] font-semibold text-[#5b2633]"><%= idx + 1 %>. <%= step[:title] %></div>
+            <p class="text-sm text-[#6b4653]"><%= step[:desc] %></p>
+          </div>
+          <% unless idx == timeline_steps.size - 1 %><hr class="border-[#dcc2ce]" /><% end %>
+        </li>
+      <% end %>
+    </ul>
+    <div class="modal-action">
+      <form method="dialog"><button class="btn btn-sm">Fermer</button></form>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>

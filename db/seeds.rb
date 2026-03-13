@@ -308,11 +308,55 @@ PLACEMENTS_DATA = [
   { mission_reference: 'MIS-2026-015', candidate_index: 4, annual_salary_cents: 16_000_000, fee_rate: 0.25, status: 'pending_guarantee' }
 ].freeze
 
-MISSION_SUMMARIES = [
-  "Mission confiee dans un contexte de structuration, avec un besoin fort de niveau, de credibilite et de capacite a embarquer les equipes.",
-  "Recherche sensible sur une fonction cle, avec un enjeu important d alignement entre expertise metier, leadership et culture d entreprise.",
-  "Recrutement strategique visant a securiser une etape de croissance, dans un environnement ou la posture et la capacite de pilotage sont determinantes.",
-  "Mission de recrutement haut de gamme sur un poste impactant, avec une attente forte sur la justesse d evaluation et la qualite de shortlist."
+MISSION_CONTEXT_TEMPLATES = [
+  "Le client ouvre ce recrutement pour accelerer une phase de structuration et fiabiliser les decisions operationnelles sur son perimetre.",
+  "Le poste s inscrit dans un moment cle de transformation, avec un besoin de leadership visible et de capacite a embarquer des equipes multisites.",
+  "Cette mission est directement liee a un enjeu de croissance rentable, avec une attente forte sur la qualite d execution des 100 premiers jours.",
+  "Le recrutement est strategique: la personne retenue devra clarifier les priorites, reprendre la maitrise de la performance et installer un cadre solide."
+].freeze
+
+MISSION_CHALLENGE_TEMPLATES = [
+  "L objectif est d obtenir un impact mesurable rapidement, sans phase d integration trop longue.",
+  "Le client attend une posture de decideur, capable de gerer la pression et de faire converger des parties prenantes exigeantes.",
+  "Le role demande une vraie maturite relationnelle et une capacite a arbitrer dans un contexte parfois ambigu.",
+  "Le scope est large et expose, avec un attendu eleve sur la clarte de communication et le sens du resultat."
+].freeze
+
+MISSION_ORGANISATION_TEMPLATES = [
+  "Le poste reporte au CEO avec management d une equipe transverse produit, tech et business.",
+  "Le role est rattache a la Direction Generale avec interaction directe avec le CODIR.",
+  "Le poste est au coeur de l organisation, avec coordination de plusieurs responsables de pole.",
+  "Le mandat couvre un perimetre multi-equipes avec pilotage budgetaire et priorisation executive."
+].freeze
+
+MISSION_WHY_RECRUITMENT_TEMPLATES = [
+  [
+    "Structurer la fonction sur un perimetre en forte croissance.",
+    "Passer d un mode reactif a une execution planifiee.",
+    "Securiser le delivery sur les priorites des 12 prochains mois."
+  ],
+  [
+    "Renforcer le leadership managerial sur une equipe en transition.",
+    "Installer des rituels de pilotage et de decision plus robustes.",
+    "Accompagner la monte en maturite de l organisation."
+  ],
+  [
+    "Gagner en vitesse d execution sans degrader la qualite.",
+    "Clarifier le role de chaque partie prenante du process.",
+    "Fiabiliser les indicateurs et la lecture de performance."
+  ],
+  [
+    "Preparer une phase de croissance ambitieuse et structurante.",
+    "Aligner le terrain operationnel avec la vision direction.",
+    "Professionnaliser les interactions entre metier, produit et operations."
+  ]
+].freeze
+
+MISSION_12M_ENJEUX_TEMPLATES = [
+  [ "Construire une equipe solide", "Ameliorer la roadmap et les priorites", "Structurer la discovery et la qualite d execution" ],
+  [ "Stabiliser l organisation interne", "Augmenter la performance collective", "Renforcer la predictibilite des resultats" ],
+  [ "Accelerer le time-to-value", "Securiser les recrutements critiques", "Fluidifier la collaboration transverse" ],
+  [ "Fiabiliser les indicateurs business", "Installer une cadence de delivery durable", "Elever le niveau managerial des equipes" ]
 ].freeze
 
 COMPENSATION_SUMMARIES = [
@@ -322,10 +366,55 @@ COMPENSATION_SUMMARIES = [
   "90 000EUR - 120 000EUR"
 ].freeze
 
-SEARCH_CONSTRAINTS = [
-  "Le client attend un candidat ayant deja evolue dans un environnement comparable, capable de piloter, structurer et faire adherer.",
-  "Une experience sectorielle ou contextuelle proche est fortement attendue, avec un vrai niveau d autonomie et de leadership.",
-  "Le poste suppose une forte credibilite metier, de la maturite relationnelle et une capacite a tenir un role expose."
+SEARCH_REQUIREMENT_TEMPLATES = [
+  "Experience indispensable sur un poste comparable, avec des resultats concrets et documentables.",
+  "Capacite a tenir un role a forte exposition, avec autonomie de decision et sens politique.",
+  "Credibilite metier immediate face a des interlocuteurs seniors et des equipes expertes.",
+  "Leadership de transformation attendu, avec priorisation claire et execution rigoureuse."
+].freeze
+
+SEARCH_PROCESS_TEMPLATES = [
+  "Le client privilegie une shortlist courte (3 a 5 profils), argumentee et exploitable en moins de 10 jours.",
+  "Le process doit rester fluide: disponibilites rapides, feedbacks structurees et pilotage serre des etapes.",
+  "La validation finale se fait sur adequation de posture, capacite a delivrer vite et compatibilite culturelle.",
+  "Le niveau d exigence est eleve sur la qualite de qualification amont, pour eviter les presentations hors cible."
+].freeze
+
+MISSION_DETAILS_TEMPLATES = [
+  [ "Definir la strategie sur son perimetre", "Piloter la roadmap et les arbitrages", "Installer des methodes de travail robustes", "Collaborer avec la direction et les parties prenantes clefs" ],
+  [ "Manager une equipe de responsables", "Prioriser les projets a plus fort impact", "Structurer les process internes", "Accompagner la transformation des pratiques" ],
+  [ "Assurer le pilotage de la performance", "Coordonner les acteurs metier et support", "Porter une execution exigeante", "Contribuer aux decisions strategiques" ],
+  [ "Prendre en main un perimetre sensible", "Creer les conditions d une execution fiable", "Renforcer les standards de qualite", "Animer un collectif pluridisciplinaire" ]
+].freeze
+
+MISSION_TIMELINE_TEMPLATES = [
+  [ "Kickoff mission sous 48h", "Shortlist attendue sous 12 jours", "3 entretiens maximum", "Decision finale sous 21 jours" ],
+  [ "Cadrage client immediat", "Premier lot de profils sous 10 jours", "Feedback client en 72h", "Closing cible avant fin de mois" ],
+  [ "Validation du brief semaine 1", "Approche marche semaine 2", "Entretiens semaine 3", "Signature candidate semaine 4" ],
+  [ "Mission lancee en urgence", "Shortlist qualitative sous 2 semaines", "Process decisionnaire resserre", "Demarrage candidat rapide" ]
+].freeze
+
+MISSION_RESOURCES_TEMPLATES = [
+  [ "Job description complete", "Presentation entreprise", "Organigramme cible", "Notes de cadrage Rivyr" ],
+  [ "Contexte business detaille", "Enjeux de poste", "Process client", "Elements de remuneration" ],
+  [ "Fiche mission validee", "Synthese des risques", "Attendus du hiring manager", "FAQ client" ],
+  [ "Pack onboarding mission", "Benchmarks marches", "Points de vigilance", "Materiaux de qualification" ]
+].freeze
+
+NICE_TO_HAVE_TEMPLATES = [
+  [ "Transformation Lean", "Experience environnement familial", "Capacite a structurer une fonction from scratch" ],
+  [ "Exposition groupe multi-sites", "Posture entrepreneuriale", "Aisance en conduite du changement" ],
+  [ "Experience scale-up", "Culture produit/data", "Capacite a recruter et faire grandir une equipe" ],
+  [ "Pilotage international", "Maitrise environnements complexes", "Communication executive" ]
+].freeze
+
+DIFFICULTY_LEVELS = [ "Moyenne", "Elevee", "Tres elevee", "Critique" ].freeze
+CLIENT_EXIGENCE_LEVELS = [ "Standard", "Elevee", "Tres elevee", "Premium" ].freeze
+PAYMENT_TERMS = [
+  "50% shortlist, 50% placement",
+  "40% shortlist, 60% placement",
+  "100% au placement",
+  "30% demarrage, 70% placement"
 ].freeze
 
 CANDIDATE_NOTES = [
@@ -389,6 +478,88 @@ end
 
 def ownership_type_for(index)
   CLIENT_OWNERSHIP_TYPES[index % CLIENT_OWNERSHIP_TYPES.size]
+end
+
+def mission_brief_for(data, client, index)
+  reference_seed = data[:reference].to_s.each_byte.sum
+  context = MISSION_CONTEXT_TEMPLATES[reference_seed % MISSION_CONTEXT_TEMPLATES.size]
+  challenge = MISSION_CHALLENGE_TEMPLATES[index % MISSION_CHALLENGE_TEMPLATES.size]
+  organisation = MISSION_ORGANISATION_TEMPLATES[reference_seed % MISSION_ORGANISATION_TEMPLATES.size]
+  why_items = MISSION_WHY_RECRUITMENT_TEMPLATES[index % MISSION_WHY_RECRUITMENT_TEMPLATES.size]
+  enjeux_items = MISSION_12M_ENJEUX_TEMPLATES[reference_seed % MISSION_12M_ENJEUX_TEMPLATES.size]
+  creation_or_replacement = index.even? ? "Creation de poste" : "Remplacement"
+  estimated_revenue_meur = 25 + (reference_seed % 180)
+  estimated_headcount = 60 + (reference_seed % 460)
+  hierarchy_level =
+    if data[:title].to_s.downcase.match?(/directeur|head|chief|ceo|coo|cto|cfo/)
+      "Directeur"
+    elsif data[:title].to_s.downcase.match?(/responsable|manager/)
+      "Manager"
+    else
+      "Expert"
+    end
+
+  [
+    "headline=Mission #{data[:title]} pour #{client.brand_name.presence || client.legal_name} (#{client.sector})",
+    "context=#{context}",
+    "creation_or_replacement=#{creation_or_replacement}",
+    "organisation=#{organisation}",
+    "business=#{challenge}",
+    "client_context=#{client.brand_name.presence || client.legal_name} - #{client.sector} - #{client.company_size}",
+    "company_size=#{client.company_size}",
+    "company_revenue_meur=#{estimated_revenue_meur}",
+    "company_headcount=#{estimated_headcount}",
+    "org_position=Le poste reporte directement a la Direction Generale",
+    "hierarchy_level=#{hierarchy_level}",
+    "why=#{why_items.join(';')}",
+    "enjeux=#{enjeux_items.join(';')}"
+  ].join("||")
+end
+
+def mission_constraints_for(data, client, index)
+  title_seed = data[:title].to_s.each_byte.sum
+  requirement = SEARCH_REQUIREMENT_TEMPLATES[title_seed % SEARCH_REQUIREMENT_TEMPLATES.size]
+  process = SEARCH_PROCESS_TEMPLATES[index % SEARCH_PROCESS_TEMPLATES.size]
+  details = MISSION_DETAILS_TEMPLATES[index % MISSION_DETAILS_TEMPLATES.size]
+  timeline = MISSION_TIMELINE_TEMPLATES[title_seed % MISSION_TIMELINE_TEMPLATES.size]
+  resources = MISSION_RESOURCES_TEMPLATES[index % MISSION_RESOURCES_TEMPLATES.size]
+  nice_to_have = NICE_TO_HAVE_TEMPLATES[index % NICE_TO_HAVE_TEMPLATES.size]
+  difficulty = DIFFICULTY_LEVELS[title_seed % DIFFICULTY_LEVELS.size]
+  exigence = CLIENT_EXIGENCE_LEVELS[index % CLIENT_EXIGENCE_LEVELS.size]
+  closing_probability = 58 + (title_seed % 35)
+  history_count = 1 + (index % 5)
+  max_freelancers = 2 + (index % 2)
+  shortlist_deadline_days = 10 + (title_seed % 14)
+  autonomy = [ "Cadre resserre", "Autonomie moderee", "Autonomie elevee", "Autonomie totale" ][index % 4]
+  payment_terms = PAYMENT_TERMS[index % PAYMENT_TERMS.size]
+  must_have = [
+    requirement,
+    "Experience du secteur #{client.sector}",
+    "Niveau hierarchique coherent avec #{data[:title]}",
+    "Capacite a piloter dans une organisation #{client.company_size}"
+  ]
+
+  [
+    "profil=#{requirement}",
+    "constraints=Mobilite coherente avec #{client.location};Niveau de remuneration aligne;Disponibilite reelle sous 3 mois",
+    "process=#{process}",
+    "details=#{details.join(';')}",
+    "must_have=#{must_have.join(';')}",
+    "nice_to_have=#{nice_to_have.join(';')}",
+    "timeline=#{timeline.join(';')}",
+    "resources=#{resources.join(';')}",
+    "difficulty=#{difficulty}",
+    "history_count=#{history_count}",
+    "client_relation=#{index.even? ? 'Client historique RIVYR' : 'Nouveau client RIVYR'}",
+    "client_exigence=#{exigence}",
+    "closing_probability=#{closing_probability}",
+    "collab_pilot=Pilotage RIVYR",
+    "collab_autonomy=#{autonomy}",
+    "collab_max_freelancers=#{max_freelancers}",
+    "collab_deadline_days=#{shortlist_deadline_days}",
+    "collab_candidate_sharing=Candidats exclusifs",
+    "payment_terms=#{payment_terms}"
+  ].join("||")
 end
 
 # --------------------------------------------------
@@ -580,6 +751,8 @@ MISSIONS_DATA.each_with_index do |data, index|
   closed_days_ago = data[:closed_days_ago] || (120 - (index * 3))
   closed_at = mission_status == 'closed' ? seeded_date(closed_days_ago) : nil
   mission_type = data[:mission_type] || mission_type_for(index)
+  brief_summary = mission_brief_for(data, client, index)
+  search_constraints = mission_constraints_for(data, client, index)
 
   mission = Mission.find_or_create_by!(reference: data[:reference]) do |m|
     m.region = region
@@ -594,9 +767,9 @@ MISSIONS_DATA.each_with_index do |data, index|
     m.started_at = started_at
     m.closed_at = closed_at
     m.priority_level = data[:priority]
-    m.brief_summary = MISSION_SUMMARIES[index % MISSION_SUMMARIES.size]
+    m.brief_summary = brief_summary
     m.compensation_summary = COMPENSATION_SUMMARIES[index % COMPENSATION_SUMMARIES.size]
-    m.search_constraints = SEARCH_CONSTRAINTS[index % SEARCH_CONSTRAINTS.size]
+    m.search_constraints = search_constraints
     m.origin_type = mission_origin
     m.specialty = specialty
   end
@@ -614,9 +787,9 @@ MISSIONS_DATA.each_with_index do |data, index|
     started_at: started_at,
     closed_at: closed_at,
     priority_level: data[:priority],
-    brief_summary: MISSION_SUMMARIES[index % MISSION_SUMMARIES.size],
+    brief_summary: brief_summary,
     compensation_summary: COMPENSATION_SUMMARIES[index % COMPENSATION_SUMMARIES.size],
-    search_constraints: SEARCH_CONSTRAINTS[index % SEARCH_CONSTRAINTS.size],
+    search_constraints: search_constraints,
     origin_type: mission_origin,
     specialty: specialty
   )
@@ -906,6 +1079,9 @@ demo_rows.each_with_index do |row, index|
   rivyr_share_cents = gross_amount_cents - row[:freelancer_share_cents]
   hired_date = Date.current - (45 - index * 3)
   mission_ref = "MIS-CL-2026-#{format('%02d', index + 1)}"
+  mission_seed_data = { reference: mission_ref, title: row[:title] }
+  mission_brief = mission_brief_for(mission_seed_data, contact.client, index)
+  mission_constraints = mission_constraints_for(mission_seed_data, contact.client, index)
 
   mission = Mission.create!(
     reference: mission_ref,
@@ -920,9 +1096,9 @@ demo_rows.each_with_index do |row, index|
     opened_at: hired_date - 30,
     started_at: hired_date - 25,
     priority_level: index.even? ? "high" : "critical",
-    brief_summary: MISSION_SUMMARIES[index % MISSION_SUMMARIES.size],
+    brief_summary: mission_brief,
     compensation_summary: COMPENSATION_SUMMARIES[index % COMPENSATION_SUMMARIES.size],
-    search_constraints: SEARCH_CONSTRAINTS[index % SEARCH_CONSTRAINTS.size],
+    search_constraints: mission_constraints,
     origin_type: "freelancer",
     specialty: demo_specialty
   )
