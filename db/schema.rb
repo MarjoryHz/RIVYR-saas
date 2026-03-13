@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_12_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_13_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -159,7 +159,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_12_140000) do
     t.string "mission_type"
     t.date "opened_at"
     t.string "origin_type"
-    t.string "pipeline_stage", default: "sourcing_candidates", null: false
     t.string "priority_level"
     t.string "reference"
     t.bigint "region_id", null: false
@@ -233,6 +232,32 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_12_140000) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "todo_categories", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.boolean "system", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "name"], name: "index_todo_categories_on_user_id_and_name", unique: true
+    t.index ["user_id"], name: "index_todo_categories_on_user_id"
+  end
+
+  create_table "todo_tasks", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.date "due_on"
+    t.string "priority", default: "medium", null: false
+    t.string "status", default: "todo", null: false
+    t.string "title", null: false
+    t.bigint "todo_category_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["priority"], name: "index_todo_tasks_on_priority"
+    t.index ["status"], name: "index_todo_tasks_on_status"
+    t.index ["todo_category_id"], name: "index_todo_tasks_on_todo_category_id"
+    t.index ["user_id"], name: "index_todo_tasks_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", default: "", null: false
@@ -274,4 +299,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_12_140000) do
   add_foreign_key "payout_requests", "users"
   add_foreign_key "placements", "candidates"
   add_foreign_key "placements", "missions"
+  add_foreign_key "todo_categories", "users"
+  add_foreign_key "todo_tasks", "todo_categories"
+  add_foreign_key "todo_tasks", "users"
 end
