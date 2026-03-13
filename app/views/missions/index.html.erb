@@ -22,11 +22,11 @@
             <div class="space-y-2">
               <h2 class="text-2xl font-semibold text-base-content">Mes missions en cours</h2>
               <div class="space-y-1 text-base-content/70">
-                <p><span class="text-3xl font-semibold text-primary"><%= current_missions_count %></span> missions en cours</p>
+                <p><span class="text-3xl font-semibold text-[#ed0e64]"><%= current_missions_count %></span> missions en cours</p>
                 <p>
-                  <span class="font-semibold text-primary"><%= pending_response_count %></span> en attente de réponse
+                  <span class="font-semibold text-[#ed0e64]"><%= pending_response_count %></span> en attente de réponse
                   <span class="mx-2 text-base-content/30">|</span>
-                  <span class="font-semibold text-secondary"><%= accepted_offers_count %></span> offres acceptées
+                  <span class="font-semibold text-[#ed0e64]"><%= accepted_offers_count %></span> offres acceptées
                 </p>
               </div>
             </div>
@@ -45,7 +45,7 @@
                         <% end %>
                       </p>
                     </div>
-                    <i class="fa-solid fa-angle-right text-primary"></i>
+                    <i class="fa-solid fa-angle-right text-[#ed0e64]"></i>
                   </div>
                 <% end %>
               <% else %>
@@ -57,7 +57,7 @@
 
             <div class="mt-auto flex justify-end pt-1">
               <%= link_to my_missions_missions_path, class: "inline-flex items-center gap-2 rounded-full border border-[#f1a38b] bg-[#f4a58a] px-5 py-3 text-base font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" do %>
-                <i class="fa-solid fa-circle-check"></i>
+                <i class="fa-solid fa-circle-check text-[#ed0e64]"></i>
                 Voir mes missions
               <% end %>
             </div>
@@ -88,7 +88,7 @@
                         <%= mission.mission_type.presence || mission.specialty&.name || "Mission ouverte" %>
                       </p>
                     </div>
-                    <i class="fa-solid fa-angle-right text-primary"></i>
+                    <i class="fa-solid fa-angle-right text-[#ed0e64]"></i>
                   </div>
                 <% end %>
               <% else %>
@@ -99,8 +99,8 @@
             </div>
 
             <div class="mt-auto flex justify-end pt-1">
-              <%= link_to library_missions_path(status: "open"), class: "inline-flex items-center gap-2 rounded-full border border-[#f1a38b] bg-[#f4a58a] px-5 py-3 text-base font-semibold text-white shadow-sm" do %>
-                <i class="fa-solid fa-star"></i>
+              <%= link_to library_missions_path(status: "open"), class: "inline-flex items-center gap-2 rounded-full border border-[#f1a38b] bg-[#f4a58a] px-5 py-3 text-base font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" do %>
+                <i class="fa-solid fa-star text-[#ed0e64]"></i>
                 <span>Accéder à la bibliothèque</span>
               <% end %>
             </div>

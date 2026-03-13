@@ -15,6 +15,8 @@ class User < ApplicationRecord
   has_one :client_contact
   has_one :candidate
   has_many :payout_requests, dependent: :destroy
+  has_many :todo_categories, dependent: :destroy
+  has_many :todo_tasks, dependent: :destroy
 
   validates :first_name, presence: true
   validates :last_name, presence: true

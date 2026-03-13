@@ -1,0 +1,296 @@
+<% surface_card_class = "rounded-[1.45rem] border border-base-100/70 bg-base-100/88 shadow-lg" %>
+<% status_labels = { "urgent" => "Urgent", "todo" => "À faire", "in_progress" => "En cours", "done" => "Terminé" } %>
+<% priority_labels = { "low" => "Basse", "medium" => "Moyenne", "high" => "Haute" } %>
+<% task_form_open = @todo_task.persisted? %>
+
+<div class="mx-auto max-w-7xl p-4 md:p-6">
+  <section class="space-y-6">
+    <header class="space-y-4">
+      <div class="space-y-2">
+        <h1 class="text-3xl font-semibold tracking-tight text-base-content md:text-4xl">To-do list</h1>
+        <p class="max-w-3xl text-base text-base-content/70 md:text-lg">
+          Gère tes tâches, tes catégories et les priorités de la journée depuis un seul espace.
+        </p>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div class="<%= surface_card_class %> p-5">
+          <p class="text-sm text-base-content/60">Tâches</p>
+          <p class="mt-2 text-3xl font-semibold text-[#ed0e64]"><%= @todo_kpis[:tasks_count] %></p>
+        </div>
+        <div class="<%= surface_card_class %> p-5">
+          <p class="text-sm text-base-content/60">Missions urgentes</p>
+          <p class="mt-2 text-3xl font-semibold text-[#ed0e64]"><%= @todo_kpis[:urgent_count] %></p>
+        </div>
+        <div class="<%= surface_card_class %> p-5">
+          <p class="text-sm text-base-content/60">Validations en attente</p>
+          <p class="mt-2 text-3xl font-semibold text-[#ed0e64]"><%= @todo_kpis[:pending_validation_count] %></p>
+        </div>
+        <div class="<%= surface_card_class %> p-5">
+          <p class="text-sm text-base-content/60">Missions actives</p>
+          <p class="mt-2 text-3xl font-semibold text-base-content"><%= @todo_kpis[:active_missions_count] %></p>
+        </div>
+        <div class="<%= surface_card_class %> p-5">
+          <p class="text-sm text-base-content/60">Actions finance</p>
+          <p class="mt-2 text-3xl font-semibold text-base-content"><%= @todo_kpis[:finance_actions_count] %></p>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid gap-6 xl:grid-cols-[minmax(0,1.46fr)_minmax(250px,0.54fr)]">
+      <div class="space-y-6">
+        <section class="<%= surface_card_class %> overflow-hidden">
+          <div class="flex items-center justify-between border-b border-base-200/70 px-6 py-4">
+            <h2 class="text-xl font-semibold text-base-content"><%= @todo_task.persisted? ? "Modifier la tâche" : "Nouvelle tâche" %></h2>
+            <% unless @todo_task.persisted? %>
+              <button
+                type="button"
+                class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#f1a38b] bg-[#f4a58a] text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]"
+                aria-controls="todo-task-form-panel"
+                aria-expanded="<%= task_form_open %>"
+                onclick="const panel = document.getElementById('todo-task-form-panel'); const isHidden = panel.classList.toggle('hidden'); this.setAttribute('aria-expanded', String(!isHidden)); const icon = this.querySelector('i'); icon.classList.toggle('fa-plus', isHidden); icon.classList.toggle('fa-xmark', !isHidden);">
+                <i class="fa-solid <%= task_form_open ? 'fa-xmark' : 'fa-plus' %>"></i>
+              </button>
+            <% end %>
+          </div>
+
+          <div id="todo-task-form-panel" class="<%= 'hidden' unless task_form_open %> p-6">
+            <%= form_with model: @todo_task, url: @todo_task.persisted? ? todo_task_path(@todo_task) : todo_tasks_path, method: @todo_task.persisted? ? :patch : :post, class: "space-y-4" do |form| %>
+              <div class="grid gap-4 md:grid-cols-2">
+                <div class="md:col-span-2">
+                  <%= form.label :title, "Titre", class: "mb-1 block text-sm font-medium text-base-content/70" %>
+                  <%= form.text_field :title, class: "input input-bordered w-full", placeholder: "Ex. Relancer le client sur la mission CFO" %>
+                </div>
+
+                <div class="md:col-span-2">
+                  <%= form.label :description, "Description", class: "mb-1 block text-sm font-medium text-base-content/70" %>
+                  <%= form.text_area :description, rows: 4, class: "textarea textarea-bordered w-full", placeholder: "Ajoute ici le contexte, la prochaine action ou le point de vigilance." %>
+                </div>
+
+                <div>
+                  <%= form.label :todo_category_id, "Catégorie", class: "mb-1 block text-sm font-medium text-base-content/70" %>
+                  <%= form.collection_select :todo_category_id, @todo_categories, :id, :name, { prompt: "Choisir une catégorie" }, { class: "select select-bordered w-full" } %>
+                </div>
+
+                <div>
+                  <%= form.label :due_on, "Échéance", class: "mb-1 block text-sm font-medium text-base-content/70" %>
+                  <%= form.date_field :due_on, class: "input input-bordered w-full" %>
+                </div>
+
+                <div>
+                  <%= form.label :status, "Statut", class: "mb-1 block text-sm font-medium text-base-content/70" %>
+                  <%= form.select :status, status_labels.map { |key, label| [ label, key ] }, {}, class: "select select-bordered w-full" %>
+                </div>
+
+                <div>
+                  <%= form.label :priority, "Priorité", class: "mb-1 block text-sm font-medium text-base-content/70" %>
+                  <%= form.select :priority, priority_labels.map { |key, label| [ label, key ] }, {}, class: "select select-bordered w-full" %>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap gap-3">
+                <%= form.submit(@todo_task.persisted? ? "Mettre à jour" : "Ajouter la tâche", class: "inline-flex items-center justify-center rounded-full border border-[#f1a38b] bg-[#f4a58a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]") %>
+                <% if @todo_task.persisted? %>
+                  <%= link_to "Annuler", todo_list_path, class: "btn btn-ghost" %>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </section>
+
+        <section class="<%= surface_card_class %> overflow-hidden">
+          <div class="border-b border-base-200/70 px-6 py-4">
+            <div class="relative">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <h2 class="text-xl font-semibold text-base-content">Mes tâches</h2>
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-2 rounded-2xl border border-base-200 bg-base-100/75 px-5 py-3 text-base font-medium text-base-content/70 shadow-sm transition hover:bg-base-100/95"
+                  aria-controls="todo-filtres"
+                  aria-expanded="false"
+                  onclick="document.getElementById('todo-filtres').classList.toggle('hidden'); this.setAttribute('aria-expanded', String(!document.getElementById('todo-filtres').classList.contains('hidden')));">
+                  <i class="fa-solid fa-sliders text-[#ed0e64]"></i>
+                  Filtres
+                  <i class="fa-solid fa-angle-down text-xs text-[#ed0e64]"></i>
+                </button>
+              </div>
+
+              <div id="todo-filtres" class="absolute inset-x-0 top-full z-30 mt-3 hidden rounded-[1.45rem] border border-base-200 bg-base-100 p-4 shadow-xl">
+                <%= form_with url: todo_list_path, method: :get, class: "grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,1fr))_minmax(0,0.9fr)]", html: { onsubmit: "document.getElementById('todo-filtres').classList.add('hidden')" } do %>
+                  <div>
+                    <label for="todo-query-filter" class="mb-1 block text-sm font-medium text-base-content/70">Recherche</label>
+                    <%= text_field_tag :q, @task_query, id: "todo-query-filter", class: "input input-bordered w-full", placeholder: "Titre ou description" %>
+                  </div>
+
+                  <div>
+                    <label for="todo-status-filter" class="mb-1 block text-sm font-medium text-base-content/70">Statut</label>
+                    <%= select_tag :status,
+                      options_for_select([["Tous les statuts", ""]] + status_labels.map { |key, label| [label, key] }, @task_status_filter),
+                      id: "todo-status-filter",
+                      class: "select select-bordered w-full" %>
+                  </div>
+
+                  <div>
+                    <label for="todo-priority-filter" class="mb-1 block text-sm font-medium text-base-content/70">Priorité</label>
+                    <%= select_tag :priority,
+                      options_for_select([["Toutes les priorités", ""]] + priority_labels.map { |key, label| [label, key] }, @task_priority_filter),
+                      id: "todo-priority-filter",
+                      class: "select select-bordered w-full" %>
+                  </div>
+
+                  <div>
+                    <label for="todo-category-filter" class="mb-1 block text-sm font-medium text-base-content/70">Catégorie</label>
+                    <%= select_tag :category_id,
+                      options_for_select([["Toutes les catégories", ""]] + @todo_categories.map { |category| [category.name, category.id] }, @task_category_filter),
+                      id: "todo-category-filter",
+                      class: "select select-bordered w-full" %>
+                  </div>
+
+                  <div class="ml-3 flex min-w-0 items-end gap-2">
+                    <button type="submit" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#f4bfd2] bg-[#fff2f7] text-[#ed0e64] transition hover:border-[#e8a8c2] hover:bg-[#ffe6f0] hover:text-[#c50b54]" aria-label="Appliquer les filtres">
+                      <i class="fa-solid fa-check text-base"></i>
+                    </button>
+                    <%= link_to todo_list_path, class: "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-base-content/60 transition hover:border-base-300 hover:bg-base-100 hover:text-base-content", aria: { label: "Réinitialiser les filtres" } do %>
+                      <i class="fa-solid fa-xmark text-sm"></i>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-6 p-6">
+            <% status_labels.each do |status_key, status_label| %>
+              <% tasks = Array(@todo_tasks_groups[status_key]) %>
+              <% collapsed = status_key == "done" %>
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <% if status_key == "done" %>
+                      <button
+                        type="button"
+                        class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-base-content/65 transition hover:bg-base-100 hover:text-base-content"
+                        aria-controls="todo-section-<%= status_key %>"
+                        aria-expanded="false"
+                        onclick="const panel = document.getElementById('todo-section-<%= status_key %>'); const isHidden = panel.classList.toggle('hidden'); this.setAttribute('aria-expanded', String(!isHidden)); this.querySelector('i').classList.toggle('rotate-180', !isHidden);">
+                        <i class="fa-solid fa-angle-down text-xs transition"></i>
+                      </button>
+                    <% end %>
+                    <h3 class="text-lg font-semibold text-base-content"><%= status_label %></h3>
+                  </div>
+                  <span class="text-sm text-base-content/55"><%= tasks.size %> tâche<%= "s" if tasks.size > 1 %></span>
+                </div>
+
+                <div id="todo-section-<%= status_key %>" class="<%= 'hidden' if collapsed %> space-y-3">
+                  <% if tasks.any? %>
+                    <% tasks.each do |task| %>
+                      <% task_description_expandable = task.description.to_s.length > 100 %>
+                      <article class="rounded-[1.25rem] border border-base-200/80 bg-base-100/80 p-4">
+                        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                          <div class="space-y-2">
+                            <div class="flex flex-wrap items-center gap-3">
+                              <% unless task.status_done? %>
+                                <%= button_to todo_task_path(task, todo_task: { status: "done" }), method: :patch, class: "inline-flex h-6 w-6 items-center justify-center text-[#ed0e64] transition hover:text-[#c50b54]", form_class: "contents" do %>
+                                  <i class="fa-regular fa-circle text-lg"></i>
+                                <% end %>
+                              <% else %>
+                                <%= button_to todo_task_path(task, todo_task: { status: "todo" }), method: :patch, class: "inline-flex h-6 w-6 items-center justify-center text-[#ed0e64] transition hover:text-[#c50b54]", form_class: "contents" do %>
+                                  <i class="fa-solid fa-circle-check text-lg"></i>
+                                <% end %>
+                              <% end %>
+                              <p class="text-lg font-semibold text-base-content"><%= task.title %></p>
+                              <span class="inline-flex rounded-full bg-[#fff2f7] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#ed0e64]"><%= task.todo_category.name %></span>
+                              <span class="inline-flex rounded-full bg-base-200/80 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-base-content/60"><%= priority_labels[task.priority] %></span>
+                            </div>
+                            <% if task.description.present? %>
+                              <% if task_description_expandable %>
+                                <div class="space-y-1">
+                                  <p id="task-description-preview-<%= task.id %>" class="text-sm leading-6 text-base-content/70"><%= truncate(task.description, length: 96) %></p>
+                                  <p id="task-description-full-<%= task.id %>" class="hidden text-sm leading-6 text-base-content/70"><%= task.description %></p>
+                                  <button
+                                    type="button"
+                                    class="inline-flex items-center gap-2 text-xs font-semibold text-[#ed0e64] transition hover:text-[#c50b54]"
+                                    aria-expanded="false"
+                                    onclick="const preview = document.getElementById('task-description-preview-<%= task.id %>'); const full = document.getElementById('task-description-full-<%= task.id %>'); const isHidden = full.classList.toggle('hidden'); preview.classList.toggle('hidden', !isHidden); this.setAttribute('aria-expanded', String(!isHidden)); this.querySelector('span').textContent = isHidden ? 'Voir le détail' : 'Masquer le détail'; this.querySelector('i').classList.toggle('rotate-180', !isHidden);">
+                                    <span>Voir le détail</span>
+                                    <i class="fa-solid fa-angle-down text-[11px] transition"></i>
+                                  </button>
+                                </div>
+                              <% else %>
+                                <p class="text-sm leading-6 text-base-content/70"><%= task.description %></p>
+                              <% end %>
+                            <% end %>
+                            <% if task.due_on.present? %>
+                              <p class="text-sm text-base-content/55">Échéance : <%= l(task.due_on) %></p>
+                            <% end %>
+                          </div>
+
+                          <div class="flex flex-wrap gap-2 lg:justify-end">
+                            <%= link_to "Modifier", todo_list_path(edit_task: task.id), class: "btn btn-sm border-base-200 bg-base-100/85 text-base-content/75 hover:bg-base-100" %>
+                            <%= button_to "Supprimer", todo_task_path(task), method: :delete, class: "btn btn-sm border-[#f4bfd2] bg-[#fff2f7] text-[#ed0e64] hover:bg-[#ffe6f0]", form: { data: { turbo_confirm: "Supprimer cette tâche ?" } } %>
+                          </div>
+                        </div>
+                      </article>
+                    <% end %>
+                  <% else %>
+                    <div class="rounded-2xl border border-dashed border-base-200 bg-base-100/55 px-4 py-5 text-sm text-base-content/55">
+                      Aucune tâche dans cette colonne.
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </section>
+      </div>
+
+      <aside class="space-y-6">
+        <section class="<%= surface_card_class %> overflow-hidden">
+          <div class="border-b border-base-200/70 px-6 py-4">
+            <h2 class="text-xl font-semibold text-base-content">Actions recommandées</h2>
+          </div>
+
+          <div class="space-y-4 p-6">
+            <% @recommended_actions.each do |action| %>
+              <% detail_is_expandable = action[:detail].to_s.length > 85 %>
+              <article class="rounded-[1.25rem] border <%= action[:highlight] ? 'border-[#f4bfd2] bg-[#fff2f8]' : 'border-base-200/80 bg-base-100/75' %> p-4">
+                <div class="flex items-start gap-3">
+                  <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full <%= action[:highlight] ? 'bg-[#ffe2ee]' : 'bg-base-200/70' %>">
+                    <i class="fa-solid <%= action[:icon] %> text-[#ed0e64]"></i>
+                  </div>
+
+                  <div class="min-w-0 flex-1 space-y-3">
+                    <div class="space-y-1">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <p class="font-semibold text-base-content"><%= action[:title] %></p>
+                        <span class="inline-flex rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#ed0e64]"><%= action[:status] %></span>
+                      </div>
+                      <% if detail_is_expandable %>
+                        <div class="space-y-1">
+                          <p id="recommended-action-preview-<%= action[:title].parameterize %>" class="text-sm leading-6 text-base-content/70"><%= truncate(action[:detail], length: 82) %></p>
+                          <p id="recommended-action-full-<%= action[:title].parameterize %>" class="hidden text-sm leading-6 text-base-content/70"><%= action[:detail] %></p>
+                          <button
+                            type="button"
+                            class="inline-flex items-center gap-2 text-xs font-semibold text-[#ed0e64] transition hover:text-[#c50b54]"
+                            aria-expanded="false"
+                            onclick="const key = '<%= action[:title].parameterize %>'; const preview = document.getElementById(`recommended-action-preview-${key}`); const full = document.getElementById(`recommended-action-full-${key}`); const expanded = full.classList.toggle('hidden'); preview.classList.toggle('hidden', !expanded); this.setAttribute('aria-expanded', String(!expanded)); this.querySelector('i').classList.toggle('rotate-180', !expanded);">
+                            <span>Voir le détail</span>
+                            <i class="fa-solid fa-angle-down text-[11px] transition"></i>
+                          </button>
+                        </div>
+                      <% else %>
+                        <p class="text-sm leading-6 text-base-content/70"><%= action[:detail] %></p>
+                      <% end %>
+                    </div>
+
+                    <%= link_to action[:action_label], action[:action_path], class: "inline-flex items-center justify-center rounded-full border border-[#f1a38b] bg-[#f4a58a] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" %>
+                  </div>
+                </div>
+              </article>
+            <% end %>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </section>
+</div>

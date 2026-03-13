@@ -1,30 +1,104 @@
-<% hide_search = controller_name == "missions" && action_name == "index" %>
-<% show_my_missions_nav = controller_name == "missions" && action_name == "my_missions" %>
-
-<nav class="py-7 px-9 sticky top-0 z-100">
+<nav class="absolute inset-x-0 top-0 z-100 px-4 pt-4 md:px-6 md:pt-6">
+  <% search_modal_id = "freelance_quick_search_modal" %>
+  <% show_back_button = !(controller_name == "missions" && action_name == "index") %>
   <div class="flex items-center justify-between">
+    <div></div>
 
-    <div class="flex items-center">
-      <%= inline_svg_tag("icon_pers.svg", options={class: "text-white h-12 w-auto object-contain"}) %>
-      <%= inline_svg_tag("icon_rivyr.svg", options={class: "text-secondary h-8 w-auto object-contain"}) %>
-    </div>
-
-      <% unless hide_search %>
-        <div class="flex-1 items-center justify-center flex">
-          <label class="flex w-full max-w-xl items-center gap-3 rounded-full border border-rose-100 bg-rose-50/85 px-5 py-2 text-[#c48797] shadow-sm">
-            <i class="fa-solid fa-magnifying-glass text-sm"></i>
-            <input type="text" placeholder="Rechercher" class="w-full text-sm text-[#7f5260] outline-none placeholder:text-[#c48797]">
-          </label>
-        </div>
+    <div class="flex shrink-0 items-center gap-2">
+      <% if show_back_button %>
+        <%= link_to(request.referer.presence || missions_path, class: "inline-flex h-10 items-center gap-2 rounded-full border border-base-200 bg-base-100/80 px-4 text-sm font-medium text-base-content/75 shadow-sm transition hover:bg-base-100 hover:text-base-content") do %>
+          <i class="fa-solid fa-arrow-left text-[#ed0e64]"></i>
+          Retour
+        <% end %>
       <% end %>
+      <button type="button" class="h-10 w-10 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-primary shadow-sm transition hover:bg-base-100 sm:inline-flex" onclick="document.getElementById('<%= search_modal_id %>').showModal()">
+        <i class="fa-solid fa-magnifying-glass text-base text-[#ed0e64]"></i>
+      </button>
+      <button type="button" class="h-10 w-10 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-primary shadow-sm sm:inline-flex">
+        <i class="fa-regular fa-bell text-base text-[#ed0e64]"></i>
+      </button>
+      <button type="button" class="h-10 w-10 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-primary shadow-sm sm:inline-flex">
+        <i class="fa-solid fa-robot text-base text-[#ed0e64]"></i>
+      </button>
+    </div>
+  </div>
+</nav>
 
-      <div class="flex shrink-0 items-center gap-2">
-        <button type="button" class="h-10 w-10 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-primary shadow-sm sm:inline-flex">
-          <i class="fa-regular fa-bell text-base"></i>
-        </button>
-        <button type="button" class="h-10 w-10 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-primary shadow-sm sm:inline-flex">
-          <i class="fa-solid <%= show_my_missions_nav ? 'fa-gear' : 'fa-robot' %> text-base"></i>
-        </button>
+<dialog id="<%= search_modal_id %>" class="modal">
+  <div class="modal-box max-w-xl rounded-[1.75rem] border border-[#f2d5df] bg-base-100 shadow-2xl">
+    <div class="space-y-5">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h3 class="text-2xl font-semibold text-base-content">Recherche rapide</h3>
+          <p class="mt-1 text-sm text-base-content/65">Trouve rapidement une section du site.</p>
+        </div>
+        <form method="dialog">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-base-content/60 transition hover:bg-base-100 hover:text-base-content">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </form>
+      </div>
+
+      <label class="flex items-center gap-3 rounded-full border border-[#f2d5df] bg-[#fff5f8] px-5 py-3 text-[#b36a82] shadow-sm">
+        <i class="fa-solid fa-magnifying-glass text-sm text-[#ed0e64]"></i>
+        <input
+          type="text"
+          placeholder="Rechercher une page, une rubrique, une action..."
+          class="w-full bg-transparent text-sm text-base-content outline-none placeholder:text-[#c79aad]"
+          autofocus
+          oninput="const query = this.value.toLowerCase(); const items = this.closest('dialog').querySelectorAll('[data-search-item]'); items.forEach((item) => { item.classList.toggle('hidden', !item.dataset.searchItem.includes(query)); });">
+      </label>
+
+      <div class="grid gap-3 sm:grid-cols-2">
+        <%= link_to missions_path, class: "flex items-center gap-3 rounded-2xl border border-[#f2d5df] bg-[#fff7f9] px-4 py-3 text-base-content transition hover:bg-white", data: { search_item: "missions accueil tableau de bord recrutement" } do %>
+          <i class="fa-solid fa-briefcase text-[#ed0e64]"></i>
+          <div>
+            <p class="font-semibold">Missions</p>
+            <p class="text-sm text-base-content/60">Accueil et suivi des missions</p>
+          </div>
+        <% end %>
+
+        <%= link_to my_missions_missions_path, class: "flex items-center gap-3 rounded-2xl border border-[#f2d5df] bg-[#fff7f9] px-4 py-3 text-base-content transition hover:bg-white", data: { search_item: "mes missions en cours urgent freelance" } do %>
+          <i class="fa-solid fa-list-check text-[#ed0e64]"></i>
+          <div>
+            <p class="font-semibold">Mes missions</p>
+            <p class="text-sm text-base-content/60">Missions en cours et priorités</p>
+          </div>
+        <% end %>
+
+        <%= link_to pending_missions_missions_path, class: "flex items-center gap-3 rounded-2xl border border-[#f2d5df] bg-[#fff7f9] px-4 py-3 text-base-content transition hover:bg-white", data: { search_item: "attente validation pending missions" } do %>
+          <i class="fa-regular fa-clock text-[#ed0e64]"></i>
+          <div>
+            <p class="font-semibold">En attente</p>
+            <p class="text-sm text-base-content/60">Validations et missions en attente</p>
+          </div>
+        <% end %>
+
+        <%= link_to invoices_path, class: "flex items-center gap-3 rounded-2xl border border-[#f2d5df] bg-[#fff7f9] px-4 py-3 text-base-content transition hover:bg-white", data: { search_item: "factures invoices finance paiement" } do %>
+          <i class="fa-solid fa-file-invoice text-[#ed0e64]"></i>
+          <div>
+            <p class="font-semibold">Factures</p>
+            <p class="text-sm text-base-content/60">Suivi de la facturation</p>
+          </div>
+        <% end %>
+
+        <%= link_to freelancer_profiles_path, class: "flex items-center gap-3 rounded-2xl border border-[#f2d5df] bg-[#fff7f9] px-4 py-3 text-base-content transition hover:bg-white", data: { search_item: "cvtheque cv profils candidats freelance" } do %>
+          <i class="fa-solid fa-folder-open text-[#ed0e64]"></i>
+          <div>
+            <p class="font-semibold">CVthèque</p>
+            <p class="text-sm text-base-content/60">Profils et documents</p>
+          </div>
+        <% end %>
+
+        <%= link_to placements_path(scope: "closed_missions"), class: "flex items-center gap-3 rounded-2xl border border-[#f2d5df] bg-[#fff7f9] px-4 py-3 text-base-content transition hover:bg-white", data: { search_item: "terminees placements closed missions archive" } do %>
+          <i class="fa-solid fa-circle-check text-[#ed0e64]"></i>
+          <div>
+            <p class="font-semibold">Terminées</p>
+            <p class="text-sm text-base-content/60">Placements et missions clôturées</p>
+          </div>
+        <% end %>
       </div>
     </div>
-</nav>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>

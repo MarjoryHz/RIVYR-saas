@@ -1,58 +1,64 @@
 <% active_controller = controller_name %>
-<% active_highlight_top = case active_controller
-when "missions" then "4.5rem"
-when "invoices" then "9rem"
-when "freelancer_profiles" then "13.5rem"
-end %>
 
-<aside class="freelance-sidebar">
-  <input id="freelance-sidebar-toggle" type="checkbox" class="freelance-sidebar__toggle">
-
+<aside class="freelance-sidebar" data-freelance-sidebar>
   <div class="freelance-sidebar__shell">
     <div class="freelance-sidebar__header">
-      <div aria-hidden="true"></div>
-
-      <label for="freelance-sidebar-toggle" class="freelance-sidebar__collapse" aria-label="Réduire la sidebar freelance">
-        <span class="freelance-sidebar__collapse-open"><i class="fa-solid fa-angle-left"></i></span>
-        <span class="freelance-sidebar__collapse-closed"><i class="fa-solid fa-bars"></i></span>
-      </label>
+      <%= link_to safe_join([
+        content_tag(:span, inline_svg_tag("icon_pers.svg", class: "freelance-sidebar__brand-mark-icon"), class: "freelance-sidebar__brand-mark"),
+        content_tag(:span, inline_svg_tag("icon_rivyr.svg", class: "freelance-sidebar__brand-wordmark-icon"), class: "freelance-sidebar__brand-wordmark")
+      ]), missions_path, class: "freelance-sidebar__brand", aria: { label: "Rivyr" } %>
     </div>
 
     <div class="freelance-sidebar__content">
-      <% if active_highlight_top.present? %>
-        <div class="freelance-sidebar__active-highlight" style="top: <%= active_highlight_top %>;"></div>
-      <% end %>
+      <button type="button" class="freelance-sidebar__collapse freelance-sidebar__collapse--content" aria-label="Réduire la sidebar freelance" aria-expanded="true" data-freelance-sidebar-toggle>
+        <span class="freelance-sidebar__collapse-open"><i class="fa-solid fa-angle-left"></i></span>
+        <span class="freelance-sidebar__collapse-closed"><i class="fa-solid fa-bars"></i></span>
+      </button>
 
-      <div class="freelance-sidebar__section">
-        <span class="freelance-sidebar__item freelance-sidebar__item--disabled">
-          <i class="fa-solid fa-table-columns"></i>
-          <span>Dashboard</span>
-        </span>
-        <%= link_to missions_path, class: ["freelance-sidebar__item", ("freelance-sidebar__item--active" if active_controller == "missions")] do %>
-          <i class="fa-solid fa-briefcase"></i>
-          <span>Missions</span>
-        <% end %>
-        <%= link_to invoices_path, class: ["freelance-sidebar__item", ("freelance-sidebar__item--active" if active_controller == "invoices")] do %>
-          <i class="fa-solid fa-file-invoice"></i>
-          <span>Factures</span>
-        <% end %>
-        <%= link_to freelancer_profiles_path, class: ["freelance-sidebar__item", ("freelance-sidebar__item--active" if active_controller == "freelancer_profiles")] do %>
-          <i class="fa-solid fa-folder-open"></i>
-          <span>CVthèque</span>
-        <% end %>
-        <span class="freelance-sidebar__item freelance-sidebar__item--disabled">
-          <i class="fa-solid fa-list-check"></i>
-          <span>To-do list</span>
-        </span>
-        <span class="freelance-sidebar__item freelance-sidebar__item--disabled">
-          <i class="fa-solid fa-newspaper"></i>
-          <span>Feed</span>
-        </span>
-        <span class="freelance-sidebar__item freelance-sidebar__item--disabled">
-          <i class="fa-solid fa-users"></i>
-          <span>Communauté</span>
-        </span>
-      </div>
+      <ul class="freelance-sidebar__menu">
+        <li class="freelance-sidebar__menu-item">
+          <span class="freelance-sidebar__item freelance-sidebar__item--disabled">
+            <i class="fa-solid fa-table-columns"></i>
+            <span>Dashboard</span>
+          </span>
+        </li>
+        <li class="freelance-sidebar__menu-item">
+          <%= link_to missions_path, class: ["freelance-sidebar__item", ("freelance-sidebar__item--active" if active_controller == "missions")] do %>
+            <i class="fa-solid fa-briefcase"></i>
+            <span>Missions</span>
+          <% end %>
+        </li>
+        <li class="freelance-sidebar__menu-item">
+          <%= link_to invoices_path, class: ["freelance-sidebar__item", ("freelance-sidebar__item--active" if active_controller == "invoices")] do %>
+            <i class="fa-solid fa-file-invoice"></i>
+            <span>Factures</span>
+          <% end %>
+        </li>
+        <li class="freelance-sidebar__menu-item">
+          <%= link_to freelancer_profiles_path, class: ["freelance-sidebar__item", ("freelance-sidebar__item--active" if active_controller == "freelancer_profiles")] do %>
+            <i class="fa-solid fa-folder-open"></i>
+            <span>CVthèque</span>
+          <% end %>
+        </li>
+        <li class="freelance-sidebar__menu-item">
+          <%= link_to todo_list_path, class: ["freelance-sidebar__item", ("freelance-sidebar__item--active" if active_controller == "todo_lists")] do %>
+            <i class="fa-solid fa-list-check"></i>
+            <span>To-do list</span>
+          <% end %>
+        </li>
+        <li class="freelance-sidebar__menu-item">
+          <span class="freelance-sidebar__item freelance-sidebar__item--disabled">
+            <i class="fa-solid fa-newspaper"></i>
+            <span>Feed</span>
+          </span>
+        </li>
+        <li class="freelance-sidebar__menu-item">
+          <span class="freelance-sidebar__item freelance-sidebar__item--disabled">
+            <i class="fa-solid fa-users"></i>
+            <span>Communauté</span>
+          </span>
+        </li>
+      </ul>
     </div>
 
     <% if user_signed_in? %>
