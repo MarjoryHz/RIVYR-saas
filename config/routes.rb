@@ -9,6 +9,7 @@ Rails.application.routes.draw do
     get :pending_missions, on: :collection
     patch :toggle_freelance_urgent, on: :member
     post :apply, on: :member
+    delete :withdraw, on: :member
     collection do
       get :library, as: :library
     end
