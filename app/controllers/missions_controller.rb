@@ -1,3 +1,5 @@
+require_dependency Rails.root.join("app/services/freelance_dashboard_builder").to_s
+
 class MissionsController < ApplicationController
   helper_method :mission_company_segment, :mission_company_masked, :mission_available_since_label, :mission_score_for, :mission_score_tone_class, :mission_score_breakdown_for, :mission_level_for, :mission_pitch_points, :mission_origin_badge, :favorite_mission?, :mission_approx_fee_label, :mission_client_insight, :mission_client_label, :mission_positionings_label, :mission_fee_label, :mission_fee_breakdown_for, :format_amount, :mission_priority_badge, :mission_already_applied?
 
@@ -27,6 +29,13 @@ class MissionsController < ApplicationController
     end
 
     @missions = paginate(scope)
+  end
+
+  def dashboard
+    authorize Mission, :index?
+    return redirect_to missions_path, alert: "Le dashboard freelance est reserve aux freelances." unless current_user.role_freelance?
+
+    load_freelance_missions_dashboard
   end
 
   def library
@@ -314,24 +323,9 @@ class MissionsController < ApplicationController
   end
 
   def load_freelance_missions_dashboard
-    current_scope = policy_scope(Mission)
-      .includes(:region, :client_contact, :specialty, freelancer_profile: :user)
-      .joins(:freelancer_profile)
-      .where(freelancer_profiles: { user_id: current_user.id })
-
-    @current_missions = current_scope
-      .where(status: %w[open in_progress])
-      .order(created_at: :desc)
-      .limit(3)
-
-    @current_missions_count = current_scope.where(status: %w[open in_progress]).count
-    @pending_response_count = current_scope.where(status: "open").count
-    @accepted_offers_count = current_scope.where(status: "in_progress").count
-
-    @library_missions = library_scope
-      .includes(:region, :client_contact, :specialty)
-      .order(created_at: :desc)
-      .limit(3)
+    ::FreelanceDashboardBuilder.new(context: self, current_user: current_user).build.each do |key, value|
+      instance_variable_set("@#{key}", value)
+    end
   end
 
   def build_my_mission_row(mission, preference = nil)
@@ -915,4 +909,5 @@ class MissionsController < ApplicationController
     size = mission_company_segment(mission)
     "#{size} du secteur #{sector}, environnement exigeant et evolutif."
   end
+
 end

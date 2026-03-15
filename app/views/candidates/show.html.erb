@@ -20,5 +20,5 @@
     <p><%= @candidate.notes.presence || "-" %></p>
   </div>
 
-  <%= link_to "Retour a la liste", candidates_path, class: "btn" %>
+  <%= link_to "Retour a la liste", request.path.start_with?("/dashboard") ? dashboard_candidates_path : candidates_path, class: "btn" %>
 </div>

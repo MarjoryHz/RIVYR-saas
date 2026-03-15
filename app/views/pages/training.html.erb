@@ -1,0 +1,230 @@
+<% tone_badges = {
+  "pink" => "bg-[#FDE7F1] text-[#B40C4D] ring-[#F7C4DA]",
+  "emerald" => "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  "amber" => "bg-amber-50 text-amber-700 ring-amber-200",
+  "slate" => "bg-slate-100 text-slate-600 ring-slate-200"
+} %>
+
+<div class="w-full max-w-none space-y-6 px-6 py-4 md:px-11 md:py-5 lg:px-10">
+  <section class="overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.08)]">
+    <div class="relative overflow-hidden px-6 py-8 sm:px-8 lg:px-10 lg:py-10">
+      <div class="absolute inset-x-0 top-0 h-1 bg-[#ED0E64]"></div>
+      <div class="absolute -right-20 top-0 h-56 w-56 rounded-full bg-[#FDE7F1] blur-3xl"></div>
+      <div class="absolute bottom-0 left-0 h-48 w-48 rounded-full bg-orange-100/80 blur-3xl"></div>
+
+      <div class="relative grid gap-8 xl:grid-cols-[1.25fr_0.75fr] xl:items-center">
+        <div class="space-y-5">
+          <span class="inline-flex items-center rounded-full bg-[#FDE7F1] px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[#B40C4D]">
+            Rivyr Academy
+          </span>
+          <div class="space-y-3">
+            <h1 class="max-w-3xl text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
+              Montez en niveau sur les competences qui font gagner plus de missions.
+            </h1>
+            <p class="max-w-3xl text-base leading-relaxed text-slate-600 md:text-lg">
+              Des formations Rivyr pensees pour les freelances du collectif : recrutement, commercial, closing, LinkedIn et pilotage client. Chaque module se termine par un quiz pour valider reellement le niveau.
+            </p>
+          </div>
+
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <% @training_highlights.each do |item| %>
+              <div class="rounded-[24px] border border-slate-200 bg-white/90 p-4 shadow-sm">
+                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400"><%= item[:label] %></p>
+                <p class="mt-3 text-2xl font-semibold text-slate-900"><%= item[:value] %></p>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <aside class="rounded-[28px] border border-slate-200 bg-slate-950 p-6 text-white shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-white/45">Progression label</p>
+              <h2 class="mt-2 text-2xl font-semibold">Votre evolution Rivyr</h2>
+            </div>
+            <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/70">Academy</span>
+          </div>
+
+          <div class="mt-6 rounded-[24px] bg-white/6 p-5">
+            <div class="flex items-end justify-between gap-4">
+              <div>
+                <p class="text-sm text-white/65">Certification globale</p>
+                <p class="mt-2 text-4xl font-semibold"><%= @training_highlights.first[:value] %></p>
+              </div>
+              <div class="text-right text-sm text-white/60">
+                <p>Prochaine etape</p>
+                <p class="mt-2 font-medium text-white">Quiz closing expert</p>
+              </div>
+            </div>
+            <div class="mt-5 h-3 overflow-hidden rounded-full bg-white/10">
+              <div class="h-full rounded-full bg-[#ED0E64]" style="width: <%= @training_highlights.first[:value] %>;"></div>
+            </div>
+          </div>
+
+          <div class="mt-6 space-y-4">
+            <% @learning_paths.each do |path| %>
+              <div class="space-y-2 rounded-2xl border border-white/8 bg-white/4 p-4">
+                <div class="flex items-center justify-between gap-3">
+                  <p class="font-medium text-white"><%= path[:title] %></p>
+                  <span class="text-sm text-white/70"><%= path[:progress] %>%</span>
+                </div>
+                <div class="h-2 overflow-hidden rounded-full bg-white/10">
+                  <div class="h-full rounded-full bg-gradient-to-r from-[#ED0E64] to-[#ffb086]" style="width: <%= path[:progress] %>%;"></div>
+                </div>
+                <p class="text-sm leading-relaxed text-white/60"><%= path[:description] %></p>
+              </div>
+            <% end %>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid gap-6 xl:grid-cols-[1.65fr_360px]">
+    <div class="space-y-6">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-semibold tracking-tight text-slate-900">Formations proposees par Rivyr</h2>
+          <p class="mt-1 text-sm text-slate-500">Des parcours utiles sur le terrain, avec validation finale par quiz.</p>
+        </div>
+        <span class="rounded-full border border-[#F7C4DA] bg-[#FFF3F8] px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#B40C4D]">
+          8 modules actifs
+        </span>
+      </div>
+
+      <div class="grid gap-4">
+        <% @training_tracks.each do |track| %>
+          <article class="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_55px_rgba(15,23,42,0.05)]">
+            <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+              <div class="space-y-3">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500"><%= track[:category] %></span>
+                  <span class="rounded-full px-3 py-1 text-xs font-semibold ring-1 <%= tone_badges.fetch(track[:status_tone]) %>"><%= track[:status] %></span>
+                </div>
+                <div>
+                  <h3 class="text-2xl font-semibold tracking-tight text-slate-900"><%= track[:title] %></h3>
+                  <p class="mt-2 max-w-3xl text-sm leading-relaxed text-slate-500"><%= track[:summary] %></p>
+                </div>
+              </div>
+
+              <div class="grid gap-3 sm:grid-cols-3 xl:w-[340px] xl:grid-cols-1">
+                <div class="rounded-2xl bg-slate-50 px-4 py-3">
+                  <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Duree</p>
+                  <p class="mt-2 text-sm font-semibold text-slate-800"><%= track[:duration] %></p>
+                </div>
+                <div class="rounded-2xl bg-slate-50 px-4 py-3">
+                  <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Niveau</p>
+                  <p class="mt-2 text-sm font-semibold text-slate-800"><%= track[:level] %></p>
+                </div>
+                <div class="rounded-2xl bg-slate-50 px-4 py-3">
+                  <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Quiz</p>
+                  <p class="mt-2 text-sm font-semibold text-slate-800"><%= track[:quiz_score] %></p>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)]">
+              <div class="space-y-4">
+                <div>
+                  <div class="mb-2 flex items-center justify-between gap-4">
+                    <p class="text-sm font-medium text-slate-700">Progression du module</p>
+                    <span class="text-sm font-semibold text-slate-900"><%= track[:progress] %>%</span>
+                  </div>
+                  <div class="h-3 overflow-hidden rounded-full bg-slate-100">
+                    <div class="h-full rounded-full bg-gradient-to-r from-[#ED0E64] to-[#ffb086]" style="width: <%= track[:progress] %>%;"></div>
+                  </div>
+                </div>
+
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <% track[:lessons].each_with_index do |lesson, index| %>
+                    <% lesson_done = (index + 1) * 25 <= track[:progress] %>
+                    <div class="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3">
+                      <span class="inline-flex h-8 w-8 items-center justify-center rounded-full <%= lesson_done ? 'bg-[#FDE7F1] text-[#B40C4D]' : 'bg-slate-100 text-slate-400' %>">
+                        <i class="fa-solid <%= lesson_done ? 'fa-check' : 'fa-play' %> text-xs"></i>
+                      </span>
+                      <span class="text-sm font-medium text-slate-700"><%= lesson %></span>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+
+              <div class="rounded-[24px] border border-[#F7C4DA] bg-[#FFF7FA] p-5">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#B40C4D]">Validation finale</p>
+                    <h4 class="mt-2 text-lg font-semibold text-slate-900">Quiz de competence</h4>
+                  </div>
+                  <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#B40C4D]">Obligatoire</span>
+                </div>
+                <p class="mt-3 text-sm leading-relaxed text-slate-600">
+                  Le module n’est valide qu’apres reussite du quiz final. Tant que le quiz n’est pas passe ou valide, la certification reste en attente.
+                </p>
+                <div class="mt-5 rounded-2xl bg-white p-4 shadow-sm">
+                  <p class="text-xs uppercase tracking-[0.16em] text-slate-400">Prochaine action</p>
+                  <p class="mt-2 text-sm font-semibold text-slate-900"><%= track[:next_step] %></p>
+                </div>
+                <div class="mt-5 flex flex-wrap gap-3">
+                  <a href="#quizs" class="inline-flex items-center rounded-full bg-[#ED0E64] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(237,14,100,0.18)] transition hover:brightness-105">
+                    Lancer le quiz
+                  </a>
+                  <a href="#parcours" class="inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900">
+                    Voir le parcours
+                  </a>
+                </div>
+              </div>
+            </div>
+          </article>
+        <% end %>
+      </div>
+    </div>
+
+    <aside class="space-y-6">
+      <section id="quizs" class="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.05)]">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#B40C4D]">Quiz & validation</p>
+            <h2 class="mt-2 text-2xl font-semibold text-slate-900">A faire ensuite</h2>
+          </div>
+          <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">Evaluation</span>
+        </div>
+
+        <div class="mt-5 space-y-4">
+          <% @quiz_pipeline.each do |quiz| %>
+            <div class="rounded-2xl border border-slate-200 p-4">
+              <div class="flex items-center justify-between gap-3">
+                <h3 class="text-sm font-semibold text-slate-900"><%= quiz[:title] %></h3>
+                <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 <%= tone_badges.fetch(quiz[:tone]) %>"><%= quiz[:status] %></span>
+              </div>
+              <p class="mt-2 text-sm text-slate-500"><%= quiz[:module] %></p>
+              <div class="mt-4 flex items-center justify-between text-sm">
+                <span class="text-slate-400"><%= quiz[:questions] %> questions</span>
+                <a href="#" class="font-semibold text-[#B40C4D] hover:text-[#ED0E64]">Ouvrir</a>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </section>
+
+      <section id="parcours" class="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.05)]">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Suivi academy</p>
+            <h2 class="mt-2 text-2xl font-semibold text-slate-900">Signal academy</h2>
+          </div>
+          <i class="fa-solid fa-sparkles text-[#ED0E64]"></i>
+        </div>
+
+        <div class="mt-5 space-y-3">
+          <% @academy_feed.each do |item| %>
+            <div class="flex gap-3 rounded-2xl bg-slate-50 p-4">
+              <span class="mt-1 inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#FDE7F1] text-[#B40C4D]">
+                <i class="fa-solid fa-bolt text-xs"></i>
+              </span>
+              <p class="text-sm leading-relaxed text-slate-600"><%= item %></p>
+            </div>
+          <% end %>
+        </div>
+      </section>
+    </aside>
+  </section>
+</div>

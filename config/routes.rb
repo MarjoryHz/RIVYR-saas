@@ -3,9 +3,32 @@ Rails.application.routes.draw do
   root to: "pages#home"
   get "/contact", to: "pages#contact", as: :contact
   post "/contact", to: "pages#create_contact"
+  get "/showcase/company", to: "pages#company_showcase", as: :company_showcase
   resources :clients
   resources :client_contacts
   resources :freelancer_profiles
+  get "/dashboard", to: "missions#dashboard", as: :dashboard
+  scope "/dashboard", as: :dashboard do
+    get "feed", to: "pages#feed", as: :feed
+    get "community", to: "pages#community", as: :community
+    get "training", to: "pages#training", as: :training
+    post "community/messages", to: "pages#create_community_message", as: :community_messages
+    delete "community/messages/:id", to: "pages#destroy_community_message", as: :community_message
+    post "community/replies", to: "pages#create_community_reply", as: :community_replies
+    post "community/reactions", to: "pages#create_community_reaction", as: :community_reactions
+    get "missions", to: "missions#index", as: :missions
+    get "missions/my", to: "missions#my_missions", as: :my_missions
+    get "missions/pending", to: "missions#pending_missions", as: :pending_missions
+    get "missions/library", to: "missions#library", as: :library_missions
+    get "missions/:id", to: "missions#show", as: :mission
+    get "freelancers", to: "freelancer_profiles#index", as: :freelancer_profiles
+    get "freelancers/:id", to: "freelancer_profiles#show", as: :freelancer_profile
+    get "candidates", to: "candidates#index", as: :candidates
+    get "candidates/:id", to: "candidates#show", as: :candidate
+    get "finances", to: "freelance_finances#show", as: :freelance_finance
+    get "invoices", to: "invoices#index", as: :invoices
+    get "todo", to: "todo_lists#show", as: :todo_list
+  end
   resources :missions do
     get :my_missions, on: :collection
     get :pending_missions, on: :collection

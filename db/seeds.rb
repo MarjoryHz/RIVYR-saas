@@ -10,7 +10,8 @@ puts "RIVYR SEED START"
 puts "============================"
 
 # --------------------------------------------------
-# Clean database
+# 1. Reset
+# On repart d'une base propre pour garantir un seed deterministe.
 # --------------------------------------------------
 
 puts "Cleaning database..."
@@ -33,7 +34,8 @@ Specialty.destroy_all
 puts "Database cleaned."
 
 # --------------------------------------------------
-# Constants
+# 2. Catalogues et jeux de donnees
+# Donnees de reference reutilisees dans tout le seed.
 # --------------------------------------------------
 
 REGIONS_DATA = [
@@ -445,8 +447,16 @@ LAST_NAMES = %w[
 ].freeze
 
 # --------------------------------------------------
-# Helpers
+# 3. Helpers
+# Helpers simples pour eviter les repetitions et rendre le seed lisible.
 # --------------------------------------------------
+
+def upsert_record(model_or_scope, finder_attrs, assign_attrs)
+  record = model_or_scope.find_or_initialize_by(finder_attrs)
+  record.assign_attributes(assign_attrs)
+  record.save!
+  record
+end
 
 def safe_phone(seed_number)
   "06#{seed_number.to_s.rjust(8, '0')}"
@@ -562,67 +572,70 @@ def mission_constraints_for(data, client, index)
   ].join("||")
 end
 
+def freelancer_performance_snapshot(seed:, score:)
+  months = %w[Jan Feb Mar Apr May Jun Jul]
+  base = [[(score.to_i / 20.0).round(1), 2.6].max, 4.9].min
+  current = months.each_with_index.map do |_, index|
+    wave = ((seed + (index * 3)) % 11) / 10.0
+    value = base - 0.8 + (index * 0.14) + wave - 0.35
+    value.round(1).clamp(2.2, 4.9)
+  end
+  previous = months.each_with_index.map do |_, index|
+    wave = ((seed + (index * 5)) % 9) / 10.0
+    value = current[index] - 0.4 + wave - 0.25
+    value.round(1).clamp(2.0, 4.6)
+  end
+
+  {
+    "months" => months,
+    "current" => current,
+    "previous" => previous
+  }
+end
+
 # --------------------------------------------------
-# Regions
+# 4. Regions
 # --------------------------------------------------
 
 puts "Seeding regions..."
 REGIONS_DATA.each do |data|
-  region = Region.find_or_create_by!(name: data[:name])
-  region.update!(options: data[:options])
+  upsert_record(Region, { name: data[:name] }, options: data[:options])
 end
 puts "#{Region.count} regions ready."
 
 # --------------------------------------------------
-# Specialties
+# 5. Specialties
 # --------------------------------------------------
 
 puts "Seeding specialties..."
 SPECIALTIES_DATA.each do |data|
-  specialty = Specialty.find_or_create_by!(name: data[:name])
-  specialty.update!(options: data[:options])
+  upsert_record(Specialty, { name: data[:name] }, options: data[:options])
 end
 puts "#{Specialty.count} specialties ready."
 
+regions_by_name = Region.all.index_by(&:name)
+specialties_by_name = Specialty.all.index_by(&:name)
+
 # --------------------------------------------------
-# Users + Freelancer Profiles
+# 6. Utilisateurs et profils freelances
+# Les profils RIVYR sont crees ici avec leurs attributs metier.
 # --------------------------------------------------
 
 puts "Seeding users and freelancer profiles..."
 ALL_FREELANCERS.each_with_index do |data, index|
-  user = User.find_or_create_by!(email: data[:email]) do |u|
-    u.password = 'password'
-    u.first_name = data[:first_name]
-    u.last_name = data[:last_name]
-    u.phone = safe_phone(index + 1)
-    u.status = 'active'
-    u.role = 'freelance'
-  end
-
-  user.update!(
+  user = upsert_record(User, { email: data[:email] }, {
+    password: 'password',
     first_name: data[:first_name],
     last_name: data[:last_name],
-    phone: user.phone.presence || safe_phone(index + 1),
+    phone: safe_phone(index + 1),
     status: 'active',
     role: 'freelance'
-  )
+  })
 
-  region = Region.find_by!(name: data[:region])
-  specialty = Specialty.find_by!(name: data[:specialty])
+  region = regions_by_name.fetch(data[:region])
+  specialty = specialties_by_name.fetch(data[:specialty])
 
-  freelancer = FreelancerProfile.find_or_create_by!(user: user) do |fp|
-    fp.region = region
-    fp.specialty = specialty
-    fp.operational_status = 'active'
-    fp.availability_status = 'available'
-    fp.bio = data[:bio]
-    fp.linkedin_url = "https://www.linkedin.com/in/#{data[:first_name].parameterize}-#{data[:last_name].parameterize}"
-    fp.website_url = "https://www.#{data[:first_name].parameterize}-#{data[:last_name].parameterize}.fr"
-    fp.rivyr_score_current = data[:score]
-    fp.profile_private = false
-  end
-
-  freelancer.update!(
+  freelancer_attrs = {
     region: region,
     specialty: specialty,
     operational_status: index < 4 ? 'active' : FREELANCER_OPERATIONAL_STATUSES[index % FREELANCER_OPERATIONAL_STATUSES.size],
@@ -632,51 +645,51 @@ ALL_FREELANCERS.each_with_index do |data, index|
     website_url: "https://www.#{data[:first_name].parameterize}-#{data[:last_name].parameterize}.fr",
     rivyr_score_current: data[:score],
     profile_private: false
-  )
+  }
+  if FreelancerProfile.column_names.include?("performance_snapshot")
+    freelancer_attrs[:performance_snapshot] = freelancer_performance_snapshot(seed: index + 1, score: data[:score])
+  end
+
+  upsert_record(FreelancerProfile, { user: user }, freelancer_attrs)
 end
 puts "#{User.count} users ready."
 puts "#{FreelancerProfile.count} freelancer profiles ready."
 
-admin_user = User.find_or_create_by!(email: "admin@rivyr.test") do |u|
-  u.password = "password"
-  u.first_name = "Admin"
-  u.last_name = "Rivyr"
-  u.phone = safe_phone(999)
-  u.status = "active"
-  u.role = "admin"
-end
-admin_user.update!(status: "active", role: "admin")
+admin_user = upsert_record(User, { email: "admin@rivyr.test" }, {
+  password: "password",
+  first_name: "Admin",
+  last_name: "Rivyr",
+  phone: safe_phone(999),
+  status: "active",
+  role: "admin"
+})
 
 # Pool Rivyr: ce profil porte les missions "non attribuees" de la bibliotheque.
-library_region = Region.find_by!(name: "Hauts-de-France")
-library_specialty = Specialty.find_by!(name: "Direction Generale")
-library_freelancer_pool = FreelancerProfile.find_or_create_by!(user: admin_user) do |fp|
-  fp.region = library_region
-  fp.specialty = library_specialty
-  fp.operational_status = "active"
-  fp.availability_status = "available"
-  fp.bio = "Profil pool Rivyr pour les missions non attribuees."
-  fp.linkedin_url = "https://www.linkedin.com/company/rivyr"
-  fp.website_url = "https://www.rivyr.com"
-  fp.rivyr_score_current = 100
-  fp.profile_private = true
-end
-library_freelancer_pool.update!(
+library_region = regions_by_name.fetch("Hauts-de-France")
+library_specialty = specialties_by_name.fetch("Direction Generale")
+library_pool_attrs = {
   region: library_region,
   specialty: library_specialty,
   operational_status: "active",
   availability_status: "available",
+  bio: "Profil pool Rivyr pour les missions non attribuees.",
+  linkedin_url: "https://www.linkedin.com/company/rivyr",
+  website_url: "https://www.rivyr.com",
+  rivyr_score_current: 100,
   profile_private: true
-)
+}
+if FreelancerProfile.column_names.include?("performance_snapshot")
+  library_pool_attrs[:performance_snapshot] = freelancer_performance_snapshot(seed: 99, score: 100)
+end
+library_freelancer_pool = upsert_record(FreelancerProfile, { user: admin_user }, library_pool_attrs)
 
 # --------------------------------------------------
-# Clients
+# 7. Clients
 # --------------------------------------------------
 
 puts "Seeding clients..."
 CLIENTS_DATA.each_with_index do |data, index|
-  client = Client.find_or_create_by!(legal_name: data[:legal_name])
-  client.update!(
+  upsert_record(Client, { legal_name: data[:legal_name] }, {
     ownership_type: ownership_type_for(index),
     brand_name: data[:brand_name],
     sector: data[:sector],
@@ -685,61 +698,57 @@ CLIENTS_DATA.each_with_index do |data, index|
     company_size: data[:company_size],
     bio: data[:bio],
     active: true
-  )
+  })
 end
 puts "#{Client.count} clients ready."
 
+clients_by_legal_name = Client.all.index_by(&:legal_name)
+
 # --------------------------------------------------
-# Client contacts
+# 8. Contacts clients
 # --------------------------------------------------
 
 puts "Seeding client contacts..."
 CLIENT_CONTACTS_DATA.each_with_index do |data, index|
-  client = Client.find_by!(legal_name: data[:client_legal_name])
+  client = clients_by_legal_name.fetch(data[:client_legal_name])
   email = "#{data[:first_name].parameterize}.#{data[:last_name].parameterize}@#{domain_for(client.brand_name)}"
 
-  contact = ClientContact.find_or_create_by!(client: client, email: email) do |c|
-    c.first_name = data[:first_name]
-    c.last_name = data[:last_name]
-    c.phone = safe_phone(100 + index)
-    c.job_title = data[:job_title]
-    c.primary_contact = true
-  end
-
-  contact.update!(
+  upsert_record(ClientContact, { client: client, email: email }, {
     first_name: data[:first_name],
     last_name: data[:last_name],
     phone: safe_phone(100 + index),
     job_title: data[:job_title],
     primary_contact: true
-  )
+  })
 end
 puts "#{ClientContact.count} client contacts ready."
 
+contacts_by_client_id = ClientContact.all.group_by(&:client_id).transform_values(&:first)
+
 first_contact = ClientContact.order(:id).first
 if first_contact
-  client_user = User.find_or_create_by!(email: "client@rivyr.test") do |u|
-    u.password = "password"
-    u.first_name = first_contact.first_name
-    u.last_name = first_contact.last_name
-    u.phone = first_contact.phone
-    u.status = "active"
-    u.role = "client"
-  end
-  client_user.update!(status: "active", role: "client")
+  client_user = upsert_record(User, { email: "client@rivyr.test" }, {
+    password: "password",
+    first_name: first_contact.first_name,
+    last_name: first_contact.last_name,
+    phone: first_contact.phone,
+    status: "active",
+    role: "client"
+  })
   first_contact.update!(user: client_user)
 end
 
 # --------------------------------------------------
-# Missions
+# 9. Missions
+# Mission principale + metadata derivee du client et du template.
 # --------------------------------------------------
 
 puts "Seeding missions..."
 MISSIONS_DATA.each_with_index do |data, index|
-  client = Client.find_by!(legal_name: data[:client_legal_name])
-  contact = ClientContact.find_by!(client: client)
-  specialty = Specialty.find_by!(name: data[:specialty])
-  region = Region.find_by!(name: client.location)
+  client = clients_by_legal_name.fetch(data[:client_legal_name])
+  contact = contacts_by_client_id.fetch(client.id)
+  specialty = specialties_by_name.fetch(data[:specialty])
+  region = regions_by_name.fetch(client.location)
   assigned_freelancer = User.includes(:freelancer_profile).find_by(email: data[:assigned_freelancer_email])&.freelancer_profile
   matching_freelancer = assigned_freelancer || FreelancerProfile.joins(:specialty).find_by(specialties: { name: data[:specialty] }) || FreelancerProfile.first
   mission_status = data[:status] || mission_status_for(index)
@@ -754,27 +763,7 @@ MISSIONS_DATA.each_with_index do |data, index|
   brief_summary = mission_brief_for(data, client, index)
   search_constraints = mission_constraints_for(data, client, index)
 
-  mission = Mission.find_or_create_by!(reference: data[:reference]) do |m|
-    m.region = region
-    m.freelancer_profile = matching_freelancer
-    m.mission_type = mission_type
-    m.title = data[:title]
-    m.status = mission_status
-    m.client_contact = contact
-    m.location = client.location
-    m.contract_signed = true
-    m.opened_at = opened_at
-    m.started_at = started_at
-    m.closed_at = closed_at
-    m.priority_level = data[:priority]
-    m.brief_summary = brief_summary
-    m.compensation_summary = COMPENSATION_SUMMARIES[index % COMPENSATION_SUMMARIES.size]
-    m.search_constraints = search_constraints
-    m.origin_type = mission_origin
-    m.specialty = specialty
-  end
-
-  mission.update!(
+  upsert_record(Mission, { reference: data[:reference] }, {
     region: region,
     freelancer_profile: matching_freelancer,
     mission_type: mission_type,
@@ -792,12 +781,14 @@ MISSIONS_DATA.each_with_index do |data, index|
     search_constraints: search_constraints,
     origin_type: mission_origin,
     specialty: specialty
-  )
+  })
 end
 puts "#{Mission.count} missions ready."
 
+missions_by_reference = Mission.all.index_by(&:reference)
+
 # --------------------------------------------------
-# Candidates
+# 10. Candidats
 # --------------------------------------------------
 
 puts "Seeding candidates..."
@@ -808,17 +799,7 @@ candidates = []
   last_name = "#{LAST_NAMES[index % LAST_NAMES.size]}#{index + 1}"
   email = "#{first_name.parameterize}.#{last_name.parameterize}@candidate.rivyr.test"
 
-  candidate = Candidate.find_or_create_by!(email: email) do |c|
-    c.first_name = first_name
-    c.last_name = last_name
-    c.phone = safe_phone(200 + index)
-    c.linkedin_url = "https://www.linkedin.com/in/#{first_name.parameterize}-#{last_name.parameterize}"
-    c.status = CANDIDATE_STATUSES[index % CANDIDATE_STATUSES.size]
-    c.notes = CANDIDATE_NOTES[index % CANDIDATE_NOTES.size]
-    c.source = CANDIDATE_SOURCES[index % CANDIDATE_SOURCES.size]
-  end
-
-  candidate.update!(
+  candidate = upsert_record(Candidate, { email: email }, {
     first_name: first_name,
     last_name: last_name,
     phone: safe_phone(200 + index),
@@ -826,7 +807,7 @@ candidates = []
     status: CANDIDATE_STATUSES[index % CANDIDATE_STATUSES.size],
     notes: CANDIDATE_NOTES[index % CANDIDATE_NOTES.size],
     source: CANDIDATE_SOURCES[index % CANDIDATE_SOURCES.size]
-  )
+  })
 
   candidates << candidate
 end
@@ -835,76 +816,54 @@ puts "#{Candidate.count} candidates ready."
 
 first_candidate = Candidate.order(:id).first
 if first_candidate
-  candidate_user = User.find_or_create_by!(email: "candidate@rivyr.test") do |u|
-    u.password = "password"
-    u.first_name = first_candidate.first_name
-    u.last_name = first_candidate.last_name
-    u.phone = first_candidate.phone
-    u.status = "active"
-    u.role = "candidate"
-  end
-  candidate_user.update!(status: "active", role: "candidate")
+  candidate_user = upsert_record(User, { email: "candidate@rivyr.test" }, {
+    password: "password",
+    first_name: first_candidate.first_name,
+    last_name: first_candidate.last_name,
+    phone: first_candidate.phone,
+    status: "active",
+    role: "candidate"
+  })
   first_candidate.update!(user: candidate_user)
 end
 
 # --------------------------------------------------
-# Placements
+# 11. Placements
 # --------------------------------------------------
 
 puts "Seeding placements..."
 placements = PLACEMENTS_DATA.map.with_index do |data, index|
-  mission = Mission.find_by!(reference: data[:mission_reference])
+  mission = missions_by_reference.fetch(data[:mission_reference])
   candidate = candidates[data[:candidate_index]]
   fee_cents = (data[:annual_salary_cents] * data[:fee_rate]).to_i
 
-  placement = Placement.find_or_create_by!(mission: mission, candidate: candidate) do |p|
-    p.hired_at = seeded_date(60 - (index * 7))
-    p.annual_salary_cents = data[:annual_salary_cents]
-    p.placement_fee_cents = fee_cents
-    p.status = data[:status]
-    p.notes = "Placement realise sur une fonction a fort enjeu apres un process structure, une shortlist ciblee et une prise de decision rapide du client."
-  end
-
-  placement.update!(
+  upsert_record(Placement, { mission: mission, candidate: candidate }, {
     hired_at: seeded_date(60 - (index * 7)),
     annual_salary_cents: data[:annual_salary_cents],
     placement_fee_cents: fee_cents,
     status: data[:status],
     notes: "Placement realise sur une fonction a fort enjeu apres un process structure, une shortlist ciblee et une prise de decision rapide du client."
-  )
-
-  placement
+  })
 end
 
 puts "#{Placement.count} placements ready."
 
 # --------------------------------------------------
-# Invoices
+# 12. Factures et notes de suivi
 # --------------------------------------------------
 
 puts "Seeding invoices..."
 invoices = placements.map.with_index do |placement, index|
   number = "FAC-#{Date.current.year}-#{format('%04d', index + 1)}"
 
-  invoice = Invoice.find_or_create_by!(number: number) do |i|
-    i.invoice_type = 'client'
-    i.issue_date = placement.hired_at + 5
-    i.paid_date = index.even? ? placement.hired_at + 20 : nil
-    i.amount_cents = placement.placement_fee_cents
-    i.placement = placement
-    i.status = index.even? ? 'paid' : 'issued'
-  end
-
-  invoice.update!(
+  upsert_record(Invoice, { number: number }, {
     invoice_type: 'client',
     issue_date: placement.hired_at + 5,
     paid_date: index.even? ? placement.hired_at + 20 : nil,
     amount_cents: placement.placement_fee_cents,
     placement: placement,
     status: index.even? ? 'paid' : 'issued'
-  )
-
-  invoice
+  })
 end
 puts "#{Invoice.count} invoices ready."
 
@@ -921,7 +880,7 @@ end
 puts "#{InvoiceNote.count} invoice notes ready."
 
 # --------------------------------------------------
-# Commissions
+# 13. Commissions et factures freelance
 # --------------------------------------------------
 
 puts "Seeding commissions..."
@@ -931,17 +890,7 @@ commissions = placements.map.with_index do |placement, index|
   freelancer_share = (placement.placement_fee_cents * ratio).to_i
   rivyr_share = placement.placement_fee_cents - freelancer_share
 
-  commission = Commission.find_or_create_by!(placement: placement) do |c|
-    c.commission_rule = rule
-    c.status = index.even? ? 'paid' : 'eligible'
-    c.gross_amount_cents = placement.placement_fee_cents
-    c.rivyr_share_cents = rivyr_share
-    c.freelancer_share_cents = freelancer_share
-    c.client_payment_required = true
-    c.eligible_for_invoicing_at = placement.hired_at + 3
-  end
-
-  commission.update!(
+  upsert_record(Commission, { placement: placement }, {
     commission_rule: rule,
     status: index.even? ? 'paid' : 'eligible',
     gross_amount_cents: placement.placement_fee_cents,
@@ -949,9 +898,7 @@ commissions = placements.map.with_index do |placement, index|
     freelancer_share_cents: freelancer_share,
     client_payment_required: true,
     eligible_for_invoicing_at: placement.hired_at + 3
-  )
-
-  commission
+  })
 end
 puts "#{Commission.count} commissions ready."
 
@@ -973,7 +920,7 @@ end
 puts "#{Invoice.where(invoice_type: 'freelancer').count} freelancer invoices ready."
 
 # --------------------------------------------------
-# Payments
+# 14. Paiements et demandes de virement
 # --------------------------------------------------
 
 puts "Seeding payments..."
@@ -982,60 +929,46 @@ placements.each_with_index do |placement, index|
   commission = commissions[index]
 
   client_payment_ref = "PAY-CLI-#{format('%04d', index + 1)}"
-  client_payment = Payment.find_or_create_by!(reference: client_payment_ref) do |payment|
-    payment.invoice = invoice
-    payment.commission = commission
-    payment.amount_cents = invoice.amount_cents
-    payment.paid_at = invoice.paid_date&.to_time&.change(hour: 10, min: 0)
-    payment.payment_type = 'client_payment'
-    payment.status = invoice.status == 'paid' ? 'paid' : 'pending'
-  end
-
-  client_payment.update!(
+  upsert_record(Payment, { reference: client_payment_ref }, {
     invoice: invoice,
     commission: commission,
     amount_cents: invoice.amount_cents,
     paid_at: invoice.paid_date&.to_time&.change(hour: 10, min: 0),
     payment_type: 'client_payment',
     status: invoice.status == 'paid' ? 'paid' : 'pending'
-  )
+  })
 
   freelancer_payment_ref = "PAY-FREE-#{format('%04d', index + 1)}"
-  freelancer_payment = Payment.find_or_create_by!(reference: freelancer_payment_ref) do |payment|
-    payment.invoice = invoice
-    payment.commission = commission
-    payment.amount_cents = commission.freelancer_share_cents
-    payment.paid_at = (invoice.paid_date || Date.current).to_time.change(hour: 15, min: 0)
-    payment.payment_type = 'freelancer_payout'
-    payment.status = invoice.status == 'paid' ? 'paid' : 'pending'
-  end
-
-  freelancer_payment.update!(
+  upsert_record(Payment, { reference: freelancer_payment_ref }, {
     invoice: invoice,
     commission: commission,
     amount_cents: commission.freelancer_share_cents,
     paid_at: (invoice.paid_date || Date.current).to_time.change(hour: 15, min: 0),
     payment_type: 'freelancer_payout',
     status: invoice.status == 'paid' ? 'paid' : 'pending'
-  )
+  })
 end
 puts "#{Payment.count} payments ready."
 
 puts "Seeding payout requests..."
 freelancer_invoice_sample = Invoice.where(invoice_type: "freelancer").first
 if freelancer_invoice_sample
-  PayoutRequest.find_or_create_by!(user: freelancer_invoice_sample.placement.mission.freelancer_profile.user, invoice: freelancer_invoice_sample) do |request|
-    request.amount_cents = freelancer_invoice_sample.amount_cents
-    request.billing_number = freelancer_invoice_sample.number
-    request.status = "pending"
-    request.requested_at = Time.current
-    request.bank_account_label = "Compte principal"
-  end
+  upsert_record(PayoutRequest, {
+    user: freelancer_invoice_sample.placement.mission.freelancer_profile.user,
+    invoice: freelancer_invoice_sample
+  }, {
+    amount_cents: freelancer_invoice_sample.amount_cents,
+    billing_number: freelancer_invoice_sample.number,
+    status: "pending",
+    requested_at: Time.current,
+    bank_account_label: "Compte principal"
+  })
 end
 puts "#{PayoutRequest.count} payout requests ready."
 
 # --------------------------------------------------
-# Claire Dumont - finance demo dataset
+# 15. Dataset de demo finance
+# Cas d'usage dedie a Claire Dumont pour la page finance freelance.
 # --------------------------------------------------
 
 puts "Seeding dedicated finance demo for Claire Dumont..."

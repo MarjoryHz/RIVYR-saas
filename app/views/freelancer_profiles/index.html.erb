@@ -1,48 +1,200 @@
-<div class="max-w-6xl mx-auto p-6 space-y-6">
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-bold">Freelancer profiles</h1>
-    <% if policy(FreelancerProfile).new? %>
-      <%= link_to "Nouveau profil", new_freelancer_profile_path, class: "btn btn-primary" %>
-    <% end %>
-  </div>
-  <%= render "shared/index_filters", path: freelancer_profiles_path, q: @q, status: @operational_status, status_options: FreelancerProfile.operational_statuses.keys, status_param: :operational_status %>
+<div class="w-full max-w-none space-y-6 px-6 py-5 md:px-11 lg:px-10">
+  <section class="rounded-[2rem] border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div class="max-w-3xl">
+        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Le collectif RIVYR</p>
+        <h1 class="mt-2 text-3xl font-semibold tracking-tight text-[#4c1f2a] md:text-4xl">Freelances du label RIVYR</h1>
+        <p class="mt-3 max-w-2xl text-[15px] leading-relaxed text-[#6b3f4f]">Des recruteurs independants selectionnes pour leur expertise et leur exigence.</p>
+        <p class="mt-3 max-w-3xl text-[15px] leading-relaxed text-[#6b3f4f]">Les freelances RIVYR sont selectionnes pour leur expertise, leur exigence et leur capacite a livrer des recrutements complexes. Chaque membre du collectif est evalue en continu.</p>
+      </div>
+      <div class="inline-flex items-center rounded-full border border-[#f2c9d8] bg-[#fff1f6] px-5 py-3 text-sm font-semibold text-[#a33d68]">
+        <span><%= @directory_intro_count %> freelances certifies</span>
+      </div>
+    </div>
+  </section>
 
-  <div class="overflow-x-auto bg-base-100 rounded-lg">
-    <% if @freelancer_profiles.any? %>
-      <table class="table w-full">
-        <thead>
-          <tr>
-            <th>Freelancer</th>
-            <th>Region</th>
-            <th>Specialite</th>
-            <th>Disponibilite</th>
-            <th>Score</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @freelancer_profiles.each do |profile| %>
-            <tr>
-              <td><%= [profile.user.first_name, profile.user.last_name].join(" ") %></td>
-              <td><%= profile.region&.name || "-" %></td>
-              <td><%= profile.specialty&.name || "-" %></td>
-              <td><%= profile.availability_status.presence || "-" %></td>
-              <td><%= profile.rivyr_score_current.nil? ? "-" : profile.rivyr_score_current %></td>
-              <td class="text-right">
-                <%= link_to "Voir", freelancer_profile_path(profile), class: "btn btn-sm" %>
-              </td>
-            </tr>
+  <section class="rounded-[2rem] border border-[#ead2dc] bg-[#fff8fb]/95 p-4">
+    <form action="<%= freelancer_profiles_path %>" method="get" class="space-y-4">
+      <div class="grid gap-3 xl:grid-cols-[2.3fr_repeat(7,minmax(0,1fr))]">
+        <label class="flex items-center gap-3 rounded-full border border-[#dfbcc9] bg-white px-4 py-3 text-[#9a5a68]">
+          <i class="fa-solid fa-magnifying-glass text-sm text-[#ed0e64]"></i>
+          <input type="text" name="q" value="<%= @q %>" placeholder="Rechercher un freelance..." class="w-full bg-transparent text-sm text-[#4c1f2a] outline-none placeholder:text-[#c79aad]" />
+        </label>
+
+        <select name="specialty_id" class="select select-bordered rounded-full border-[#dfbcc9] bg-white text-[#6b2f3d]">
+          <option value="">specialite</option>
+          <% @specialty_options.each do |specialty| %>
+            <option value="<%= specialty.id %>" <%= "selected" if @specialty_id == specialty.id.to_s %>><%= specialty.name %></option>
           <% end %>
-        </tbody>
-      </table>
-    <% else %>
-      <div class="p-8 text-center space-y-3">
-        <p class="text-lg font-medium">Aucun profil freelancer pour le moment</p>
-        <% if policy(FreelancerProfile).new? %>
-          <%= link_to "Creer le premier profil", new_freelancer_profile_path, class: "btn btn-primary" %>
+        </select>
+
+        <select name="sector" class="select select-bordered rounded-full border-[#dfbcc9] bg-white text-[#6b2f3d]">
+          <option value="">secteur</option>
+          <% @sector_options.each do |sector| %>
+            <option value="<%= sector %>" <%= "selected" if @sector == sector %>><%= sector %></option>
+          <% end %>
+        </select>
+
+        <select name="profile_level" class="select select-bordered rounded-full border-[#dfbcc9] bg-white text-[#6b2f3d]">
+          <option value="">niveau de poste</option>
+          <% @level_options.each do |level| %>
+            <option value="<%= level %>" <%= "selected" if @profile_level == level %>><%= level %></option>
+          <% end %>
+        </select>
+
+        <select name="region" class="select select-bordered rounded-full border-[#dfbcc9] bg-white text-[#6b2f3d]">
+          <option value="">region</option>
+          <% @region_options.each do |region| %>
+            <option value="<%= region.name %>" <%= "selected" if @region == region.name %>><%= region.name %></option>
+          <% end %>
+        </select>
+
+        <select name="language" class="select select-bordered rounded-full border-[#dfbcc9] bg-white text-[#6b2f3d]">
+          <option value="">langue</option>
+          <% @language_options.each do |language| %>
+            <option value="<%= language %>" <%= "selected" if @language == language %>><%= language %></option>
+          <% end %>
+        </select>
+
+        <select name="availability" class="select select-bordered rounded-full border-[#dfbcc9] bg-white text-[#6b2f3d]">
+          <option value="">disponibilite</option>
+          <% @availability_options.each do |availability| %>
+            <option value="<%= availability %>" <%= "selected" if @availability == availability %>><%= availability.humanize %></option>
+          <% end %>
+        </select>
+
+        <select name="badge" class="select select-bordered rounded-full border-[#dfbcc9] bg-white text-[#6b2f3d]">
+          <option value="">badge RIVYR</option>
+          <% @badge_options.each do |badge| %>
+            <option value="<%= badge %>" <%= "selected" if @badge == badge %>><%= badge %></option>
+          <% end %>
+        </select>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <label class="inline-flex items-center gap-2 rounded-full border border-[#f2d5df] bg-white px-4 py-2 text-sm font-medium text-[#7a3a49]">
+          <input type="checkbox" name="recommended_only" value="1" class="checkbox checkbox-sm border-[#d9b6c4]" <%= "checked" if @recommended_only %> />
+          Freelances recommandes par RIVYR
+        </label>
+
+        <div class="flex items-center gap-2">
+          <%= link_to "Reset filtres", freelancer_profiles_path, class: "btn btn-ghost rounded-full text-[#7a3a49] hover:bg-[#fce7ef]" %>
+          <button type="submit" class="btn rounded-full border-[#ed0e64] bg-[#ed0e64] text-white hover:border-[#cf0c57] hover:bg-[#cf0c57]">Rechercher</button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <% if @recommended_profiles.any? %>
+    <section class="space-y-3">
+      <div class="flex items-center justify-between gap-3">
+        <h2 class="text-2xl font-semibold text-[#5b2633]">Freelances recommandes par RIVYR</h2>
+        <span class="rounded-full border border-[#f2c9d8] bg-[#fff1f6] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[#a33d68]"><%= @recommended_profiles.count %> profils mis en avant</span>
+      </div>
+      <div class="grid gap-4 lg:grid-cols-3">
+        <% @recommended_profiles.first(3).each do |profile| %>
+          <% card = @profile_cards[profile.id] %>
+          <article class="rounded-[1.75rem] border border-[#f0d7df] bg-white/90 p-4 shadow-sm">
+            <div class="flex items-center gap-3">
+              <%= image_tag card[:avatar_path], alt: card[:name], class: "h-14 w-14 rounded-full object-cover ring-2 ring-[#F7C4DA]" %>
+              <div>
+                <p class="text-lg font-semibold text-[#4c1f2a]"><%= card[:name] %></p>
+                <p class="text-sm text-[#7a5562]"><%= card[:title] %></p>
+              </div>
+            </div>
+            <div class="mt-4 flex items-center justify-between">
+              <span class="rounded-full border border-[#f2c9d8] bg-[#fff1f6] px-3 py-1 text-xs font-semibold text-[#a33d68]"><%= card[:badge] %></span>
+              <span class="text-sm font-semibold text-[#5b2633]">Indice RIVYR <%= card[:rivyr_index] %></span>
+            </div>
+          </article>
         <% end %>
       </div>
+    </section>
+  <% end %>
+
+  <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <% @freelancer_profiles.each do |profile| %>
+        <% card = @profile_cards[profile.id] %>
+        <article class="flex h-full flex-col rounded-[1.9rem] border border-[#ead2dc] bg-[#fff8fb]/95 p-5 shadow-sm">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-center gap-4">
+              <%= image_tag card[:avatar_path], alt: card[:name], class: "h-16 w-16 rounded-full object-cover ring-2 ring-[#F7C4DA]" %>
+              <div>
+                <h3 class="text-xl font-semibold text-[#4c1f2a]"><%= card[:name] %></h3>
+                <p class="mt-1 text-sm leading-relaxed text-[#6b3f4f]"><%= card[:title] %></p>
+            </div>
+          </div>
+          <div class="rounded-full border border-[#f2c9d8] bg-[#fff1f6] px-3 py-1 text-sm font-semibold text-[#a33d68]">Indice RIVYR <%= card[:rivyr_index] %></div>
+        </div>
+
+        <div class="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
+          <span class="rounded-full border border-[#f2c9d8] bg-[#fff1f6] px-3 py-1 text-[#a33d68]">⭐ <%= card[:badge] %></span>
+          <span class="rounded-full border border-[#ead2dc] bg-white px-3 py-1 text-[#6b3f4f]">🏭 <%= card[:sectors].first %></span>
+          <span class="rounded-full border border-[#ead2dc] bg-white px-3 py-1 text-[#6b3f4f]">📍 <%= profile.region&.name || "France" %></span>
+        </div>
+
+        <div class="mt-4 grid grid-cols-2 gap-3 rounded-2xl border border-[#efdbe4] bg-white/70 p-3 text-sm text-[#5f3647]">
+          <p><strong><%= card[:placements_count] %></strong> placements realises</p>
+          <p><strong><%= card[:experience_years] %></strong> ans d experience</p>
+          <p><strong><%= card[:active_missions] %></strong> missions actives</p>
+          <p><strong><%= card[:success_rate] %>%</strong> taux de succes</p>
+        </div>
+
+        <div class="mt-4 flex flex-wrap gap-2">
+          <% card[:tags].each do |tag| %>
+            <span class="rounded-full border border-[#ead2dc] bg-white px-3 py-1 text-xs font-medium text-[#6b3f4f]"><%= tag %></span>
+          <% end %>
+        </div>
+
+        <div class="mt-4 space-y-2">
+          <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Pourquoi travailler avec ce freelance</p>
+          <p class="text-sm leading-relaxed text-[#5f3647]"><%= card[:why_text] %></p>
+        </div>
+
+        <div class="mt-4 rounded-2xl border border-[#efdbe4] bg-white/70 p-3">
+          <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Activite RIVYR</p>
+          <div class="mt-3 space-y-3 text-sm text-[#5f3647]">
+            <div>
+              <div class="mb-1 flex items-center justify-between"><span>Placements</span><span><%= card[:activity][:placements] %>%</span></div>
+              <div class="h-2 rounded-full bg-[#f2e9ee]"><div class="h-full rounded-full bg-[#ed0e64]" style="width: <%= card[:activity][:placements] %>%"></div></div>
+            </div>
+            <div>
+              <div class="mb-1 flex items-center justify-between"><span>Participation</span><span><%= card[:activity][:participation] %>%</span></div>
+              <div class="h-2 rounded-full bg-[#f2e9ee]"><div class="h-full rounded-full bg-[#d85b8b]" style="width: <%= card[:activity][:participation] %>%"></div></div>
+            </div>
+            <div>
+              <div class="mb-1 flex items-center justify-between"><span>Satisfaction client</span><span><%= card[:activity][:satisfaction] %>%</span></div>
+              <div class="h-2 rounded-full bg-[#f2e9ee]"><div class="h-full rounded-full bg-[#7f7ae6]" style="width: <%= card[:activity][:satisfaction] %>%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Dernier placement</p>
+          <p class="mt-1 text-sm text-[#5f3647]"><%= card[:recent_placement] %></p>
+        </div>
+
+        <div class="mt-4">
+          <span class="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-semibold <%= card[:availability][:classes] %>">
+            <span><%= card[:availability][:icon] %></span>
+            <span><%= card[:availability][:label] %></span>
+          </span>
+        </div>
+
+        <div class="mt-auto flex items-center gap-2 pt-5">
+          <%= link_to "Voir profil", freelancer_profile_path(profile), class: "btn flex-1 rounded-full border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] hover:bg-[#fdeef3]" %>
+          <%= link_to "Contacter", freelancer_profile_path(profile, anchor: "contact"), class: "btn flex-1 rounded-full border-[#ed0e64] bg-[#ed0e64] text-white hover:border-[#cf0c57] hover:bg-[#cf0c57]" %>
+        </div>
+      </article>
     <% end %>
-  </div>
-  <%= render "shared/pagination", page: @page, total_pages: @total_pages, extra_params: { q: @q, operational_status: @operational_status }, path: ->(params) { freelancer_profiles_path(params) } %>
+  </section>
+
+  <% if @freelancer_profiles.blank? %>
+    <section class="rounded-[2rem] border border-dashed border-[#e4c9d4] bg-white/70 p-10 text-center">
+      <h2 class="text-xl font-semibold text-[#5b2633]">Aucun freelance ne correspond a ces filtres</h2>
+      <p class="mt-2 text-sm text-[#6b3f4f]">Elargis la recherche ou reinitialise les filtres pour retrouver l ensemble du collectif.</p>
+    </section>
+  <% end %>
+
+  <%= render "shared/pagination", page: @page, total_pages: @total_pages, extra_params: { q: @q, specialty_id: @specialty_id, sector: @sector, profile_level: @profile_level, region: @region, language: @language, availability: @availability, badge: @badge, recommended_only: (@recommended_only ? "1" : nil) }, path: ->(params) { freelancer_profiles_path(params) } %>
 </div>

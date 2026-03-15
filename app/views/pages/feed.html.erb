@@ -1,0 +1,153 @@
+<div class="w-full max-w-none space-y-5 px-6 py-5 md:px-11 lg:px-10">
+  <section class="rounded-[2rem] border border-[#ead2dc] bg-[radial-gradient(circle_at_top_left,_rgba(237,14,100,0.12),_transparent_30%),linear-gradient(135deg,#fff8fb_0%,#fffdfd_100%)] p-6">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div class="max-w-3xl">
+        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Feed RIVYR</p>
+        <h1 class="mt-2 text-3xl font-semibold tracking-tight text-[#4c1f2a] md:text-4xl">Le collectif en mouvement</h1>
+        <p class="mt-3 text-[15px] leading-7 text-[#6b3f4f]">
+          Une page d'inspiration, de signaux marche et de retours terrain pour donner au label RIVYR une vraie presence editoriale.
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <span class="rounded-full border border-[#f2c9d8] bg-white px-4 py-2 text-sm font-semibold text-[#a33d68]">Flux editorial</span>
+        <span class="rounded-full border border-[#f3dfb7] bg-[#fff7e8] px-4 py-2 text-sm font-semibold text-[#9a6a00]">Version visuelle</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid gap-4 xl:grid-cols-[1.65fr_360px]">
+    <div class="space-y-4">
+      <section class="grid gap-3 md:grid-cols-2">
+        <% @feed_highlights.each do |item| %>
+          <article class="overflow-hidden rounded-3xl border border-[#ead2dc] bg-white">
+            <div class="bg-gradient-to-br <%= item[:tone] %> p-5">
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Focus</p>
+              <h2 class="mt-3 text-2xl font-semibold leading-tight text-[#4c1f2a]"><%= item[:title] %></h2>
+              <p class="mt-2 text-sm leading-6 text-[#6b3f4f]"><%= item[:subtitle] %></p>
+            </div>
+          </article>
+        <% end %>
+      </section>
+
+      <section class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4">
+        <div class="flex flex-wrap gap-2">
+          <% @feed_topics.each do |topic| %>
+            <button type="button" class="rounded-full border border-[#dfbcc9] bg-white px-4 py-2 text-sm font-semibold text-[#8b4452] transition hover:bg-[#fdeef3]">
+              #<%= topic %>
+            </button>
+          <% end %>
+        </div>
+      </section>
+
+      <section class="space-y-4">
+        <% @feed_posts.each do |post| %>
+          <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5 shadow-[0_18px_40px_rgba(100,37,56,0.06)]">
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex min-w-0 items-start gap-3">
+                <div class="relative h-14 w-14 shrink-0 rounded-full bg-[#ed0e64] p-[3px] shadow-[0_10px_24px_rgba(237,14,100,0.22)]">
+                  <div class="relative h-full w-full overflow-hidden rounded-full">
+                    <%= image_tag post[:avatar], alt: post[:author], class: "h-full w-full object-cover" %>
+                  </div>
+                  <span class="absolute bottom-[2px] right-[2px] h-4 w-4 rounded-full border-[3px] border-[#ed0e64] bg-[#12d45e]"></span>
+                </div>
+                <div class="min-w-0">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <p class="text-[15px] font-semibold text-[#4c1f2a]"><%= post[:author] %></p>
+                    <span class="rounded-full border border-[#f2c9d8] bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#a33d68]"><%= post[:badge] %></span>
+                  </div>
+                  <p class="text-sm text-[#7a5562]"><%= post[:role] %> · <%= post[:time] %></p>
+                </div>
+              </div>
+              <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#dfbcc9] bg-white text-[#8b4452] transition hover:bg-[#fdeef3]">
+                <i class="fa-solid fa-ellipsis"></i>
+              </button>
+            </div>
+
+            <div class="mt-4 space-y-3">
+              <h3 class="text-xl font-semibold leading-tight text-[#4c1f2a]"><%= post[:title] %></h3>
+              <p class="text-[15px] leading-7 text-[#6b3f4f]"><%= post[:body] %></p>
+            </div>
+
+            <div class="mt-4 flex flex-wrap gap-2">
+              <% post[:tags].each do |tag| %>
+                <span class="rounded-full bg-[#fff1f6] px-3 py-1 text-xs font-semibold text-[#a33d68]"><%= tag %></span>
+              <% end %>
+            </div>
+
+            <div class="mt-5 rounded-2xl border border-[#f1dce5] bg-white/80 p-4">
+              <div class="h-48 rounded-[1.4rem] bg-[linear-gradient(135deg,rgba(237,14,100,0.12),rgba(255,255,255,0.95)),radial-gradient(circle_at_top_right,rgba(244,165,138,0.28),transparent_35%)] p-5">
+                <div class="flex h-full flex-col justify-between">
+                  <div class="flex items-center justify-between">
+                    <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#8b4452]">Insight RIVYR</span>
+                    <span class="text-xs font-semibold uppercase tracking-[0.2em] text-[#b06c83]">Preview</span>
+                  </div>
+                  <div>
+                    <p class="max-w-md text-lg font-semibold leading-snug text-[#4c1f2a]">
+                      Une composition editoriale premium pour nourrir la vie du collectif et mettre en avant les signaux utiles.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#f1dce5] pt-4 text-sm text-[#7a5562]">
+              <div class="flex items-center gap-4">
+                <span><strong class="text-[#4c1f2a]"><%= post[:stats][:likes] %></strong> appreciations</span>
+                <span><strong class="text-[#4c1f2a]"><%= post[:stats][:comments] %></strong> commentaires</span>
+                <span><strong class="text-[#4c1f2a]"><%= post[:stats][:shares] %></strong> partages</span>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button type="button" class="rounded-full border border-[#dfbcc9] bg-white px-4 py-2 font-semibold text-[#8b4452] transition hover:bg-[#fdeef3]">Apprecier</button>
+                <button type="button" class="rounded-full border border-[#dfbcc9] bg-white px-4 py-2 font-semibold text-[#8b4452] transition hover:bg-[#fdeef3]">Commenter</button>
+                <button type="button" class="rounded-full border border-[#dfbcc9] bg-white px-4 py-2 font-semibold text-[#8b4452] transition hover:bg-[#fdeef3]">Partager</button>
+              </div>
+            </div>
+          </article>
+        <% end %>
+      </section>
+    </div>
+
+    <aside class="space-y-4">
+      <section class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+        <h2 class="text-2xl font-semibold text-[#5b2633]">Signaux du moment</h2>
+        <div class="mt-4 space-y-3">
+          <% @feed_signals.each do |item| %>
+            <div class="rounded-2xl border border-[#efdbe4] bg-white/80 p-4">
+              <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]"><%= item[:label] %></p>
+              <p class="mt-2 text-3xl font-semibold <%= item[:tone] %>"><%= item[:value] %></p>
+            </div>
+          <% end %>
+        </div>
+      </section>
+
+      <section class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+        <h2 class="text-2xl font-semibold text-[#5b2633]">Membres en vue</h2>
+        <div class="mt-4 space-y-3">
+          <% @feed_members.each do |member| %>
+            <div class="flex items-center gap-3 rounded-2xl border border-[#efdbe4] bg-white/80 p-4">
+              <div class="relative h-14 w-14 shrink-0 rounded-full bg-[#ed0e64] p-[3px] shadow-[0_10px_24px_rgba(237,14,100,0.22)]">
+                <div class="relative h-full w-full overflow-hidden rounded-full">
+                  <%= image_tag member[:avatar], alt: member[:name], class: "h-full w-full object-cover" %>
+                </div>
+                <span class="absolute bottom-[2px] right-[2px] h-4 w-4 rounded-full border-[3px] border-[#ed0e64] bg-[#12d45e]"></span>
+              </div>
+              <div>
+                <p class="font-semibold text-[#4c1f2a]"><%= member[:name] %></p>
+                <p class="text-sm text-[#6b3f4f]"><%= member[:role] %> · <%= member[:city] %></p>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </section>
+
+      <section class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+        <h2 class="text-2xl font-semibold text-[#5b2633]">Direction editoriale</h2>
+        <div class="mt-4 space-y-3 text-sm leading-7 text-[#6b3f4f]">
+          <p>Le feed ne doit pas ressembler a une marketplace. Il doit exprimer un collectif selectif, actif, expert et visible.</p>
+          <p>Cette premiere version est volontairement centree sur la mise en scene visuelle, les prises de parole et les interactions.</p>
+          <p>On pourra ensuite brancher une vraie logique de posts, reactions, commentaires et contenus RIVYR.</p>
+        </div>
+      </section>
+    </aside>
+  </section>
+</div>

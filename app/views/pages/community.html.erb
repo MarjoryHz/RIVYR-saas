@@ -1,0 +1,139 @@
+<div class="w-full max-w-none space-y-5 px-6 py-5 md:px-11 lg:px-10">
+  <section class="rounded-[2rem] border border-[#ead2dc] bg-[radial-gradient(circle_at_top_left,_rgba(237,14,100,0.12),_transparent_30%),linear-gradient(135deg,#fff8fb_0%,#fffdfd_100%)] p-6">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div class="max-w-3xl">
+        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Communaute RIVYR</p>
+        <h1 class="mt-2 text-3xl font-semibold tracking-tight text-[#4c1f2a] md:text-4xl">Le salon du collectif</h1>
+        <p class="mt-3 text-[15px] leading-7 text-[#6b3f4f]">
+          Une maquette de chat prive entre freelances, pensee comme un mix entre Slack et Telegram, mais avec une presence visuelle plus editoriale et plus premium.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid gap-4 xl:grid-cols-[280px_1fr_320px]">
+    <aside class="space-y-4">
+      <section class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+        <div class="flex items-center justify-between gap-3">
+          <h2 class="text-xl font-semibold text-[#5b2633]">Canaux</h2>
+          <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#dfbcc9] bg-white text-[#8b4452] transition hover:bg-[#fdeef3]">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </div>
+        <div class="mt-4 space-y-2">
+          <% @community_channels.each do |channel| %>
+            <%= link_to dashboard_community_path(channel: channel[:slug]), class: "flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition #{channel[:active] ? 'border-[#ed0e64] bg-[#fff1f6] text-[#4c1f2a]' : 'border-[#efdbe4] bg-white/80 text-[#6b3f4f] hover:bg-white'}" do %>
+              <span class="font-semibold"># <%= channel[:name] %></span>
+              <% if channel[:unread].positive? %>
+                <span class="rounded-full bg-[#ed0e64] px-2.5 py-1 text-xs font-semibold text-white"><%= channel[:unread] %></span>
+              <% end %>
+            <% end %>
+          <% end %>
+        </div>
+      </section>
+
+      <section class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+        <h2 class="text-xl font-semibold text-[#5b2633]">Raccourcis</h2>
+        <div class="mt-4 space-y-3">
+          <div class="rounded-2xl border border-[#efdbe4] bg-white/80 p-4">
+            <p class="text-sm font-semibold text-[#4c1f2a]">Partager un brief</p>
+            <p class="mt-1 text-sm leading-6 text-[#6b3f4f]">Ouvrir une conversation rapide pour demander de l'aide sur une mission.</p>
+          </div>
+          <div class="rounded-2xl border border-[#efdbe4] bg-white/80 p-4">
+            <p class="text-sm font-semibold text-[#4c1f2a]">Poser une question marche</p>
+            <p class="mt-1 text-sm leading-6 text-[#6b3f4f]">Faire remonter un signal faible ou challenger un positionnement client.</p>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <main class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 shadow-[0_18px_40px_rgba(100,37,56,0.06)]">
+      <div class="flex items-center justify-between gap-4 border-b border-[#f1dce5] px-5 py-4">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Canal actif</p>
+          <h2 class="mt-1 text-2xl font-semibold text-[#4c1f2a]"># <%= @community_active_channel[:name] %></h2>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#dfbcc9] bg-white text-[#8b4452] transition hover:bg-[#fdeef3]">
+            <i class="fa-solid fa-phone"></i>
+          </button>
+          <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#dfbcc9] bg-white text-[#8b4452] transition hover:bg-[#fdeef3]">
+            <i class="fa-solid fa-video"></i>
+          </button>
+          <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#dfbcc9] bg-white text-[#8b4452] transition hover:bg-[#fdeef3]">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="space-y-4 px-5 py-5">
+        <% @community_messages.each do |message| %>
+          <%= render "pages/community_message", message: message, current_channel: @community_current_channel %>
+        <% end %>
+      </div>
+
+      <div class="border-t border-[#f1dce5] px-5 py-4">
+        <% if @community_reply_to.present? || @community_react_to.present? %>
+          <div class="mb-3 rounded-2xl border border-[#f2c9d8] bg-[#fff1f6] px-4 py-3 text-sm text-[#6b3f4f]">
+            <% if @community_reply_to.present? %>
+              <p><strong class="text-[#4c1f2a]">Reponse en cours :</strong> <%= @community_reply_to[:author] %> · <%= @community_reply_to[:body] %></p>
+            <% else %>
+              <p><strong class="text-[#4c1f2a]">Reaction a ajouter :</strong> <%= @community_react_to[:author] %> · Choisissez l'emoji qui convient au message.</p>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <% %w[🔥 👏 💡 ✅].each do |emoji| %>
+                  <%= button_to emoji, dashboard_community_reactions_path, params: { channel: @community_current_channel, message_id: @community_react_to[:id], emoji: emoji }, class: "rounded-full border border-[#dfbcc9] bg-white px-3 py-1.5 text-sm", form_class: "inline-block" %>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+        <div class="rounded-[1.7rem] border border-[#dfbcc9] bg-white px-4 py-4 shadow-sm">
+          <% if @community_reply_to.present? %>
+            <%= form_with url: dashboard_community_replies_path, method: :post, local: true do |form| %>
+              <%= hidden_field_tag :channel, @community_current_channel %>
+              <%= hidden_field_tag :message_id, @community_reply_to[:id] %>
+              <div class="flex items-end gap-3">
+                <button type="button" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] transition hover:bg-[#fdeef3]">
+                  <i class="fa-solid fa-reply"></i>
+                </button>
+                <%= form.text_area :body, name: :body, rows: 3, placeholder: "Repondre a #{@community_reply_to[:author]}...", class: "min-h-[68px] flex-1 rounded-2xl border-0 bg-[#fff8fb] px-4 py-3 text-sm leading-6 text-[#4c1f2a] outline-none placeholder:text-[#b38494]" %>
+                <%= form.submit "Envoyer", class: "inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-[#ed0e64] px-5 text-sm font-semibold text-white transition hover:bg-[#cf0c57]" %>
+              </div>
+            <% end %>
+          <% else %>
+            <%= form_with url: dashboard_community_messages_path, method: :post, local: true do |form| %>
+              <%= hidden_field_tag :channel, @community_current_channel %>
+              <div class="flex items-end gap-3">
+                <button type="button" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] transition hover:bg-[#fdeef3]">
+                  <i class="fa-solid fa-paperclip"></i>
+                </button>
+                <%= form.text_area :body, name: :body, rows: 3, placeholder: "Ecrire un message au collectif, partager un signal terrain ou demander un avis au canal ##{@community_active_channel[:name]}...", class: "min-h-[68px] flex-1 rounded-2xl border-0 bg-[#fff8fb] px-4 py-3 text-sm leading-6 text-[#4c1f2a] outline-none placeholder:text-[#b38494]" %>
+                <%= form.submit "Envoyer", class: "inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-[#ed0e64] px-5 text-sm font-semibold text-white transition hover:bg-[#cf0c57]" %>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    </main>
+
+    <aside class="space-y-4">
+      <section class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+        <h2 class="text-xl font-semibold text-[#5b2633]">Membres en ligne</h2>
+        <div class="mt-4 space-y-3">
+          <% @community_members.each do |member| %>
+            <%= render "pages/community_member", member: member %>
+          <% end %>
+        </div>
+      </section>
+
+      <section class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+        <h2 class="text-xl font-semibold text-[#5b2633]">Esprit du canal</h2>
+        <div class="mt-4 space-y-3 text-sm leading-7 text-[#6b3f4f]">
+          <p>La communaute doit ressembler a un salon prive de recruteurs selectifs, pas a un forum bruyant.</p>
+          <p>L'objectif ici est de favoriser les echanges utiles, les signaux terrain, les methodes et les retours d'experience entre pairs.</p>
+          <p>On pourra ensuite y ajouter du temps reel, des reactions, des threads et des salons prives si tu valides cette direction.</p>
+        </div>
+      </section>
+    </aside>
+  </section>
+</div>
