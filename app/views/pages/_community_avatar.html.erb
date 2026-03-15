@@ -1,0 +1,8 @@
+<div class="relative <%= wrapper_classes %> rounded-full bg-[#ed0e64] p-[3px] shadow-[0_10px_24px_rgba(237,14,100,0.22)]">
+  <div class="relative h-full w-full overflow-hidden rounded-full">
+    <%= image_tag avatar_path, alt: alt_text, class: "h-full w-full object-cover" %>
+  </div>
+  <% if status_dot.present? %>
+    <span class="absolute bottom-[2px] right-[2px] h-4 w-4 rounded-full border-[3px] border-[#ed0e64] <%= status_dot %>"></span>
+  <% end %>
+</div>

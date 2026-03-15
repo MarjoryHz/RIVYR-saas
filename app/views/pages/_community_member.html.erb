@@ -1,0 +1,12 @@
+<%= link_to member[:path], class: "flex items-center gap-3 rounded-2xl border border-[#efdbe4] bg-white/80 p-4 transition hover:bg-white" do %>
+  <%= render "pages/community_avatar",
+      wrapper_classes: "h-14 w-14 shrink-0",
+      avatar_path: member[:avatar],
+      alt_text: member[:name],
+      status_dot: (member[:status] == "En ligne" ? "bg-[#12d45e]" : nil) %>
+  <div class="min-w-0">
+    <p class="font-semibold text-[#4c1f2a]"><%= member[:name] %></p>
+    <p class="text-sm text-[#6b3f4f]"><%= member[:role] %></p>
+    <p class="text-xs text-[#8a6170]"><%= member[:status] %> · Voir le profil</p>
+  </div>
+<% end %>

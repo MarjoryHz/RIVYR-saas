@@ -6,7 +6,6 @@
 <% fee_breakdown = mission_fee_breakdown_for(@mission) %>
 <% current_application = current_user&.role_freelance? ? current_user.freelancer_profile&.freelance_mission_applications&.find_by(mission_id: @mission.id) : nil %>
 <% already_applied = current_application.present? %>
-<% priority_label = @mission.priority_level.to_s.upcase.presence || "MEDIUM" %>
 <% positioned_count = FreelanceMissionApplication.where(mission_id: @mission.id).count %>
 <% presented_count = Candidate.joins(:placements).where(placements: { mission_id: @mission.id }).distinct.count %>
 <% mission_assigned = @mission.freelancer_profile.user.role != "admin" %>
@@ -73,6 +72,12 @@
   attractiveness_score = @mission.priority_level.to_s.downcase == "critical" ? 8.9 : 8.1
   closing_score = (closing_probability / 10.0).round(1)
   rivyr_index = ((quality_score + difficulty_score + attractiveness_score + closing_score) / 4.0).round(1)
+  priority_border_classes = {
+    "critical" => "border-t-[#a84b4f]",
+    "high" => "border-t-[#dc7b67]",
+    "medium" => "border-t-[#f09a6f]",
+    "low" => "border-t-[#f4d0c5]"
+  }[@mission.priority_level.to_s.downcase] || "border-t-[#f4d0c5]"
 
   timeline_start_date = @mission.opened_at || Date.current
   timeline_steps = [
@@ -116,7 +121,44 @@
     )
 
   contract_transmitted_on = (@mission.opened_at || Date.current) + 31.days
-  contract_status = @mission.contract_signed? ? "signe" : "modification"
+  contract_signature_state =
+    if @mission.contract_signed?
+      "signed"
+    elsif @mission.status_in_progress?
+      "in_review"
+    else
+      "in_progress"
+    end
+
+  contract_status_config = {
+    "in_progress" => {
+      label: "en cours de signature",
+      classes: "border-[#f2c46f] bg-[#fff4d9] text-[#8a5a00]"
+    },
+    "signed" => {
+      label: "signe",
+      classes: "border-[#97c6a3] bg-[#edf8f0] text-[#2f6b3c]"
+    },
+    "in_review" => {
+      label: "en modification",
+      classes: "border-[#d8b3c2] bg-[#fff1f6] text-[#a33d68]"
+    }
+  }
+  contract_status = contract_status_config.fetch(contract_signature_state, contract_status_config["in_progress"])
+  signature_steps = [
+    { label: "Cree", done: true },
+    { label: "Transmis le #{contract_transmitted_on.strftime("%d/%m")}", done: true },
+    { label: "En cours signature client", done: @mission.contract_signed? || @mission.status_in_progress? },
+    { label: "Signe", done: @mission.contract_signed? }
+  ]
+  signature_current_index =
+    if @mission.contract_signed?
+      3
+    elsif @mission.status_in_progress?
+      2
+    else
+      1
+    end
 
   months_fr = %w[Janvier Fevrier Mars Avril Mai Juin Juillet Aout Septembre Octobre Novembre Decembre]
   format_fr_date = lambda { |date| "#{date.day} #{months_fr[date.month - 1]} #{date.year}" }
@@ -124,113 +166,239 @@
 
 <div class="w-full max-w-none px-6 py-5 md:px-11 lg:px-10">
   <div class="space-y-5">
-    <section class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4 md:p-5">
-      <div class="grid gap-4 xl:grid-cols-[2.1fr_1fr]">
-        <div class="space-y-4">
-          <div>
-            <h1 class="text-3xl font-semibold tracking-tight text-[#4c1f2a] md:text-4xl"><%= @mission.title %></h1>
-            <div class="mt-2 flex flex-wrap items-center gap-2 text-[14px] font-medium text-[#7b4b5a]">
-              <% if client_visible %>
-                <span><%= client_name %> <%= client.sector %></span>
-              <% else %>
-                <span class="relative inline-flex cursor-help items-center gap-1" onmouseenter="this.querySelector('.client-lock-help').classList.remove('hidden')" onmouseleave="this.querySelector('.client-lock-help').classList.add('hidden')">
-                  <span><%= masked_client %> <%= masked_sector %></span>
-                  <i class="fa-solid fa-lock text-[#b4798b]"></i>
-                  <span class="client-lock-help pointer-events-none absolute left-0 top-full z-40 mt-1 hidden w-72 rounded-xl border border-[#f2ddd6] bg-white px-2.5 py-2 text-[11px] text-[#6f332b] shadow-lg">Tant que la mission n est pas attribuee, les informations client restent masquees.</span>
-                </span>
+    <section class="mt-2 rounded-3xl border border-[#ead2dc] border-t-4 <%= priority_border_classes %> bg-[#fff8fb]/95 p-4 md:p-5">
+      <div>
+        <div class="flex items-start justify-between gap-3">
+          <h1 class="text-3xl font-semibold tracking-tight text-[#4c1f2a] md:text-4xl"><%= @mission.title %></h1>
+          <div class="flex items-center gap-3">
+            <% if current_user&.role_freelance? %>
+              <%= button_to toggle_favorite_mission_path(@mission, return_to: request.fullpath), method: :post, class: "text-sm text-[#b56c5f] hover:text-[#8f4034]" do %>
+                <i class="<%= favorite_mission?(@mission) ? 'fa-solid' : 'fa-regular' %> fa-heart"></i>
               <% end %>
-              <span>-</span>
-              <span><%= @mission.region.name %></span>
-            </div>
+            <% end %>
           </div>
+        </div>
+        <div class="mt-2 flex flex-wrap items-center gap-2 text-[14px] font-medium text-[#7b4b5a]">
+          <% if client_visible %>
+            <span><%= client_name %> <%= client.sector %></span>
+          <% else %>
+            <span class="relative inline-flex cursor-help items-center gap-1" onmouseenter="this.querySelector('.client-lock-help').classList.remove('hidden')" onmouseleave="this.querySelector('.client-lock-help').classList.add('hidden')">
+              <span><%= masked_client %> <%= masked_sector %></span>
+              <i class="fa-solid fa-lock text-[#b4798b]"></i>
+              <span class="client-lock-help pointer-events-none absolute left-0 top-full z-40 mt-1 hidden w-72 rounded-xl border border-[#f2ddd6] bg-white px-2.5 py-2 text-[11px] text-[#6f332b] shadow-lg">Tant que la mission n est pas attribuee, les informations client restent masquees.</span>
+            </span>
+            <span><%= client_relation %></span>
+            <span class="inline-flex items-center gap-2">
+              <span>Score: <strong><%= rivyr_index %>/10</strong></span>
+              <button type="button" class="inline-flex items-center rounded-full border border-[#d8b3c2] bg-[#fff1f6] px-3 py-1 text-xs font-semibold text-[#a33d68] hover:bg-[#fde7f0]" onclick="document.getElementById('rivyr_score_modal').showModal()">details</button>
+            </span>
+          <% end %>
+          <span>-</span>
+          <span><%= @mission.region.name %></span>
+        </div>
+      </div>
 
+      <div class="mt-4 grid items-stretch gap-4 xl:grid-cols-[3fr_1fr]">
+        <div class="space-y-4">
           <div class="grid gap-3 rounded-2xl border border-[#ead2dc] bg-[#fff8fb]/95 p-3 md:grid-cols-2 xl:grid-cols-3">
             <div><p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Localisation</p><p class="text-[14px] font-medium text-[#5c3143]"><%= @mission.region.name %></p></div>
             <div><p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Type de poste</p><p class="text-[14px] font-medium text-[#5c3143]"><%= job_type %></p></div>
-            <div><p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Niveau hierarchique</p><p class="text-[14px] font-medium text-[#5c3143]"><%= hierarchy_level %></p></div>
             <div><p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Package cible</p><p class="text-[14px] font-medium text-[#5c3143]"><%= @mission.compensation_summary.presence || "-" %></p></div>
-            <div><p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Honoraires RIVYR</p><p class="text-[14px] font-medium text-[#5c3143]"><%= format_amount(fee_breakdown[:gross_fee]) %>EUR</p></div>
-            <div><p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Statut mission</p><p class="text-[14px] font-medium text-[#5c3143]"><%= @mission.status.to_s.humanize %></p></div>
           </div>
 
-          <div class="grid gap-2 rounded-2xl border border-[#ead2dc] bg-[#fff8fb]/95 p-3 lg:grid-cols-[1fr_2fr]">
-            <span class="inline-flex items-center rounded-full bg-[#f1a45c] px-4 py-1.5 text-sm font-semibold text-white">PRIORITE : <%= priority_label %></span>
+          <div class="rounded-2xl border border-[#ead2dc] bg-[#fff8fb]/95 p-3">
             <div class="flex flex-wrap items-center gap-3 text-sm text-[#6b3f4f]">
-              <span>Client: <strong><%= client_relation %></strong></span>
-              <span>
-                Score: <strong><%= rivyr_index %>/10</strong>
-                <button type="button" class="ml-1 text-[#8f4a58] underline" onclick="document.getElementById('rivyr_score_modal').showModal()">details</button>
-              </span>
-              <span>Shortlist attendue <strong><%= shortlist_deadline_days %> jours</strong></span>
-            </div>
-          </div>
-        </div>
-
-        <div class="space-y-3">
-          <div class="rounded-2xl border border-[#ead2dc] bg-[#fff8fb]/95 p-3">
-            <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Commission freelance estimee</p>
-            <p class="mt-1 text-2xl font-semibold text-[#5f3247]"><%= format_amount(fee_breakdown[:fee_amount]) %>EUR</p>
-            <p class="mt-1 text-sm text-[#78505f]">Signature du contrat : <%= (fee_breakdown[:contract_rate] * 100).round %>%</p>
-          </div>
-
-          <% if show_withdraw %>
-              <span class="block rounded-2xl border border-[#d2dfd4] bg-[#edf7ef] px-4 py-3 text-center text-base font-semibold text-[#3b6d4d]">Deja positionne</span>
-            <button type="button" class="btn w-full rounded-2xl border-[#e7b2bb] bg-[#fff1f3] text-[#b43e53] hover:bg-[#ffe5e9]" onclick="document.getElementById('withdraw_modal').showModal()">
-              <i class="fa-solid fa-xmark mr-1"></i>Se retirer
-            </button>
-          <% elsif show_apply %>
-            <%= button_to "Se positionner sur la mission", apply_mission_path(@mission), method: :post, class: "btn w-full rounded-2xl border-[#7ea48b] bg-[#7ea48b] text-base text-white hover:border-[#6f9680] hover:bg-[#6f9680]" %>
-          <% elsif show_closed %>
-            <span class="block rounded-2xl border border-[#e3d8de] bg-[#f7f2f5] px-4 py-3 text-center text-base font-semibold text-[#8f6c78]">Mission fermee</span>
-          <% end %>
-          <button type="button" class="btn w-full rounded-2xl border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] hover:bg-[#fdeef3]">Poser une question a RIVYR</button>
-
-          <div class="rounded-2xl border border-[#ead2dc] bg-[#fff8fb]/95 p-3">
-            <h4 class="text-lg font-semibold text-[#5b2633]">Documents utiles</h4>
-            <div class="mt-3 space-y-2 text-[14px] text-[#5f3647]">
-              <div class="flex items-center justify-between gap-2 rounded-xl border border-[#ead2dc] px-3 py-2">
-                <span>Job description complete</span>
-                <span class="flex items-center gap-1.5">
-                  <button type="button" class="btn btn-xs rounded-full border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] hover:bg-[#fdeef3]" title="Video de brief">
-                    <i class="fa-solid fa-video"></i>
-                  </button>
-                  <button type="button" class="btn btn-xs rounded-full border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] hover:bg-[#fdeef3]" title="Document">
-                    <i class="fa-solid fa-file-lines"></i>
-                  </button>
+              <% if client_visible %>
+                <span>Client: <strong><%= client_relation %></strong></span>
+                <span class="inline-flex items-center gap-2">
+                  <span>Score: <strong><%= rivyr_index %>/10</strong></span>
+                  <button type="button" class="inline-flex items-center rounded-full border border-[#d8b3c2] bg-[#fff1f6] px-3 py-1 text-xs font-semibold text-[#a33d68] hover:bg-[#fde7f0]" onclick="document.getElementById('rivyr_score_modal').showModal()">details</button>
                 </span>
-              </div>
-
-              <div class="rounded-xl border border-[#ead2dc] px-3 py-2">
-                <% if assigned_and_accepted %>
-                  <%= link_to "Presentation entreprise", client_path(client), class: "text-[#8b4452] underline hover:text-[#6f2d3a]" %>
-                  <% if client.website_url.present? %>
-                    <span class="mx-1 text-[#b38795]">|</span>
-                    <%= link_to "Site client", client.website_url, class: "text-[#8b4452] underline hover:text-[#6f2d3a]", target: "_blank", rel: "noopener" %>
-                  <% end %>
-                <% else %>
-                  <span class="text-[#9a7582]">Presentation entreprise</span>
-                  <span class="ml-2 text-xs text-[#b38795]">(bloque - disponible apres affectation)</span>
-                <% end %>
-              </div>
-
-              <div class="rounded-xl border border-[#ead2dc] px-3 py-2">
-                <% if assigned_and_accepted %>
-                  <%= link_to "Contrat", mission_path(@mission), class: "text-[#8b4452] underline hover:text-[#6f2d3a]" %>
-                  <span class="ml-2 text-sm text-[#6f4a58]">transmis le <%= contract_transmitted_on.strftime("%d/%m") %> - <%= contract_status %></span>
-                <% else %>
-                  <span class="text-[#9a7582]">Contrat</span>
-                  <span class="ml-2 text-sm text-[#6f4a58]">transmis le <%= contract_transmitted_on.strftime("%d/%m") %> - <%= contract_status %></span>
-                  <span class="ml-2 text-xs text-[#b38795]">(bloque - disponible apres affectation)</span>
-                <% end %>
-              </div>
+              <% end %>
             </div>
+
+            <div class="mt-3 grid gap-3 md:grid-cols-2">
+              <article class="rounded-2xl border border-[#efdbe4] bg-white/80 p-4">
+                <h3 class="text-lg font-semibold text-[#5b2633]">Informations operationnelles RIVYR</h3>
+                <ul class="mt-3 space-y-2 text-[15px] text-[#5f3647]">
+                  <li><i class="fa-solid fa-layer-group mr-2 text-[#b47a8d]"></i>Mission <strong><%= origin_badge[:label] %></strong></li>
+                  <li><i class="fa-solid fa-users mr-2 text-[#b47a8d]"></i>Freelances maximum <strong><%= max_freelancers %></strong></li>
+                  <li><i class="fa-solid fa-gauge-high mr-2 text-[#b47a8d]"></i>Niveau difficulte: <strong><%= difficulty_level %></strong></li>
+                  <li><i class="fa-solid fa-bullseye mr-2 text-[#b47a8d]"></i>Niveau exigence client: <strong><%= exigence_level %></strong></li>
+                  <li><i class="fa-solid fa-chart-line mr-2 text-[#b47a8d]"></i>Probabilite de closing: <strong><%= closing_probability %>%</strong></li>
+                  <li><i class="fa-solid fa-check-double mr-2 text-[#b47a8d]"></i>Historique recrutement: <strong><%= search_meta["history_count"].presence || "1" %> missions</strong></li>
+                </ul>
+              </article>
+
+              <article class="rounded-2xl border border-[#efdbe4] bg-white/80 p-4">
+                <h3 class="text-lg font-semibold text-[#5b2633]">Modalites de collaboration</h3>
+                <ul class="mt-3 space-y-2 text-[15px] text-[#5f3647]">
+                  <li><strong>Pilotage:</strong> <%= search_meta["collab_pilot"].presence || "RIVYR" %></li>
+                  <li><strong>Autonomie freelance:</strong> <%= search_meta["collab_autonomy"].presence || "Autonomie elevee" %></li>
+                  <li><strong>Freelances max:</strong> <%= max_freelancers %></li>
+                  <li><strong>Date limite positionnement:</strong> <%= position_deadline.strftime("%d/%m/%Y") %></li>
+                  <li><strong>Partage candidats:</strong> <%= search_meta["collab_candidate_sharing"].presence || "Candidats exclusifs" %></li>
+                </ul>
+              </article>
+            </div>
+
+            <article class="mt-3 rounded-2xl border border-[#ead2dc] bg-[#fff8fb]/95 p-3">
+              <% progress_percent = if visible_timeline_steps.size > 0
+                visible_current_index = current_step_index - timeline_start
+                (((visible_current_index + 0.5).to_f) / visible_timeline_steps.size * 100).round
+              else
+                0
+              end %>
+              <div class="mt-3 px-1 py-1">
+                <div class="relative mt-3 px-2">
+                  <div class="absolute inset-x-7 top-3.5 h-0.5 -translate-y-1/2 overflow-hidden rounded-full bg-[#e9e7ef]">
+                    <div class="h-full rounded-full bg-[#ed0e64]" style="width: <%= progress_percent %>%"></div>
+                  </div>
+                  <div class="relative grid gap-3 text-center text-sm sm:grid-cols-4">
+                    <% visible_timeline_steps.each_with_index do |step, local_idx| %>
+                      <% idx = timeline_start + local_idx %>
+                      <% step_state =
+                        if idx < current_step_index
+                          :completed
+                        elsif idx == current_step_index
+                          :current
+                        else
+                          :upcoming
+                        end
+                      %>
+                      <div class="flex justify-center">
+                        <span class="inline-flex h-6 w-6 items-center justify-center rounded-full border text-[10px] font-semibold shadow-sm <%= step_state == :completed ? 'border-[#f4c9da] bg-[#fff1f6] text-[#ed0e64]' : (step_state == :current ? 'border-[#f2b7cd] bg-[#ed0e64] text-white ring-1 ring-[#fde7f0]' : 'border-[#e1e4eb] bg-[#f6f7fa] text-[#8d95a5]') %>">
+                          <%= step_state == :completed ? "✓" : (step_state == :current ? "●" : "○") %>
+                        </span>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+                <div class="mt-2 grid gap-2 text-center text-[11px] sm:grid-cols-4">
+                  <% visible_timeline_steps.each_with_index do |step, local_idx| %>
+                    <% idx = timeline_start + local_idx %>
+                    <% step_state =
+                      if idx < current_step_index
+                        :completed
+                      elsif idx == current_step_index
+                        :current
+                      else
+                        :upcoming
+                      end
+                    %>
+                    <div class="<%= step_state == :current ? 'text-[#5c4bff]' : 'text-[#5e6b82]' %>">
+                      <p class="font-semibold"><%= step[:title] %></p>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            </article>
           </div>
         </div>
+
+        <aside class="flex h-full flex-col">
+          <article class="flex h-full flex-col rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Commission freelance estimee</p>
+                <p class="mt-1 text-2xl font-semibold text-[#5f3247]"><%= format_amount(fee_breakdown[:fee_amount]) %>EUR</p>
+                <p class="mt-1 text-sm text-[#78505f]">Signature du contrat : <%= (fee_breakdown[:contract_rate] * 100).round %>%</p>
+                <p class="mt-1 text-sm text-[#78505f]">Shortlist attendue : <%= shortlist_deadline_days %> jours</p>
+              </div>
+              <button type="button" class="btn btn-xs rounded-full border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] hover:bg-[#fdeef3]" onclick="document.getElementById('commission_breakdown_modal').showModal()">details</button>
+            </div>
+
+            <% if show_withdraw %>
+                <span class="mt-4 block rounded-2xl border border-[#d2dfd4] bg-[#edf7ef] px-4 py-3 text-center text-base font-semibold text-[#3b6d4d]">Deja positionne</span>
+              <button type="button" class="btn mt-3 w-full rounded-2xl border-[#e7b2bb] bg-[#fff1f3] text-[#b43e53] hover:bg-[#ffe5e9]" onclick="document.getElementById('withdraw_modal').showModal()">
+                <i class="fa-solid fa-xmark mr-1"></i>Se retirer
+              </button>
+            <% elsif show_apply %>
+              <%= button_to "Se positionner sur la mission", apply_mission_path(@mission), method: :post, class: "btn mt-4 w-full rounded-2xl border-[#ED0E64] bg-[#ED0E64] text-base text-white hover:border-[#cf0c57] hover:bg-[#cf0c57]" %>
+            <% elsif show_closed %>
+              <span class="mt-4 block rounded-2xl border border-[#e3d8de] bg-[#f7f2f5] px-4 py-3 text-center text-base font-semibold text-[#8f6c78]">Mission fermee</span>
+            <% end %>
+            <button type="button" class="btn mt-3 w-full rounded-2xl border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] hover:bg-[#fdeef3]">Poser une question a RIVYR</button>
+
+            <div class="mt-4 border-t border-[#efdbe4] pt-4">
+              <h4 class="text-lg font-semibold text-[#5b2633]">Documents utiles</h4>
+              <div class="mt-3 space-y-2 text-[14px] text-[#5f3647]">
+                <div class="flex items-center justify-between gap-2 rounded-xl border border-[#ead2dc] px-3 py-2">
+                  <span>Job description complete</span>
+                  <span class="flex items-center gap-1.5">
+                    <span class="relative inline-flex cursor-help items-center" onmouseenter="this.querySelector('.document-lock-help').classList.remove('hidden')" onmouseleave="this.querySelector('.document-lock-help').classList.add('hidden')">
+                      <span class="btn btn-xs pointer-events-none rounded-full border-[#e7d7de] bg-[#f7f2f5] text-[#c4aab4]" title="Disponible apres affectation">
+                        <i class="fa-solid fa-video"></i>
+                      </span>
+                      <span class="document-lock-help pointer-events-none absolute right-0 top-full z-40 mt-2 hidden w-56 rounded-xl border border-[#f2ddd6] bg-white px-3 py-2 text-left text-xs text-[#6f332b] shadow-lg">Disponible apres affectation</span>
+                    </span>
+                    <span class="relative inline-flex cursor-help items-center" onmouseenter="this.querySelector('.document-lock-help').classList.remove('hidden')" onmouseleave="this.querySelector('.document-lock-help').classList.add('hidden')">
+                      <span class="btn btn-xs pointer-events-none rounded-full border-[#e7d7de] bg-[#f7f2f5] text-[#c4aab4]" title="Disponible apres affectation">
+                        <i class="fa-solid fa-file-lines"></i>
+                      </span>
+                      <span class="document-lock-help pointer-events-none absolute right-0 top-full z-40 mt-2 hidden w-56 rounded-xl border border-[#f2ddd6] bg-white px-3 py-2 text-left text-xs text-[#6f332b] shadow-lg">Disponible apres affectation</span>
+                    </span>
+                  </span>
+                </div>
+
+                <div class="flex items-center justify-between gap-2 rounded-xl border border-[#ead2dc] px-3 py-2">
+                  <div class="min-w-0">
+                    <span class="<%= assigned_and_accepted ? 'text-[#5f3647]' : 'text-[#9a7582]' %>">Presentation entreprise</span>
+                  </div>
+                  <% if assigned_and_accepted %>
+                    <button type="button" class="btn btn-xs rounded-full border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] hover:bg-[#fdeef3]" title="Presentation entreprise" onclick="document.getElementById('company_modal').showModal()">
+                      <i class="fa-solid fa-file-lines"></i>
+                    </button>
+                  <% else %>
+                    <span class="relative inline-flex cursor-help items-center" onmouseenter="this.querySelector('.document-lock-help').classList.remove('hidden')" onmouseleave="this.querySelector('.document-lock-help').classList.add('hidden')">
+                      <span class="btn btn-xs pointer-events-none rounded-full border-[#e7d7de] bg-[#f7f2f5] text-[#c4aab4]" title="Disponible apres affectation">
+                        <i class="fa-solid fa-file-lines"></i>
+                      </span>
+                      <span class="document-lock-help pointer-events-none absolute right-0 top-full z-40 mt-2 hidden w-56 rounded-xl border border-[#f2ddd6] bg-white px-3 py-2 text-left text-xs text-[#6f332b] shadow-lg">Disponible apres affectation</span>
+                    </span>
+                  <% end %>
+                </div>
+
+                <div class="flex items-center justify-between gap-2 rounded-xl border border-[#ead2dc] px-3 py-2">
+                  <div class="min-w-0 flex items-center gap-2">
+                    <span class="<%= assigned_and_accepted ? 'text-[#5f3647]' : 'text-[#9a7582]' %>">Contrat</span>
+                    <span class="relative inline-flex cursor-help items-center" onmouseenter="this.querySelector('.signature-status-help').classList.remove('hidden')" onmouseleave="this.querySelector('.signature-status-help').classList.add('hidden')">
+                      <span class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold <%= contract_status[:classes] %>"><%= contract_status[:label] %></span>
+                      <span class="signature-status-help pointer-events-none absolute right-0 top-full z-40 mt-2 hidden w-72 rounded-xl border border-[#f2ddd6] bg-white px-3 py-3 text-left shadow-lg">
+                        <span class="block text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Etapes de signature</span>
+                        <ul class="mt-2 space-y-2 text-sm text-[#5f3647]">
+                          <% signature_steps.each_with_index do |step, idx| %>
+                            <li class="flex items-center gap-2">
+                              <span class="<%= step[:done] ? 'border-[#97c6a3] bg-[#edf8f0] text-[#2f6b3c]' : 'border-[#e7d7de] bg-[#f7f2f5] text-[#b49aa4]' %> flex h-5 w-5 items-center justify-center rounded-full border text-[10px] font-semibold"><%= idx + 1 %></span>
+                              <span class="<%= idx == signature_current_index ? 'font-semibold text-[#4c1f2a]' : 'text-[#6f4a58]' %>"><%= step[:label] %></span>
+                            </li>
+                        <% end %>
+                      </ul>
+                    </span>
+                  </span>
+                </div>
+                  <% if assigned_and_accepted %>
+                    <%= link_to mission_path(@mission), class: "btn btn-xs rounded-full border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] hover:bg-[#fdeef3]", title: "Contrat" do %>
+                      <i class="fa-solid fa-file-lines"></i>
+                    <% end %>
+                  <% else %>
+                    <span class="relative inline-flex cursor-help items-center" onmouseenter="this.querySelector('.document-lock-help').classList.remove('hidden')" onmouseleave="this.querySelector('.document-lock-help').classList.add('hidden')">
+                      <span class="btn btn-xs pointer-events-none rounded-full border-[#e7d7de] bg-[#f7f2f5] text-[#c4aab4]" title="Disponible apres affectation">
+                        <i class="fa-solid fa-file-lines"></i>
+                      </span>
+                      <span class="document-lock-help pointer-events-none absolute right-0 top-full z-40 mt-2 hidden w-56 rounded-xl border border-[#f2ddd6] bg-white px-3 py-2 text-left text-xs text-[#6f332b] shadow-lg">Disponible apres affectation</span>
+                    </span>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </article>
+        </aside>
       </div>
     </section>
 
-    <section class="grid gap-4 xl:grid-cols-[3fr_1fr]">
-      <div class="space-y-4">
+    <section class="space-y-4">
+      <div class="grid items-stretch gap-4 xl:grid-cols-[2fr_1fr]">
         <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
           <h2 class="text-2xl font-semibold text-[#5b2633]">Contexte du recrutement</h2>
           <ul class="mt-3 space-y-2 text-[15px] text-[#5f3647]">
@@ -241,130 +409,53 @@
             <li><strong>Taille societe / CA / effectif:</strong> <%= company_size_label %> / <%= company_revenue %> MEUR / <%= company_headcount %> collaborateurs</li>
             <li><strong>Position du poste dans l organigramme:</strong> <%= brief_meta["org_position"].presence || "-" %></li>
           </ul>
+        </article>
 
-          <div class="mt-4 border-t border-[#efdbe4] pt-3">
-            <h3 class="text-xl font-semibold text-[#5b2633]">Enjeux des 12 premiers mois</h3>
-            <ul class="mt-2 space-y-2 text-[15px] text-[#5f3647]">
+        <div class="grid h-full gap-4 xl:grid-rows-2">
+          <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+            <h2 class="text-2xl font-semibold text-[#5b2633]">Mission et responsabilites</h2>
+            <ul class="mt-3 space-y-2 text-[15px] text-[#5f3647]">
+              <% mission_items.each do |item| %>
+                <li class="flex items-start gap-2"><span class="mt-1.5 h-2 w-2 rounded-full bg-[#c88ea1]"></span><span><%= item %></span></li>
+              <% end %>
+            </ul>
+          </article>
+
+          <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+            <h2 class="text-2xl font-semibold text-[#5b2633]">Enjeux des 12 premiers mois</h2>
+            <ul class="mt-3 space-y-2 text-[15px] text-[#5f3647]">
               <% enjeux_items.each do |item| %>
                 <li class="flex items-start gap-2"><span class="mt-1.5 h-2 w-2 rounded-full bg-[#9bbf9c]"></span><span><%= item %></span></li>
               <% end %>
             </ul>
-          </div>
-        </article>
-
-        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
-          <h2 class="text-2xl font-semibold text-[#5b2633]">Mission et responsabilites</h2>
-          <ul class="mt-3 space-y-2 text-[15px] text-[#5f3647]">
-            <% mission_items.each do |item| %>
-              <li class="flex items-start gap-2"><span class="mt-1.5 h-2 w-2 rounded-full bg-[#c88ea1]"></span><span><%= item %></span></li>
-            <% end %>
-          </ul>
-        </article>
-
-        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
-          <h2 class="text-2xl font-semibold text-[#5b2633]">Profil recherche</h2>
-          <div class="mt-3 grid gap-4 md:grid-cols-2">
-            <div>
-              <h3 class="text-lg font-semibold text-[#5b2633]">Indispensable</h3>
-              <ul class="mt-2 space-y-2 text-[15px] text-[#5f3647]">
-                <% must_have_items.each do |item| %>
-                  <li class="flex items-start gap-2"><span class="mt-1.5 h-2 w-2 rounded-full bg-[#e2a47f]"></span><span><%= item %></span></li>
-                <% end %>
-              </ul>
-            </div>
-            <div>
-              <h3 class="text-lg font-semibold text-[#5b2633]">Apprecie</h3>
-              <ul class="mt-2 space-y-2 text-[15px] text-[#5f3647]">
-                <% nice_to_have_items.each do |item| %>
-                  <li class="flex items-start gap-2"><span class="mt-1.5 h-2 w-2 rounded-full bg-[#c3b0d7]"></span><span><%= item %></span></li>
-                <% end %>
-              </ul>
-            </div>
-          </div>
-        </article>
+          </article>
+        </div>
       </div>
 
-      <aside class="space-y-4">
-        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4">
-          <div class="flex items-center justify-between gap-2">
-            <h3 class="text-2xl font-semibold text-[#5b2633]">Timeline mission</h3>
-            <button type="button" class="btn btn-xs rounded-full border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] hover:bg-[#fdeef3]" onclick="document.getElementById('timeline_modal').showModal()">Voir tout</button>
+      <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+        <h2 class="text-2xl font-semibold text-[#5b2633]">Profil recherche</h2>
+        <div class="mt-3 grid gap-4 md:grid-cols-2">
+          <div>
+            <h3 class="text-lg font-semibold text-[#5b2633]">Indispensable</h3>
+            <ul class="mt-2 space-y-2 text-[15px] text-[#5f3647]">
+              <% must_have_items.each do |item| %>
+                <li class="flex items-start gap-2"><span class="mt-1.5 h-2 w-2 rounded-full bg-[#e2a47f]"></span><span><%= item %></span></li>
+              <% end %>
+            </ul>
           </div>
-          <p class="mt-2 text-xs text-[#8a6170]">Projection type: recrutement finalise en 6 a 8 semaines.</p>
-          <ul class="timeline timeline-snap-icon timeline-compact timeline-vertical mt-4 w-full">
-            <% visible_timeline_steps.each_with_index do |step, local_idx| %>
-              <% idx = timeline_start + local_idx %>
-              <% step_date = timeline_start_date + step[:offset_days].days %>
-              <li>
-                <div class="timeline-middle">
-                  <span class="<%= idx < filled_steps ? 'bg-[#8fb795]/25' : 'bg-[#c9b8c3]/20' %> flex size-4.5 items-center justify-center rounded-full">
-                    <span class="<%= idx < filled_steps ? 'bg-[#8fb795]' : 'bg-[#c9b8c3]' %> size-3 rounded-full"></span>
-                  </span>
-                </div>
-                <div class="timeline-end ms-2 m-2 w-full rounded-lg border border-[#ead2dc] bg-[#fff8fb]/95 p-3">
-                  <p class="mb-1 text-xs font-semibold uppercase tracking-wide text-[#9a5a68]"><%= format_fr_date.call(step_date) %></p>
-                  <div class="mb-1 pt-0.5 text-[15px] font-semibold text-[#5b2633]"><%= idx + 1 %>. <%= step[:title] %></div>
-                  <p class="text-sm text-[#6b4653]"><%= step[:desc] %></p>
-                </div>
-                <% unless local_idx == visible_timeline_steps.size - 1 %><hr class="border-[#dcc2ce]" /><% end %>
-              </li>
-            <% end %>
-          </ul>
-        </article>
-
-        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4">
-          <h3 class="text-2xl font-semibold text-[#5b2633]">Informations operationnelles RIVYR</h3>
-          <ul class="mt-3 space-y-2 text-[15px] text-[#5f3647]">
-            <li><i class="fa-solid fa-layer-group mr-2 text-[#b47a8d]"></i>Mission <strong><%= origin_badge[:label] %></strong></li>
-            <li><i class="fa-solid fa-users mr-2 text-[#b47a8d]"></i>Freelances maximum <strong><%= max_freelancers %></strong></li>
-            <li><i class="fa-solid fa-handshake mr-2 text-[#b47a8d]"></i><%= client_relation %></li>
-            <li><i class="fa-solid fa-gauge-high mr-2 text-[#b47a8d]"></i>Niveau difficulte: <strong><%= difficulty_level %></strong></li>
-            <li><i class="fa-solid fa-bullseye mr-2 text-[#b47a8d]"></i>Niveau exigence client: <strong><%= exigence_level %></strong></li>
-            <li><i class="fa-solid fa-chart-line mr-2 text-[#b47a8d]"></i>Probabilite de closing: <strong><%= closing_probability %>%</strong></li>
-            <li><i class="fa-solid fa-check-double mr-2 text-[#b47a8d]"></i>Historique recrutement: <strong><%= search_meta["history_count"].presence || "1" %> missions</strong></li>
-          </ul>
-        </article>
-
-        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4">
-          <h3 class="text-2xl font-semibold text-[#5b2633]">Modalites de collaboration</h3>
-          <ul class="mt-3 space-y-2 text-[15px] text-[#5f3647]">
-            <li><strong>Pilotage:</strong> <%= search_meta["collab_pilot"].presence || "RIVYR" %></li>
-            <li><strong>Autonomie freelance:</strong> <%= search_meta["collab_autonomy"].presence || "Autonomie elevee" %></li>
-            <li><strong>Freelances max:</strong> <%= max_freelancers %></li>
-            <li><strong>Date limite positionnement:</strong> <%= position_deadline.strftime("%d/%m/%Y") %></li>
-            <li><strong>Partage candidats:</strong> <%= search_meta["collab_candidate_sharing"].presence || "Candidats exclusifs" %></li>
-          </ul>
-        </article>
-
-        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4">
-          <h3 class="text-2xl font-semibold text-[#5b2633]">Indicateurs dynamiques</h3>
-          <ul class="mt-3 space-y-2 text-[15px] text-[#5f3647]">
-            <li><strong><%= @mission.status.to_s.humanize %></strong></li>
-            <li><%= positioned_count %> freelances positionnes</li>
-            <li><%= presented_count %> candidats presentes</li>
-          </ul>
-
-          <% if show_withdraw %>
-              <span class="mt-4 block rounded-2xl border border-[#d2dfd4] bg-[#edf7ef] px-4 py-3 text-center text-base font-semibold text-[#3b6d4d]">Deja positionne</span>
-            <button type="button" class="btn mt-3 w-full rounded-2xl border-[#e7b2bb] bg-[#fff1f3] text-[#b43e53] hover:bg-[#ffe5e9]" onclick="document.getElementById('withdraw_modal').showModal()">
-              <i class="fa-solid fa-xmark mr-1"></i>Se retirer
-            </button>
-          <% elsif show_apply %>
-            <%= button_to "Se positionner", apply_mission_path(@mission), method: :post, class: "btn mt-4 w-full rounded-2xl border-[#7ea48b] bg-[#7ea48b] text-base text-white hover:border-[#6f9680] hover:bg-[#6f9680]" %>
-          <% elsif show_closed %>
-            <span class="mt-4 block rounded-2xl border border-[#e3d8de] bg-[#f7f2f5] px-4 py-3 text-center text-base font-semibold text-[#8f6c78]">Mission fermee</span>
-          <% end %>
-          <button type="button" class="btn mt-3 w-full rounded-2xl border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] hover:bg-[#fdeef3]">Poser une question</button>
-
-          <% if current_user&.role_freelance? %>
-            <%= button_to "Ajouter aux favoris", toggle_favorite_mission_path(@mission, return_to: request.fullpath), method: :post, class: "btn mt-3 w-full rounded-2xl border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] hover:bg-[#fdeef3]" %>
-          <% end %>
-        </article>
-      </aside>
+          <div>
+            <h3 class="text-lg font-semibold text-[#5b2633]">Apprecie</h3>
+            <ul class="mt-2 space-y-2 text-[15px] text-[#5f3647]">
+              <% nice_to_have_items.each do |item| %>
+                <li class="flex items-start gap-2"><span class="mt-1.5 h-2 w-2 rounded-full bg-[#c3b0d7]"></span><span><%= item %></span></li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      </article>
     </section>
 
     <div class="flex flex-wrap gap-2">
-      <%= link_to "Retour a la liste", missions_path, class: "btn btn-ghost text-[#7a3a49] hover:bg-[#fce7ef]" %>
       <% if policy(@mission).edit? %>
         <%= link_to "Modifier", edit_mission_path(@mission), class: "btn border-[#dfbcc9] bg-[#fff2f7] text-[#7a3a49] hover:bg-[#fce7ef]" %>
       <% end %>
@@ -383,6 +474,45 @@
       <li><strong>Probabilite de closing:</strong> <%= closing_score %>/10</li>
     </ul>
     <p class="mt-3 text-xs text-[#8d5f6b]">Objectif: t aider a trancher en moins de 60 secondes.</p>
+    <div class="modal-action">
+      <form method="dialog"><button class="btn btn-sm">Fermer</button></form>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
+
+<dialog id="commission_breakdown_modal" class="modal">
+  <div class="modal-box max-w-lg rounded-2xl border border-[#ead5ce] bg-white">
+    <h3 class="text-lg font-semibold text-[#6f332b]">Detail du calcul de commission</h3>
+    <div class="mt-3 space-y-3 text-sm text-[#5f3647]">
+      <p><strong>Remuneration brute moyenne:</strong> <%= format_amount(fee_breakdown[:salary_average]) %>EUR</p>
+      <p><strong>Honoraires RIVYR:</strong> <%= format_amount(fee_breakdown[:salary_average]) %> x <%= (fee_breakdown[:contract_rate] * 100).round %>% = <%= format_amount(fee_breakdown[:gross_fee]) %>EUR</p>
+      <p><strong>Part freelance:</strong> <%= format_amount(fee_breakdown[:gross_fee]) %> x <%= (fee_breakdown[:freelance_rate] * 100).round %>% = <%= format_amount(fee_breakdown[:fee_amount]) %>EUR</p>
+      <p class="rounded-xl border border-[#efdbe4] bg-[#fff8fb] px-3 py-2 text-[#6f4a58]">
+        Formule appliquee: remuneration brute moyenne x honoraires RIVYR x part freelance.
+      </p>
+    </div>
+    <div class="modal-action">
+      <form method="dialog"><button class="btn btn-sm">Fermer</button></form>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
+
+<dialog id="company_modal" class="modal">
+  <div class="modal-box max-w-lg rounded-2xl border border-[#ead5ce] bg-white">
+    <h3 class="text-lg font-semibold text-[#6f332b]">Presentation entreprise</h3>
+    <div class="mt-3 space-y-3 text-sm text-[#5f3647]">
+      <p><strong>Client:</strong> <%= client_name %></p>
+      <p><strong>Secteur:</strong> <%= client.sector.presence || "-" %></p>
+      <p><strong>Taille:</strong> <%= company_size_label %></p>
+      <p><strong>Effectif:</strong> <%= company_headcount %></p>
+      <p><strong>Chiffre d affaires:</strong> <%= company_revenue %> MEUR</p>
+      <p><strong>Contexte:</strong> <%= brief_meta["client_context"].presence || "#{client_name} - #{client.sector}" %></p>
+      <% if client.website_url.present? %>
+        <p><strong>Site:</strong> <%= link_to client.website_url, client.website_url, class: "text-[#8b4452] underline hover:text-[#6f2d3a]", target: "_blank", rel: "noopener" %></p>
+      <% end %>
+    </div>
     <div class="modal-action">
       <form method="dialog"><button class="btn btn-sm">Fermer</button></form>
     </div>
@@ -411,15 +541,24 @@
     <ul class="timeline timeline-snap-icon timeline-compact timeline-vertical mt-4 w-full">
       <% timeline_steps.each_with_index do |step, idx| %>
         <% step_date = timeline_start_date + step[:offset_days].days %>
+        <% step_state =
+          if idx < current_step_index
+            :completed
+          elsif idx == current_step_index
+            :current
+          else
+            :upcoming
+          end
+        %>
         <li>
           <div class="timeline-middle">
-            <span class="<%= idx < filled_steps ? 'bg-[#8fb795]/25' : 'bg-[#c9b8c3]/20' %> flex size-4.5 items-center justify-center rounded-full">
-              <span class="<%= idx < filled_steps ? 'bg-[#8fb795]' : 'bg-[#c9b8c3]' %> size-3 rounded-full"></span>
+            <span class="flex h-6 w-6 items-center justify-center text-sm font-semibold <%= step_state == :completed ? 'text-[#2f6b3c]' : (step_state == :current ? 'text-[#a33d68]' : 'text-[#b49aa4]') %>">
+              <%= step_state == :completed ? "✓" : (step_state == :current ? "●" : "○") %>
             </span>
           </div>
           <div class="timeline-end ms-2 m-2 w-full rounded-lg border border-[#ead2dc] bg-[#fff8fb]/95 p-3">
             <p class="mb-1 text-xs font-semibold uppercase tracking-wide text-[#9a5a68]"><%= format_fr_date.call(step_date) %></p>
-            <div class="mb-1 pt-0.5 text-[15px] font-semibold text-[#5b2633]"><%= idx + 1 %>. <%= step[:title] %></div>
+            <div class="mb-1 pt-0.5 text-[15px] font-semibold text-[#5b2633]"><%= step[:title] %></div>
             <p class="text-sm text-[#6b4653]"><%= step[:desc] %></p>
           </div>
           <% unless idx == timeline_steps.size - 1 %><hr class="border-[#dcc2ce]" /><% end %>

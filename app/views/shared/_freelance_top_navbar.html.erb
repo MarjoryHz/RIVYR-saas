@@ -1,4 +1,4 @@
-<nav class="absolute inset-x-0 top-0 z-100 px-4 pt-4 md:px-6 md:pt-6">
+<nav class="fixed inset-x-0 top-0 z-100 px-4 pt-4 md:px-6 md:pt-6">
   <% search_modal_id = "freelance_quick_search_modal" %>
   <% show_back_button = !(controller_name == "missions" && action_name == "index") %>
   <div class="flex items-center justify-between">
@@ -6,7 +6,7 @@
 
     <div class="flex shrink-0 items-center gap-2">
       <% if show_back_button %>
-        <%= link_to(request.referer.presence || missions_path, class: "inline-flex h-10 items-center gap-2 rounded-full border border-base-200 bg-base-100/80 px-4 text-sm font-medium text-base-content/75 shadow-sm transition hover:bg-base-100 hover:text-base-content") do %>
+        <%= link_to(request.referer.presence || dashboard_path, class: "inline-flex h-10 items-center gap-2 rounded-full border border-base-200 bg-base-100/80 px-4 text-sm font-medium text-base-content/75 shadow-sm transition hover:bg-base-100 hover:text-base-content") do %>
           <i class="fa-solid fa-arrow-left text-[#ed0e64]"></i>
           Retour
         <% end %>
@@ -50,15 +50,15 @@
       </label>
 
       <div class="grid gap-3 sm:grid-cols-2">
-        <%= link_to missions_path, class: "flex items-center gap-3 rounded-2xl border border-[#f2d5df] bg-[#fff7f9] px-4 py-3 text-base-content transition hover:bg-white", data: { search_item: "missions accueil tableau de bord recrutement" } do %>
-          <i class="fa-solid fa-briefcase text-[#ed0e64]"></i>
+        <%= link_to dashboard_path, class: "flex items-center gap-3 rounded-2xl border border-[#f2d5df] bg-[#fff7f9] px-4 py-3 text-base-content transition hover:bg-white", data: { search_item: "dashboard accueil tableau de bord recrutement freelance" } do %>
+          <i class="fa-solid fa-table-columns text-[#ed0e64]"></i>
           <div>
-            <p class="font-semibold">Missions</p>
-            <p class="text-sm text-base-content/60">Accueil et suivi des missions</p>
+            <p class="font-semibold">Dashboard</p>
+            <p class="text-sm text-base-content/60">Cockpit et suivi global</p>
           </div>
         <% end %>
 
-        <%= link_to my_missions_missions_path, class: "flex items-center gap-3 rounded-2xl border border-[#f2d5df] bg-[#fff7f9] px-4 py-3 text-base-content transition hover:bg-white", data: { search_item: "mes missions en cours urgent freelance" } do %>
+        <%= link_to dashboard_my_missions_path, class: "flex items-center gap-3 rounded-2xl border border-[#f2d5df] bg-[#fff7f9] px-4 py-3 text-base-content transition hover:bg-white", data: { search_item: "mes missions en cours urgent freelance" } do %>
           <i class="fa-solid fa-list-check text-[#ed0e64]"></i>
           <div>
             <p class="font-semibold">Mes missions</p>
@@ -66,7 +66,7 @@
           </div>
         <% end %>
 
-        <%= link_to pending_missions_missions_path, class: "flex items-center gap-3 rounded-2xl border border-[#f2d5df] bg-[#fff7f9] px-4 py-3 text-base-content transition hover:bg-white", data: { search_item: "attente validation pending missions" } do %>
+        <%= link_to dashboard_pending_missions_path, class: "flex items-center gap-3 rounded-2xl border border-[#f2d5df] bg-[#fff7f9] px-4 py-3 text-base-content transition hover:bg-white", data: { search_item: "attente validation pending missions" } do %>
           <i class="fa-regular fa-clock text-[#ed0e64]"></i>
           <div>
             <p class="font-semibold">En attente</p>
@@ -74,7 +74,7 @@
           </div>
         <% end %>
 
-        <%= link_to invoices_path, class: "flex items-center gap-3 rounded-2xl border border-[#f2d5df] bg-[#fff7f9] px-4 py-3 text-base-content transition hover:bg-white", data: { search_item: "factures invoices finance paiement" } do %>
+        <%= link_to dashboard_invoices_path, class: "flex items-center gap-3 rounded-2xl border border-[#f2d5df] bg-[#fff7f9] px-4 py-3 text-base-content transition hover:bg-white", data: { search_item: "factures invoices finance paiement" } do %>
           <i class="fa-solid fa-file-invoice text-[#ed0e64]"></i>
           <div>
             <p class="font-semibold">Factures</p>
@@ -82,7 +82,7 @@
           </div>
         <% end %>
 
-        <%= link_to freelancer_profiles_path, class: "flex items-center gap-3 rounded-2xl border border-[#f2d5df] bg-[#fff7f9] px-4 py-3 text-base-content transition hover:bg-white", data: { search_item: "cvtheque cv profils candidats freelance" } do %>
+        <%= link_to dashboard_freelancer_profiles_path, class: "flex items-center gap-3 rounded-2xl border border-[#f2d5df] bg-[#fff7f9] px-4 py-3 text-base-content transition hover:bg-white", data: { search_item: "cvtheque cv profils candidats freelance" } do %>
           <i class="fa-solid fa-folder-open text-[#ed0e64]"></i>
           <div>
             <p class="font-semibold">CVthèque</p>
