@@ -68,18 +68,11 @@
   </div>
 
   <div class="mt-auto pt-2">
-    <div class="mt-2 flex items-center justify-between gap-2">
-      <button
-        type="button"
-        class="rounded-full border border-[#dfbcc9] bg-[#fff5f8] px-2.5 py-1 text-[11px] text-[#8b4452] transition hover:bg-[#fdeef3]"
-        onclick="document.getElementById('<%= suggestion_modal_id %>').showModal()"
-      >
-        plus d'information
-      </button>
+    <div class="mt-2 flex items-center justify-end gap-2">
       <% if mission_already_applied?(mission) %>
         <%= link_to "Deja positionne", mission_path(mission), class: "btn btn-xs rounded-full border-[#d2dfd4] bg-[#edf7ef] text-[#3b6d4d] hover:border-[#bfd5c3] hover:bg-[#e4f3e7]", rel: "noopener" %>
       <% else %>
-        <%= link_to "Se positionner", mission_path(mission), class: "btn btn-xs rounded-full border-[#e4878b] bg-[#e4878b] text-white hover:border-[#d6747d] hover:bg-[#d6747d]", rel: "noopener" %>
+        <%= link_to "Plus d'information", mission_path(mission), class: "btn btn-xs rounded-full border-[#e4878b] bg-[#e4878b] text-white hover:border-[#d6747d] hover:bg-[#d6747d]", rel: "noopener" %>
       <% end %>
     </div>
     <dialog id="<%= suggestion_modal_id %>" class="modal">

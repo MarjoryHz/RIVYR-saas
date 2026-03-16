@@ -34,6 +34,7 @@ class MissionsController < ApplicationController
   def dashboard
     authorize Mission, :index?
     return redirect_to missions_path, alert: "Le dashboard freelance est reserve aux freelances." unless current_user.role_freelance?
+    return redirect_to dashboard_invoices_path if %w[finance pilotage].include?(params[:tab].to_s)
 
     load_freelance_missions_dashboard
   end
