@@ -31,9 +31,9 @@
           <% end %>
         </li>
         <li class="freelance-sidebar__menu-item">
-          <%= link_to dashboard_freelancer_profiles_path, class: ["freelance-sidebar__item", ("freelance-sidebar__item--active" if active_controller == "freelancer_profiles")] do %>
-            <i class="fa-solid fa-user-group"></i>
-            <span>Freelances</span>
+          <%= link_to dashboard_invoices_path, class: ["freelance-sidebar__item", ("freelance-sidebar__item--active" if active_controller == "invoices")] do %>
+            <i class="fa-solid fa-file-invoice"></i>
+            <span>Facturation</span>
           <% end %>
         </li>
         <li class="freelance-sidebar__menu-item">

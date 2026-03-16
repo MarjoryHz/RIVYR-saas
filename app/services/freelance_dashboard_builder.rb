@@ -138,7 +138,7 @@ class FreelanceDashboardBuilder
       { label: "Missions actives", value: current_missions_scope.count, path: context.dashboard_my_missions_path },
       { label: "Actions en attente", value: pending_applications.count + current_missions_scope.where(contract_signed: [ false, nil ]).count, path: context.dashboard_pending_missions_path },
       { label: "Entretiens planifies", value: interviews_this_week, path: context.dashboard_my_missions_path(anchor: "agenda") },
-      { label: "Paiements a venir", value: context.helpers.number_to_currency(portfolio[:available_cents] / 100.0, unit: "€", precision: 0), path: context.dashboard_freelance_finance_path },
+      { label: "Paiements a venir", value: context.helpers.number_to_currency(portfolio[:available_cents] / 100.0, unit: "€", precision: 0), path: context.dashboard_invoices_path },
       { label: "Missions recommandees", value: recommended_missions.count, path: context.dashboard_library_missions_path(status: "open") },
       { label: "Taux de conversion", value: "#{success_rate} %", path: context.dashboard_my_missions_path(anchor: "performance") }
     ]
@@ -180,7 +180,7 @@ class FreelanceDashboardBuilder
         mission: placement.mission.title,
         deadline: "Finance prioritaire",
         action_label: "Deposer",
-        action_path: context.dashboard_freelance_finance_path
+        action_path: context.dashboard_invoices_path
       }
     end
 
@@ -357,7 +357,7 @@ class FreelanceDashboardBuilder
           waiting_for: "Validation RIVYR",
           sent_at: placement.client_invoice.issue_date&.strftime("%d/%m") || "-",
           action_label: "Ouvrir",
-          action_path: context.dashboard_freelance_finance_path
+          action_path: context.dashboard_invoices_path
         }
       end
     )
@@ -423,7 +423,7 @@ class FreelanceDashboardBuilder
           detail: placement.mission.title,
           status: "Finance",
           action_label: "Deposer",
-          action_path: context.dashboard_freelance_finance_path
+          action_path: context.dashboard_invoices_path
         }
       end
     )
