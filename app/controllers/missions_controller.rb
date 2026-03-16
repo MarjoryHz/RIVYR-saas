@@ -99,7 +99,9 @@ class MissionsController < ApplicationController
   end
 
   def show_test
-    @mission = Mission.includes(:client_contact, :region, :specialty, freelancer_profile: :user).find(472)
+    @mission = Mission.includes(:client_contact, :region, :specialty, freelancer_profile: :user).order(created_at: :desc).first
+    raise ActiveRecord::RecordNotFound, "No missions available for show_test" unless @mission
+
     authorize @mission, :show?
 
     render :show_test
