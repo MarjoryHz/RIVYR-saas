@@ -1,0 +1,37 @@
+<% if @favorite_page_context == "library" %>
+  <turbo-stream action="replace" targets="[data-favorite-target='library-card-<%= @mission.id %>']">
+    <template>
+      <%= render partial: "missions/favorite_button", formats: [ :html ], locals: {
+        mission: @mission,
+        target: "library-card-#{@mission.id}",
+        page_context: "library",
+        return_to: @favorite_return_to,
+        button_class: "absolute right-3 top-3 text-sm text-[#ed0e64] hover:text-[#c50b54]"
+      } %>
+    </template>
+  </turbo-stream>
+
+  <turbo-stream action="replace" targets="[data-favorite-target='suggestion-card-<%= @mission.id %>']">
+    <template>
+      <%= render partial: "missions/favorite_button", formats: [ :html ], locals: {
+        mission: @mission,
+        target: "suggestion-card-#{@mission.id}",
+        page_context: "library",
+        return_to: @favorite_return_to,
+        button_class: "text-sm text-[#ed0e64] hover:text-[#c50b54]"
+      } %>
+    </template>
+  </turbo-stream>
+<% else %>
+  <turbo-stream action="replace" targets="[data-favorite-target='mission-show-<%= @mission.id %>']">
+    <template>
+      <%= render partial: "missions/favorite_button", formats: [ :html ], locals: {
+        mission: @mission,
+        target: "mission-show-#{@mission.id}",
+        page_context: "show",
+        return_to: @favorite_return_to,
+        button_class: "text-sm text-[#b56c5f] hover:text-[#8f4034]"
+      } %>
+    </template>
+  </turbo-stream>
+<% end %>

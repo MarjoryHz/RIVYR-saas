@@ -1,12 +1,172 @@
 <div class="w-full max-w-none space-y-6 px-6 py-4 text-base md:px-11 md:py-5 md:text-[17px] lg:px-10">
-  <h1 class="text-3xl font-semibold tracking-tight text-base-content md:text-4xl">Bibliotheque de missions</h1>
+  <% filter_control_class = "h-10 rounded-full border-[#dfbcc9] bg-[#fff7fa] text-[#6b2f3d] shadow-sm transition hover:border-[#f4bfd2] hover:bg-[#fff2f7]" %>
+  <% filter_action_class = "inline-flex h-10 items-center gap-2 rounded-full border border-[#dfbcc9] bg-[#fff7fa] px-4 text-sm font-medium text-[#7a3a49] shadow-sm transition hover:border-[#f4bfd2] hover:bg-[#fff2f7] hover:text-[#ed0e64]" %>
+  <style>
+    .mission-fold-card {
+      position: relative;
+      overflow: visible;
+    }
+
+    .mission-fold-card:hover,
+    .mission-fold-card:focus-within {
+      z-index: 40;
+    }
+
+    .mission-fold-surface {
+      position: relative;
+      height: 100%;
+      overflow: visible;
+      border-radius: inherit;
+      background: inherit;
+      transition: clip-path 180ms ease;
+    }
+
+    .mission-fold-card:hover .mission-fold-surface {
+      clip-path: polygon(0 0, 100% 0, 100% calc(100% - 3.35rem), calc(100% - 3.35rem) 100%, 0 100%);
+    }
+
+    .mission-fold-corner {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      width: 3.35rem;
+      height: 3.35rem;
+      opacity: 0;
+      transform: translate(0.28rem, 0.28rem);
+      transform-origin: bottom right;
+      transition: opacity 140ms ease, transform 180ms ease;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .mission-fold-card:hover .mission-fold-corner {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+
+    .mission-fold-sheet {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(315deg, #fffefe 0%, #fff7fb 48%, #f6dde8 48%, #efd3df 100%);
+      border-top-left-radius: 1.15rem;
+      border-bottom-right-radius: 0.85rem;
+      box-shadow:
+        -12px -12px 20px rgba(244, 205, 221, 0.36),
+        inset 0 1px 0 rgba(255, 255, 255, 0.82);
+      overflow: hidden;
+    }
+
+    .mission-fold-sheet::after {
+      content: "";
+      position: absolute;
+      right: 0.4rem;
+      bottom: 0.35rem;
+      width: 2.8rem;
+      height: 2px;
+      transform: rotate(-45deg);
+      transform-origin: right center;
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    .mission-fold-dots {
+      position: absolute;
+      right: 0.38rem;
+      bottom: 0.95rem;
+      z-index: 11;
+      background: transparent;
+      font-size: 1rem;
+      line-height: 1;
+      letter-spacing: 0.08rem;
+      color: #4a202c;
+      opacity: 0.92;
+    }
+
+    .client-insight-help,
+    .fee-help,
+    .score-help {
+      z-index: 60;
+      border-color: rgba(242, 221, 214, 0.72);
+      background: rgba(255, 252, 254, 0.78);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 18px 40px rgba(122, 58, 73, 0.16);
+    }
+
+    .client-insight-help {
+      position: fixed;
+      z-index: 9999;
+      max-width: 16rem;
+    }
+
+    .fee-help {
+      position: fixed;
+      z-index: 9999;
+      max-width: 18rem;
+    }
+
+    .mission-info-trigger {
+      display: inline-flex;
+      height: 1rem;
+      width: 1rem;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      border-radius: 9999px;
+      border: 1px solid rgba(237, 14, 100, 0.24);
+      background: transparent;
+      color: #a15c70;
+      font-size: 0.65rem;
+      line-height: 1;
+      transition: border-color 160ms ease, color 160ms ease, background-color 160ms ease;
+    }
+
+    .mission-info-trigger:hover {
+      border-color: rgba(237, 14, 100, 0.45);
+      color: #ed0e64;
+      background: rgba(255, 255, 255, 0.42);
+    }
+
+  </style>
+  <script>
+    window.toggleMissionPopover = function(button, popoverId) {
+      const popover = document.getElementById(popoverId);
+      if (!popover) return;
+
+      const isOpen = !popover.classList.contains("hidden");
+      document.querySelectorAll("[data-floating='true']").forEach((element) => {
+        element.classList.add("hidden");
+      });
+
+      if (isOpen) return;
+
+      const rect = button.getBoundingClientRect();
+      const popoverWidth = 256;
+      const left = Math.min(window.innerWidth - popoverWidth - 16, Math.max(16, rect.right - popoverWidth));
+      const top = Math.min(window.innerHeight - 16, rect.bottom + 10);
+
+      popover.style.left = `${left}px`;
+      popover.style.top = `${top}px`;
+      popover.classList.remove("hidden");
+    };
+
+    document.addEventListener("click", function(event) {
+      if (event.target.closest(".mission-info-trigger") || event.target.closest("[data-floating='true']")) return;
+      document.querySelectorAll("[data-floating='true']").forEach((element) => {
+        element.classList.add("hidden");
+      });
+    });
+  </script>
+  <h1 class="text-3xl font-semibold tracking-tight text-base-content md:text-4xl">Bibliothèque de missions</h1>
 
   <section class="space-y-4">
     <div class="flex items-start justify-between gap-3">
       <div>
         <h2 class="text-2xl font-semibold text-[#5b2633]">Suggestions pour vous</h2>
       </div>
-      <span class="badge badge-outline badge-lg border-[#dfbcc9] bg-[#faedf2] text-[#7c3f4b]"><%= @opportunities_count %> opportunites</span>
     </div>
 
     <% if @suggested_missions.any? %>
@@ -20,133 +180,159 @@
     <% end %>
   </section>
 
+  <div class="border-t border-[#efd7e0]"></div>
+
   <section class="space-y-4">
     <div class="space-y-3">
-      <div class="flex items-start justify-between gap-3">
-        <h2 class="text-2xl font-semibold text-[#5b2633]">Bibliotheque de missions disponibles</h2>
-      </div>
-      <form id="library-filters-form" action="<%= library_missions_path %>" method="get" class="flex flex-wrap items-center gap-2">
+      <form id="library-filters-form" action="<%= library_missions_path %>" method="get" class="space-y-3">
         <input type="hidden" name="status" value="<%= @status %>" />
-        <div class="join w-full sm:w-64">
-          <input type="text" name="q" value="<%= @q %>" placeholder="Mot-cle..." class="input input-bordered join-item w-full border-[#dfbcc9] bg-[#fff7fa] text-[#6b2f3d] placeholder:text-[#bf8d9e]" />
-          <button type="submit" class="btn join-item border-[#dfbcc9] bg-[#fff2f7] text-[#7a3a49] hover:bg-[#fce7ef]">OK</button>
+        <% library_filters_open = @specialty_id.present? || @published_since.present? || @origin_badge.present? || @profile_level.present? || @location.present? %>
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="join w-full sm:max-w-[31rem]">
+            <input type="text" name="q" value="<%= @q %>" placeholder="Mot-clé..." class="input input-bordered join-item w-full border-[#dfbcc9] bg-[#fff7fa] text-[#6b2f3d] placeholder:text-[#bf8d9e]" />
+            <button type="submit" class="btn join-item h-10 border-[#dfbcc9] bg-[#fff2f7] text-[#7a3a49] shadow-sm transition hover:border-[#f4bfd2] hover:bg-[#fdebf2] hover:text-[#ed0e64]">Valider</button>
+          </div>
+
+          <div class="-ml-1 flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              class="<%= filter_action_class %> px-3 <%= @only_favorites ? 'border-[#f4bfd2] bg-[#fff2f7] text-[#ed0e64]' : '' %>"
+              aria-label="Filtrer les favoris"
+              aria-pressed="<%= @only_favorites %>"
+              onclick="const input = document.getElementById('library-only-favorites'); input.value = input.value === '1' ? '0' : '1'; this.form.requestSubmit();">
+              <i class="<%= @only_favorites ? 'fa-solid' : 'fa-regular' %> fa-heart text-sm"></i>
+              <span class="text-sm font-medium">Favoris</span>
+            </button>
+            <input type="hidden" id="library-only-favorites" name="only_favorites" value="<%= @only_favorites ? '1' : '0' %>" />
+          </div>
+
+          <button
+            type="button"
+            class="<%= filter_action_class %>"
+            aria-controls="library-more-filters"
+            aria-expanded="<%= library_filters_open %>"
+            onclick="const panel = document.getElementById('library-more-filters'); const isHidden = panel.classList.toggle('hidden'); this.setAttribute('aria-expanded', String(!isHidden)); this.querySelector('i:last-child').classList.toggle('rotate-180', !isHidden);">
+            <i class="fa-solid fa-sliders text-[#ed0e64]"></i>
+            Plus de filtres
+            <i class="fa-solid fa-angle-down text-xs text-[#ed0e64] transition <%= 'rotate-180' if library_filters_open %>"></i>
+          </button>
         </div>
-        <select name="specialty_id" class="select select-bordered w-40 rounded-full border-[#dfbcc9] bg-[#fff7fa] text-[#6b2f3d]" onchange="this.form.requestSubmit()">
-          <option value="">Specialite</option>
-          <% Specialty.order(:name).each do |specialty| %>
-            <option value="<%= specialty.id %>" <%= "selected" if @specialty_id == specialty.id.to_s %>><%= specialty.name %></option>
-          <% end %>
-        </select>
-        <select name="published_since" class="select select-bordered w-36 rounded-full border-[#dfbcc9] bg-[#fff7fa] text-[#6b2f3d]" onchange="this.form.requestSubmit()">
-          <option value="">Publication</option>
-          <option value="7" <%= "selected" if @published_since == "7" %>>7 derniers jours</option>
-          <option value="30" <%= "selected" if @published_since == "30" %>>30 derniers jours</option>
-          <option value="90" <%= "selected" if @published_since == "90" %>>90 derniers jours</option>
-        </select>
-        <select name="origin_badge" class="select select-bordered w-44 rounded-full border-[#dfbcc9] bg-[#fff7fa] text-[#6b2f3d]" onchange="this.form.requestSubmit()">
-          <option value="">Badges</option>
-          <option value="rivyr" <%= "selected" if @origin_badge == "rivyr" %>>Mission RIVYR</option>
-          <option value="freelancer" <%= "selected" if @origin_badge == "freelancer" %>>Apport freelance</option>
-          <option value="partner" <%= "selected" if @origin_badge == "partner" %>>Multi-diffusion client</option>
-        </select>
-        <select name="profile_level" class="select select-bordered w-40 rounded-full border-[#dfbcc9] bg-[#fff7fa] text-[#6b2f3d]" onchange="this.form.requestSubmit()">
-          <option value="">Niveau profil</option>
-          <option value="technicien" <%= "selected" if @profile_level == "technicien" %>>Technicien</option>
-          <option value="responsable" <%= "selected" if @profile_level == "responsable" %>>Responsable</option>
-          <option value="direction" <%= "selected" if @profile_level == "direction" %>>Direction</option>
-          <option value="executive" <%= "selected" if @profile_level == "executive" %>>Executive</option>
-        </select>
-        <select name="location" class="select select-bordered w-40 rounded-full border-[#dfbcc9] bg-[#fff7fa] text-[#6b2f3d]" onchange="this.form.requestSubmit()">
-          <option value="">Region</option>
-          <% Region.order(:name).each do |region| %>
-            <option value="<%= region.name %>" <%= "selected" if @location == region.name %>><%= region.name %></option>
-          <% end %>
-        </select>
-        <label class="label h-9 cursor-pointer justify-start gap-2 px-1 py-0">
-          <input type="checkbox" name="only_favorites" value="1" class="checkbox checkbox-sm border-[#d9b6c4]" <%= "checked" if @only_favorites %> onchange="this.form.requestSubmit()" />
-          <span class="label-text text-sm font-medium text-[#7a3a49]">Favoris</span>
-        </label>
-        <div class="flex items-center">
-          <%= link_to "Reset", library_missions_path, class: "btn btn-ghost btn-sm h-9 min-h-0 px-3 text-sm font-medium text-[#7a3a49] hover:bg-[#fce7ef]" %>
+
+        <div id="library-more-filters" class="<%= 'hidden' unless library_filters_open %> rounded-[1.45rem] border border-base-200 bg-base-100 p-4 shadow-sm">
+          <div class="flex flex-wrap items-center gap-2">
+            <select name="specialty_id" class="select select-bordered w-40 <%= filter_control_class %>" onchange="this.form.requestSubmit()">
+              <option value="">Spécialité</option>
+              <% Specialty.order(:name).each do |specialty| %>
+                <option value="<%= specialty.id %>" <%= "selected" if @specialty_id == specialty.id.to_s %>><%= specialty.name %></option>
+              <% end %>
+            </select>
+            <select name="published_since" class="select select-bordered w-36 <%= filter_control_class %>" onchange="this.form.requestSubmit()">
+              <option value="">Publication</option>
+              <option value="7" <%= "selected" if @published_since == "7" %>>7 derniers jours</option>
+              <option value="30" <%= "selected" if @published_since == "30" %>>30 derniers jours</option>
+              <option value="90" <%= "selected" if @published_since == "90" %>>90 derniers jours</option>
+            </select>
+            <select name="origin_badge" class="select select-bordered w-44 <%= filter_control_class %>" onchange="this.form.requestSubmit()">
+              <option value="">Badges</option>
+              <option value="rivyr" <%= "selected" if @origin_badge == "rivyr" %>>Mission RIVYR</option>
+              <option value="freelancer" <%= "selected" if @origin_badge == "freelancer" %>>Apport freelance</option>
+              <option value="partner" <%= "selected" if @origin_badge == "partner" %>>Multi-diffusion client</option>
+            </select>
+            <select name="profile_level" class="select select-bordered w-40 <%= filter_control_class %>" onchange="this.form.requestSubmit()">
+              <option value="">Niveau profil</option>
+              <option value="technicien" <%= "selected" if @profile_level == "technicien" %>>Technicien</option>
+              <option value="responsable" <%= "selected" if @profile_level == "responsable" %>>Responsable</option>
+              <option value="direction" <%= "selected" if @profile_level == "direction" %>>Direction</option>
+              <option value="executive" <%= "selected" if @profile_level == "executive" %>>Exécutif</option>
+            </select>
+            <select name="location" class="select select-bordered w-40 <%= filter_control_class %>" onchange="this.form.requestSubmit()">
+              <option value="">Région</option>
+              <% Region.order(:name).each do |region| %>
+                <option value="<%= region.name %>" <%= "selected" if @location == region.name %>><%= region.name %></option>
+              <% end %>
+            </select>
+            <div class="flex items-center">
+              <%= link_to "Réinitialiser", library_missions_path, class: "#{filter_action_class} px-3" %>
+            </div>
+          </div>
         </div>
       </form>
     </div>
 
     <% if @library_missions_available.any? %>
-      <div class="grid gap-3 md:grid-cols-2">
+      <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         <% @library_missions_available.each do |mission| %>
           <% client_insight = mission_client_insight(mission) %>
           <% library_fee = mission_fee_breakdown_for(mission) %>
           <% priority_badge = mission_priority_badge(mission) %>
           <% info_modal_id = "library_info_modal_#{mission.id}" %>
+          <% client_popover_id = "library_client_insight_#{mission.id}" %>
+          <% fee_popover_id = "library_fee_insight_#{mission.id}" %>
           <% pitch_points = mission_pitch_points(mission) %>
           <% context_text = pitch_points.find { |point| point.start_with?("Contexte:") }.to_s.sub("Contexte:", "").strip %>
           <% mission_text = pitch_points.find { |point| point.start_with?("Mission:") }.to_s.sub("Mission:", "").strip %>
           <% company_text = pitch_points.find { |point| point.start_with?("Entreprise:") }.to_s.sub("Entreprise:", "").strip %>
-          <article class="relative flex min-h-[14rem] flex-col rounded-xl border border-[#ead2dc] bg-[#fff8fb]/95 p-3 shadow-sm">
-            <%= button_to toggle_favorite_mission_path(mission, return_to: request.fullpath), method: :post, class: "absolute right-3 top-3 text-sm text-[#b56c5f] hover:text-[#8f4034]" do %>
-              <i class="<%= favorite_mission?(mission) ? 'fa-solid' : 'fa-regular' %> fa-heart"></i>
-            <% end %>
+          <article id="library-mission-card-<%= mission.id %>" class="mission-fold-card group relative flex min-h-[14rem] cursor-pointer flex-col rounded-xl bg-[#fff8fb]/95" onclick="if (!event.target.closest('a,button,form,dialog,.modal,.modal-box')) { window.location.href = '<%= mission_path(mission) %>'; }">
+            <div class="mission-fold-surface flex min-h-[14rem] flex-col rounded-xl border border-[#ead2dc] bg-[#fff8fb]/95 p-3 shadow-sm">
+              <%= render "missions/favorite_button",
+                mission: mission,
+                target: "library-card-#{mission.id}",
+                page_context: "library",
+                return_to: request.fullpath,
+                button_class: "absolute right-3 top-3 text-sm text-[#ed0e64] hover:text-[#c50b54]" %>
 
-            <div class="mb-2 flex items-start justify-between gap-2 pr-6">
-              <div class="badge badge-sm border-0 <%= priority_badge[:classes] %>"><%= priority_badge[:label] %></div>
-              <span class="badge badge-sm border-0 bg-[#f5dce4] text-[#8f4a58]"><%= mission_available_since_label(mission) %></span>
-            </div>
-
-            <h3 class="truncate text-[1.08rem] font-semibold leading-tight text-base-content" title="<%= mission.title %>"><%= mission.title %></h3>
-
-            <div class="mt-1 flex w-full items-center gap-2">
-              <span class="relative inline-flex items-center gap-1" onmouseenter="this.querySelector('.client-insight-help').classList.remove('hidden')" onmouseleave="this.querySelector('.client-insight-help').classList.add('hidden')">
-                <span class="inline-flex items-center gap-1 truncate text-[14px] font-medium text-base-content/70"><i class="fa-solid fa-handshake-angle text-[#c26f5f]"></i><%= mission_client_label(mission) %></span>
-                <span class="rating rating-xs">
-                  <% (1..5).each do |star| %>
-                    <span class="mask mask-star <%= star <= client_insight[:stars] ? 'bg-[#7f2f2a]' : 'bg-base-300' %>"></span>
-                  <% end %>
-                </span>
-                <span class="client-insight-help pointer-events-none absolute left-0 top-full z-40 mt-1 hidden w-64 rounded-xl border border-[#f2ddd6] bg-base-100 px-2.5 py-2 text-[10px] text-base-content/75 shadow-lg">
-                  <span class="mb-1 block text-[11px] font-semibold text-[#6f332b]">Detail relation client (3 ans)</span>
-                  <span class="flex justify-between"><span>Reactivite</span><span><%= client_insight[:reactivity] %>/5</span></span>
-                  <span class="flex justify-between"><span>Longueur process</span><span><%= client_insight[:process_length] %>/5</span></span>
-                  <span class="flex justify-between"><span>Interet geographique</span><span><%= client_insight[:geo_interest] %>/5</span></span>
-                  <span class="flex justify-between"><span>Garanties</span><span><%= client_insight[:guarantees] %>/5</span></span>
-                  <span class="mt-1 block border-t border-[#f2ddd6] pt-1">Temps moyen <%= client_insight[:avg_days].presence || "-" %> jours</span>
-                </span>
-              </span>
-
-              <span class="relative inline-flex items-center gap-1" onmouseenter="this.querySelector('.fee-help').classList.remove('hidden')" onmouseleave="this.querySelector('.fee-help').classList.add('hidden')">
-                <span class="inline-flex items-center gap-1 text-[14px] font-medium text-base-content"><i class="fa-solid fa-sack-dollar text-[#c26f5f]"></i><%= mission_fee_label(mission) %></span>
-                <span class="fee-help pointer-events-none absolute right-0 top-full z-40 mt-1 hidden w-72 rounded-xl border border-[#f2ddd6] bg-base-100 px-2.5 py-2 text-[10px] text-base-content/75 shadow-lg">
-                  <span class="mb-1 block text-[11px] font-semibold text-[#6f332b]">Calcul du fee</span>
-                  <span class="flex justify-between"><span>Remuneration cible moyenne</span><span><%= format_amount(library_fee[:salary_average]) %>EUR</span></span>
-                  <span class="flex justify-between"><span>Honoraires contrat</span><span><%= (library_fee[:contract_rate] * 100).round %>%</span></span>
-                  <span class="flex justify-between"><span>Part freelance (statut label)</span><span><%= (library_fee[:freelance_rate] * 100).round %>%</span></span>
-                  <span class="mt-1 block border-t border-[#f2ddd6] pt-1 font-semibold text-[#6f332b]"><%= mission_fee_label(mission) %></span>
-                </span>
-              </span>
-            </div>
-
-            <div class="mt-2 space-y-1 text-[14px] font-medium text-base-content/70">
-              <p class="truncate"><i class="fa-solid fa-location-dot mr-1 text-[#c26f5f]"></i><%= mission.region&.name || mission.location %> <span class="mx-1">•</span> <i class="fa-solid fa-briefcase mr-1 text-[#c26f5f]"></i><%= mission.client_contact.client.sector.presence || "Secteur a confirmer" %></p>
-            </div>
-
-            <div class="mt-2 space-y-1 text-sm font-medium text-base-content/75">
-              <div class="flex items-start gap-2">
-                <span class="mt-[2px] rounded-md bg-[#f6dbe3] px-2 py-0.5 text-xs font-medium leading-none text-[#7f2f2a]">Mission</span>
-                <span class="line-clamp-3 min-h-[4.5rem] leading-relaxed"><%= mission_text %></span>
+              <div class="relative z-10 mb-2 flex items-start justify-between gap-2 pr-6">
+                <div class="badge badge-sm border-0 <%= priority_badge[:classes] %>"><%= priority_badge[:label] %></div>
+                <span class="badge badge-sm border-0 bg-[#f5dce4] text-[#8f4a58]"><%= mission_available_since_label(mission) %></span>
               </div>
-            </div>
 
-            <div class="mt-auto flex items-end justify-end pt-3">
-              <% if mission_already_applied?(mission) %>
-                <%= link_to "Deja positionne", mission_path(mission), class: "btn btn-xs rounded-full border-[#d2dfd4] bg-[#edf7ef] text-[#3b6d4d] hover:border-[#bfd5c3] hover:bg-[#e4f3e7]", rel: "noopener" %>
-              <% else %>
-                <%= link_to "Plus d'information", mission_path(mission), class: "btn btn-xs rounded-full border-[#e4878b] bg-[#e4878b] text-white hover:border-[#d6747d] hover:bg-[#d6747d]", rel: "noopener" %>
-              <% end %>
+              <h3 class="relative z-10 truncate text-[1.08rem] font-semibold leading-tight text-base-content" title="<%= mission.title %>"><%= mission.title %></h3>
+
+              <div class="relative z-10 mt-2 space-y-1 text-[14px] font-medium text-base-content/70">
+                <p class="flex items-start gap-1.5 leading-[1.35rem]"><i class="fa-solid fa-location-dot mt-[0.15rem] text-[#ed0e64]"></i><span class="truncate"><%= mission.region&.name || mission.location %></span></p>
+                <p class="flex items-start gap-1.5 leading-[1.35rem]">
+                  <i class="fa-solid fa-building mt-[0.15rem] text-[#ed0e64]"></i>
+                  <span class="min-w-0 truncate"><%= mission_company_segment(mission) == "Grand compte" ? "Gd. Compte" : mission_company_segment(mission) %></span>
+                  <span class="shrink-0 text-base-content/35">|</span>
+                  <span class="min-w-0 truncate"><%= mission.client_contact.client.sector.presence || "Secteur à confirmer" %></span>
+                </p>
+                <span class="relative inline-flex min-w-0 items-center gap-1 leading-[1.35rem]">
+                  <span class="inline-flex min-w-0 items-center gap-1 truncate"><i class="fa-solid fa-handshake-angle text-[#ed0e64]"></i><span class="truncate"><%= mission_client_label(mission) %></span></span>
+                  <span class="rating rating-xs shrink-0">
+                    <% (1..5).each do |star| %>
+                      <span class="mask mask-star <%= star <= client_insight[:stars] ? 'bg-[#7f2f2a]' : 'bg-base-300' %>"></span>
+                    <% end %>
+                  </span>
+                  <span class="relative inline-flex shrink-0">
+                    <button type="button" class="mission-info-trigger" aria-label="Voir le détail du calcul client" onclick="event.stopPropagation(); window.toggleMissionPopover(this, '<%= client_popover_id %>')">i</button>
+                  </span>
+                </span>
+              </div>
+
+              <div class="relative z-10 mt-2 space-y-1 text-sm font-medium text-base-content/75">
+                <div class="flex items-start gap-2">
+                  <span class="mt-[2px] rounded-md bg-[#f6dbe3] px-2 py-0.5 text-xs font-medium leading-none text-[#7f2f2a]">Mission</span>
+                  <span class="line-clamp-3 min-h-[4.5rem] leading-relaxed"><%= mission_text %></span>
+                </div>
+              </div>
+
+              <div class="relative z-10 mt-auto flex items-end justify-between gap-3 pt-3">
+                <span class="relative inline-flex items-center gap-1">
+                  <span class="inline-flex items-center gap-1 text-[14px] font-medium text-base-content"><i class="fa-solid fa-sack-dollar text-[#ed0e64]"></i><%= mission_fee_label(mission) %></span>
+                  <span class="relative inline-flex shrink-0">
+                    <button type="button" class="mission-info-trigger" aria-label="Voir le détail du calcul des honoraires" onclick="event.stopPropagation(); window.toggleMissionPopover(this, '<%= fee_popover_id %>')">i</button>
+                  </span>
+                </span>
+
+                <% if mission_already_applied?(mission) %>
+                  <%= link_to "Déjà positionné", mission_path(mission), class: "btn btn-xs shrink-0 rounded-full border-[#d2dfd4] bg-[#edf7ef] text-[#3b6d4d] hover:border-[#bfd5c3] hover:bg-[#e4f3e7]", rel: "noopener" %>
+                <% end %>
+              </div>
             </div>
 
             <dialog id="<%= info_modal_id %>" class="modal">
               <div class="modal-box max-w-md rounded-2xl border border-[#ead5ce] bg-base-100">
-                <h3 class="text-base font-semibold text-[#6f332b]">Plus d'information</h3>
+                <h3 class="text-base font-semibold text-[#6f332b]">Plus d'informations</h3>
                 <p class="mt-1 truncate text-sm text-base-content/70"><%= mission.title %></p>
                 <div class="mt-3 space-y-2 text-sm text-base-content/75">
                   <p><strong>Contexte</strong> <%= context_text %></p>
@@ -158,6 +344,28 @@
               </div>
               <form method="dialog" class="modal-backdrop"><button>close</button></form>
             </dialog>
+
+            <span id="<%= client_popover_id %>" data-floating="true" class="client-insight-help hidden w-64 rounded-xl border px-2.5 py-2 text-[10px] text-base-content/75 shadow-lg">
+              <span class="mb-1 block text-[11px] font-semibold text-[#6f332b]">Détail relation client (3 ans)</span>
+              <span class="flex justify-between"><span>Réactivité</span><span><%= client_insight[:reactivity] %>/5</span></span>
+              <span class="flex justify-between"><span>Longueur du processus</span><span><%= client_insight[:process_length] %>/5</span></span>
+              <span class="flex justify-between"><span>Intérêt géographique</span><span><%= client_insight[:geo_interest] %>/5</span></span>
+              <span class="flex justify-between"><span>Garanties</span><span><%= client_insight[:guarantees] %>/5</span></span>
+              <span class="mt-1 block border-t border-[#f2ddd6] pt-1">Temps moyen <%= client_insight[:avg_days].presence || "-" %> jours</span>
+            </span>
+
+            <span id="<%= fee_popover_id %>" data-floating="true" class="fee-help hidden w-72 rounded-xl border px-2.5 py-2 text-[10px] text-base-content/75 shadow-lg">
+              <span class="mb-1 block text-[11px] font-semibold text-[#6f332b]">Calcul des honoraires</span>
+              <span class="flex justify-between"><span>Rémunération cible moyenne</span><span><%= format_amount(library_fee[:salary_average]) %>EUR</span></span>
+              <span class="flex justify-between"><span>Honoraires contrat</span><span><%= (library_fee[:contract_rate] * 100).round %>%</span></span>
+              <span class="flex justify-between"><span>Part freelance</span><span><%= (library_fee[:freelance_rate] * 100).round %>%</span></span>
+              <span class="mt-1 block border-t border-[#f2ddd6] pt-1 font-semibold text-[#6f332b]"><%= mission_fee_label(mission) %></span>
+            </span>
+
+            <div class="mission-fold-corner">
+              <span class="mission-fold-sheet"></span>
+              <span class="mission-fold-dots">...</span>
+            </div>
           </article>
         <% end %>
       </div>
@@ -168,3 +376,35 @@
     <%= render "shared/pagination", page: @page, total_pages: @total_pages, extra_params: { q: @q, status: @status, specialty_id: @specialty_id, published_since: @published_since, origin_badge: @origin_badge, profile_level: @profile_level, location: @location, only_favorites: (@only_favorites ? "1" : nil) }, path: ->(params) { library_missions_path(params) } %>
   </section>
 </div>
+
+<button
+  type="button"
+  id="library-scroll-top"
+  class="pointer-events-none fixed bottom-6 right-6 z-50 inline-flex h-11 w-11 translate-y-2 items-center justify-center rounded-full border border-base-200 bg-base-100/85 text-[#ed0e64] opacity-0 shadow-sm transition duration-200 hover:bg-base-100 hover:text-[#c50b54]"
+  aria-label="Revenir en haut de la page"
+  onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">
+  <i class="fa-solid fa-arrow-up text-base"></i>
+</button>
+
+<script>
+  (() => {
+    const button = document.getElementById("library-scroll-top");
+
+    const toggleScrollTopButton = () => {
+      const visible = window.scrollY > 260;
+      button.classList.toggle("pointer-events-none", !visible);
+      button.classList.toggle("opacity-0", !visible);
+      button.classList.toggle("translate-y-2", !visible);
+      button.classList.toggle("opacity-100", visible);
+      button.classList.toggle("translate-y-0", visible);
+    };
+
+    if (button) {
+      toggleScrollTopButton();
+      window.addEventListener("scroll", toggleScrollTopButton, { passive: true });
+    }
+    document.addEventListener("turbo:load", () => {
+      if (button) toggleScrollTopButton();
+    }, { once: true });
+  })();
+</script>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_15_123000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_16_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -71,6 +71,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_123000) do
     t.string "status"
     t.datetime "updated_at", null: false
     t.index ["placement_id"], name: "index_commissions_on_placement_id"
+  end
+
+  create_table "favorite_missions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "mission_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["mission_id"], name: "index_favorite_missions_on_mission_id"
+    t.index ["user_id", "mission_id"], name: "index_favorite_missions_on_user_id_and_mission_id", unique: true
+    t.index ["user_id"], name: "index_favorite_missions_on_user_id"
   end
 
   create_table "freelance_mission_applications", force: :cascade do |t|
@@ -160,7 +170,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_123000) do
     t.string "mission_type"
     t.date "opened_at"
     t.string "origin_type"
-    t.string "pipeline_stage", default: "sourcing_candidates", null: false
     t.string "priority_level"
     t.string "reference"
     t.bigint "region_id", null: false
@@ -281,6 +290,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_123000) do
   add_foreign_key "client_contacts", "clients"
   add_foreign_key "client_contacts", "users"
   add_foreign_key "commissions", "placements"
+  add_foreign_key "favorite_missions", "missions"
+  add_foreign_key "favorite_missions", "users"
   add_foreign_key "freelance_mission_applications", "freelancer_profiles"
   add_foreign_key "freelance_mission_applications", "missions"
   add_foreign_key "freelance_mission_preferences", "freelancer_profiles"

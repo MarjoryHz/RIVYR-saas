@@ -1,0 +1,5 @@
+<span data-favorite-target="<%= target %>">
+  <%= button_to toggle_favorite_mission_path(mission, return_to: return_to, page_context: page_context), method: :post, class: button_class do %>
+    <i class="<%= favorite_mission?(mission) ? 'fa-solid' : 'fa-regular' %> fa-heart"></i>
+  <% end %>
+</span>

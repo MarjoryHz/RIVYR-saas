@@ -13,6 +13,8 @@ class Mission < ApplicationRecord
   has_one :placement, dependent: :destroy
   has_many :freelance_mission_preferences, dependent: :destroy
   has_many :freelance_mission_applications, dependent: :destroy
+  has_many :favorite_missions, dependent: :destroy
+  has_many :favorited_by_users, through: :favorite_missions, source: :user
 
   validates :title, presence: true
   validates :reference, presence: true
