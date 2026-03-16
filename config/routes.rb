@@ -17,6 +17,7 @@ Rails.application.routes.draw do
     post "community/replies", to: "pages#create_community_reply", as: :community_replies
     post "community/reactions", to: "pages#create_community_reaction", as: :community_reactions
     get "missions", to: "missions#index", as: :missions
+    get "missions-tests", to: "missions#show_test", as: :test_mission
     get "missions/my", to: "missions#my_missions", as: :my_missions
     get "missions/pending", to: "missions#pending_missions", as: :pending_missions
     get "missions/library", to: "missions#library", as: :library_missions

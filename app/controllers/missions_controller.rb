@@ -93,6 +93,13 @@ class MissionsController < ApplicationController
     authorize @mission
   end
 
+  def show_test
+    @mission = Mission.includes(:client_contact, :region, :specialty, freelancer_profile: :user).find(472)
+    authorize @mission, :show?
+
+    render :show_test
+  end
+
   def my_missions
     authorize Mission
 
