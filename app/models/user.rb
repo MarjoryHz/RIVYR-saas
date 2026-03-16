@@ -17,6 +17,8 @@ class User < ApplicationRecord
   has_many :payout_requests, dependent: :destroy
   has_many :todo_categories, dependent: :destroy
   has_many :todo_tasks, dependent: :destroy
+  has_many :favorite_missions, dependent: :destroy
+  has_many :favorited_missions, through: :favorite_missions, source: :mission
 
   validates :first_name, presence: true
   validates :last_name, presence: true

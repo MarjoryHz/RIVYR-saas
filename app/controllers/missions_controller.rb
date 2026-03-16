@@ -75,17 +75,22 @@ class MissionsController < ApplicationController
   end
 
   def toggle_favorite
+    @mission ||= Mission.includes(:client_contact, :region, :specialty, freelancer_profile: :user).find(params[:id])
     authorize @mission, :show?
+    @favorite_page_context = params[:page_context].presence || "library"
+    @favorite_return_to = params[:return_to].presence || library_missions_path(status: "open")
 
-    ids = favorite_mission_ids
-    if ids.include?(@mission.id)
-      ids.delete(@mission.id)
+    favorite = current_user.favorite_missions.find_by(mission_id: @mission.id)
+    if favorite.present?
+      favorite.destroy!
     else
-      ids << @mission.id
+      current_user.favorite_missions.create!(mission: @mission)
     end
-    session[:favorite_library_mission_ids] = ids.uniq
 
-    redirect_to params[:return_to].presence || library_missions_path(status: "open")
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_to @favorite_return_to }
+    end
   end
 
   def show
@@ -476,9 +481,34 @@ class MissionsController < ApplicationController
 
   def mission_available_since_label(mission)
     started_at = mission.opened_at || mission.created_at&.to_date
-    return "Date a confirmer" if started_at.blank?
+    return "Date à confirmer" if started_at.blank?
 
-    "#{helpers.time_ago_in_words(started_at).sub(/^about /, "")} ago"
+    time_label = helpers.time_ago_in_words(started_at).dup
+    {
+      "about " => "",
+      "environ " => "",
+      "less than a minute" => "moins d'une minute",
+      "1 minute" => "1 minute",
+      "minutes" => "minutes",
+      "1 hour" => "1 heure",
+      "hours" => "heures",
+      "1 day" => "1 jour",
+      "days" => "jours",
+      "1 week" => "1 semaine",
+      "weeks" => "semaines",
+      "about 1 month" => "1 mois",
+      "1 month" => "1 mois",
+      "months" => "mois",
+      "about 1 year" => "1 an",
+      "over 1 year" => "plus d'un an",
+      "almost 2 years" => "presque 2 ans",
+      "1 year" => "1 an",
+      "years" => "ans"
+    }.each do |source, target|
+      time_label.gsub!(source, target)
+    end
+
+    "Il y a #{time_label}"
   end
 
   def mission_company_masked(mission)
@@ -525,9 +555,9 @@ class MissionsController < ApplicationController
 
   def mission_fee_label(mission)
     breakdown = mission_fee_breakdown_for(mission)
-    return "Fee a estimer" if breakdown[:fee_amount].zero?
+    return "Fee estimé à confirmer" if breakdown[:fee_amount].zero?
 
-    "Fee #{format_amount(breakdown[:fee_amount])}EUR"
+    "Fee estimé #{format_amount(breakdown[:fee_amount])} EUR"
   end
 
   def mission_fee_breakdown_for(mission)
@@ -711,15 +741,15 @@ class MissionsController < ApplicationController
 
     case level
     when "critical"
-      { label: "CRITICAL", classes: "bg-[#a84b4f] text-white" }
+      { label: "CRITIQUE", classes: "bg-[#a84b4f] text-white" }
     when "high"
-      { label: "HIGH", classes: "bg-[#dc7b67] text-white" }
+      { label: "HAUTE", classes: "bg-[#dc7b67] text-white" }
     when "medium"
-      { label: "MEDIUM", classes: "bg-[#f09a6f] text-white" }
+      { label: "MOYENNE", classes: "bg-[#f09a6f] text-white" }
     when "low"
-      { label: "LOW", classes: "bg-[#f4d0c5] text-[#7f2f2a]" }
+      { label: "BASSE", classes: "bg-[#f4d0c5] text-[#7f2f2a]" }
     else
-      { label: mission.priority_level.presence&.upcase || "PRIORITE", classes: "bg-[#f4d0c5] text-[#7f2f2a]" }
+      { label: mission.priority_level.presence&.upcase || "PRIORITÉ", classes: "bg-[#f4d0c5] text-[#7f2f2a]" }
     end
   end
 
@@ -732,8 +762,9 @@ class MissionsController < ApplicationController
   end
 
   def favorite_mission_ids
-    session[:favorite_library_mission_ids] ||= []
-    session[:favorite_library_mission_ids].map(&:to_i)
+    return [] unless current_user
+
+    @favorite_mission_ids ||= current_user.favorite_missions.pluck(:mission_id)
   end
 
   def applied_library_mission_ids
