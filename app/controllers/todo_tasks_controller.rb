@@ -14,10 +14,11 @@ class TodoTasksController < ApplicationController
     @todo_task = current_user.todo_tasks.find(params[:id])
     authorize @todo_task
 
+    return_to = params[:return_to].presence || todo_list_path
     if @todo_task.update(todo_task_params)
-      redirect_to todo_list_path, notice: "Tache mise a jour."
+      redirect_to return_to, notice: "Tache mise a jour."
     else
-      redirect_to todo_list_path, alert: @todo_task.errors.full_messages.to_sentence
+      redirect_to return_to, alert: @todo_task.errors.full_messages.to_sentence
     end
   end
 

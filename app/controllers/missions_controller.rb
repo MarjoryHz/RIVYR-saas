@@ -343,6 +343,41 @@ class MissionsController < ApplicationController
     ::FreelanceDashboardBuilder.new(context: self, current_user: current_user).build.each do |key, value|
       instance_variable_set("@#{key}", value)
     end
+
+    load_dashboard_summary_from_my_missions_data
+  end
+
+  def load_dashboard_summary_from_my_missions_data
+    freelancer_profile = current_user.freelancer_profile
+
+    scope = policy_scope(Mission)
+      .includes(:client_contact, :region, :specialty, freelancer_profile: :user, placement: :commission)
+      .joins(:freelancer_profile)
+      .where(freelancer_profiles: { user_id: current_user.id })
+      .where(status: %w[open in_progress])
+      .order(created_at: :desc)
+
+    preference_map = if freelancer_profile.present?
+      freelancer_profile.freelance_mission_preferences.where(mission_id: scope.select(:id)).index_by(&:mission_id)
+    else
+      {}
+    end
+
+    current_missions = scope.sort_by do |mission|
+      urgent_rank = preference_map[mission.id]&.urgent? ? 0 : 1
+      started_on = mission.started_at || mission.opened_at || mission.created_at.to_date
+      [ urgent_rank, started_on ]
+    end
+
+    mission_rows = current_missions.map { |mission| build_my_mission_row(mission, preference_map[mission.id]) }
+
+    @total_potential_cents = mission_rows.sum { |row| row[:potential_cents] }
+    @average_open_days = if mission_rows.any?
+      (mission_rows.sum { |row| row[:open_days] } / mission_rows.size.to_f).round
+    else
+      0
+    end
+    @total_sent_candidates = mission_rows.sum { |row| row[:sent_candidates_count] }
   end
 
   def build_my_mission_row(mission, preference = nil)

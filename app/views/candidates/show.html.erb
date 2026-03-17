@@ -1,24 +1,253 @@
-<div class="max-w-4xl mx-auto p-6 space-y-6">
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-bold"><%= [@candidate.first_name, @candidate.last_name].join(" ") %></h1>
-    <div class="flex gap-2">
-      <%= link_to "Modifier", edit_candidate_path(@candidate), class: "btn btn-primary" %>
-      <%= link_to "Supprimer", candidate_path(@candidate), data: { turbo_method: :delete, turbo_confirm: "Confirmer la suppression ?" }, class: "btn btn-error" %>
+<% is_favorite = current_user.favorite_candidates.exists?(candidate_id: @candidate.id) %>
+<%
+  status_config = {
+    "new"          => { label: "À qualifier",    bg: "bg-slate-100",   text: "text-slate-600",   ring: "ring-slate-200"   },
+    "qualified"    => { label: "Qualifié Rivyr", bg: "bg-[#FDE7F1]",   text: "text-[#B40C4D]",   ring: "ring-[#F7C4DA]"   },
+    "presented"    => { label: "Présenté",        bg: "bg-sky-50",      text: "text-sky-700",     ring: "ring-sky-200"     },
+    "interviewing" => { label: "En entretien",    bg: "bg-emerald-50",  text: "text-emerald-700", ring: "ring-emerald-200" },
+    "placed"       => { label: "Placé",           bg: "bg-emerald-100", text: "text-emerald-800", ring: "ring-emerald-300" }
+  }
+  badge = status_config[@candidate.status] || status_config["new"]
+  avatar_index = (@candidate.id || @candidate.email.to_s.sum) % 10 + 1
+  last_title = @candidate.job_titles&.last
+  whatsapp_number = @candidate.phone.to_s.gsub(/\D/, '')
+%>
+
+<div class="w-full max-w-none px-6 py-5 md:px-11 lg:px-10">
+  <div class="space-y-4">
+
+    <%# ── Hero ── %>
+    <section class="relative overflow-hidden rounded-3xl border border-[#ead2dc] bg-gradient-to-br from-[#fff0f6] via-[#fde4ef] to-[#ffd6e8] p-6">
+      <div class="relative z-10 flex items-center gap-5">
+        <%= image_tag "avatars/avatar-#{format('%02d', avatar_index)}.png",
+              alt: "#{@candidate.first_name} #{@candidate.last_name}",
+              class: "h-24 w-24 rounded-full object-cover ring-4 ring-white shadow-md shrink-0" %>
+        <div class="space-y-2">
+          <h1 class="text-3xl font-bold text-[#3d1a24] md:text-4xl"><%= @candidate.first_name %> <%= @candidate.last_name %></h1>
+          <% if last_title.present? %>
+            <p class="text-[15px] font-medium text-[#7b4b5a]"><%= last_title %></p>
+          <% end %>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="inline-flex items-center rounded-full px-4 py-1.5 text-sm font-semibold ring-1 <%= badge[:bg] %> <%= badge[:text] %> <%= badge[:ring] %>"><%= badge[:label] %></span>
+            <% if @candidate.source.present? %>
+              <span class="inline-flex items-center rounded-full bg-[#e8e0f5] px-4 py-1.5 text-sm font-semibold text-[#6b4fa8]"><%= @candidate.source.humanize %></span>
+            <% end %>
+          </div>
+        </div>
+      </div>
+      <span class="pointer-events-none absolute -right-6 -top-6 h-36 w-36 rounded-full bg-white/20"></span>
+      <span class="pointer-events-none absolute right-20 top-6 h-14 w-14 rounded-full bg-white/30"></span>
+      <span class="pointer-events-none absolute right-8 bottom-4 h-9 w-9 rounded-full bg-white/20"></span>
+      <span class="pointer-events-none absolute right-40 bottom-2 h-6 w-6 rounded-full bg-white/25"></span>
+    </section>
+
+    <%# ── Tabs ── %>
+    <div class="flex items-center gap-1 rounded-2xl border border-[#ead2dc] bg-[#fff8fb]/95 p-1">
+      <span class="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-[#5b2633] shadow-sm">
+        <i class="fa-regular fa-user text-[#ed0e64]"></i> Profil
+      </span>
+      <span class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium text-[#9a5a68]">
+        <i class="fa-regular fa-note-sticky text-[#ed0e64]"></i> Notes
+      </span>
+      <span class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium text-[#9a5a68]">
+        <i class="fa-regular fa-file text-[#ed0e64]"></i> CV et Docs
+      </span>
+      <span class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium text-[#9a5a68]">
+        <i class="fa-regular fa-clock text-[#ed0e64]"></i> Historique
+      </span>
     </div>
-  </div>
 
-  <div class="grid md:grid-cols-2 gap-4">
-    <p><strong>Email:</strong> <%= @candidate.email.presence || "-" %></p>
-    <p><strong>Telephone:</strong> <%= @candidate.phone.presence || "-" %></p>
-    <p><strong>LinkedIn:</strong> <%= @candidate.linkedin_url.presence || "-" %></p>
-    <p><strong>Statut:</strong> <%= @candidate.status.presence || "-" %></p>
-    <p><strong>Source:</strong> <%= @candidate.source.presence || "-" %></p>
-  </div>
+    <%# ── 3 colonnes ── %>
+    <div class="grid gap-4 xl:grid-cols-[1fr_2fr_1fr]">
 
-  <div>
-    <p><strong>Notes:</strong></p>
-    <p><%= @candidate.notes.presence || "-" %></p>
-  </div>
+      <%# ── Gauche : Informations + contacts ── %>
+      <div class="space-y-4">
+        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+          <h3 class="text-lg font-semibold text-[#5b2633]">Informations</h3>
+          <dl class="mt-4 space-y-3 text-[14px]">
+            <div class="flex items-center justify-between gap-2">
+              <dt class="text-[#9a5a68]">Statut</dt>
+              <dd><span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 <%= badge[:bg] %> <%= badge[:text] %> <%= badge[:ring] %>"><%= badge[:label] %></span></dd>
+            </div>
+            <% if @candidate.source.present? %>
+              <div class="flex items-center justify-between gap-2">
+                <dt class="text-[#9a5a68]">Source</dt>
+                <dd class="font-semibold text-[#4c1f2a]"><%= @candidate.source.humanize %></dd>
+              </div>
+            <% end %>
+            <div class="flex items-center justify-between gap-2">
+              <dt class="text-[#9a5a68]">Placements</dt>
+              <dd class="font-semibold text-[#4c1f2a]"><%= @candidate.placements.size %></dd>
+            </div>
+            <% if @candidate.skills&.any? %>
+              <div>
+                <dt class="mb-2 text-[#9a5a68]">Compétences</dt>
+                <dd class="flex flex-wrap gap-1.5">
+                  <% @candidate.skills.each do |skill| %>
+                    <span class="rounded-full border border-[#ead2dc] bg-white px-2.5 py-1 text-xs font-semibold text-[#6b3f4f]"><%= skill %></span>
+                  <% end %>
+                </dd>
+              </div>
+            <% end %>
+          </dl>
+        </article>
 
-  <%= link_to "Retour a la liste", request.path.start_with?("/dashboard") ? dashboard_candidates_path : candidates_path, class: "btn" %>
+        <%# Contact card %>
+        <div class="rounded-2xl border border-[#ead2dc] bg-white/80 p-4 space-y-2.5 text-[13px] text-[#5c3143]">
+          <% if @candidate.email.present? %>
+            <%= mail_to @candidate.email, class: "flex items-center gap-2 hover:text-[#ed0e64] transition" do %>
+              <i class="fa-solid fa-envelope w-4 text-center text-[#ed0e64]"></i>
+              <span class="truncate"><%= @candidate.email %></span>
+            <% end %>
+          <% end %>
+          <% if @candidate.phone.present? %>
+            <p class="flex items-center gap-2">
+              <i class="fa-solid fa-phone w-4 text-center text-[#ed0e64]"></i>
+              <span><%= @candidate.phone %></span>
+            </p>
+          <% end %>
+          <% if @candidate.location.present? %>
+            <p class="flex items-center gap-2">
+              <i class="fa-solid fa-location-dot w-4 text-center text-[#ed0e64]"></i>
+              <span><%= @candidate.location %></span>
+            </p>
+          <% end %>
+          <div class="flex items-center gap-2 pt-1">
+            <% if @candidate.linkedin_url.present? %>
+              <%= link_to @candidate.linkedin_url, target: "_blank", rel: "noopener",
+                    class: "inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#0A66C2] text-white hover:bg-[#004182] transition" do %>
+                <i class="fa-brands fa-linkedin-in text-xs"></i>
+              <% end %>
+            <% else %>
+              <span class="inline-flex h-7 w-7 items-center justify-center rounded-full border border-base-200 bg-base-200/50 text-base-content/25">
+                <i class="fa-brands fa-linkedin-in text-xs"></i>
+              </span>
+            <% end %>
+            <% if whatsapp_number.present? %>
+              <%= link_to "https://wa.me/#{whatsapp_number}", target: "_blank", rel: "noopener",
+                    class: "inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#25D366] text-white hover:bg-[#1da851] transition" do %>
+                <i class="fa-brands fa-whatsapp text-xs"></i>
+              <% end %>
+            <% else %>
+              <span class="inline-flex h-7 w-7 items-center justify-center rounded-full border border-base-200 bg-base-200/50 text-base-content/25">
+                <i class="fa-brands fa-whatsapp text-xs"></i>
+              </span>
+            <% end %>
+            <% if @candidate.website_url.present? %>
+              <%= link_to @candidate.website_url, target: "_blank", rel: "noopener",
+                    class: "inline-flex h-7 w-7 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#6b3f4f] hover:bg-[#fff0f6] transition" do %>
+                <i class="fa-solid fa-globe text-xs"></i>
+              <% end %>
+            <% else %>
+              <span class="inline-flex h-7 w-7 items-center justify-center rounded-full border border-base-200 bg-base-200/50 text-base-content/25">
+                <i class="fa-solid fa-globe text-xs"></i>
+              </span>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <%# ── Centre : Expérience + Notes ── %>
+      <div class="space-y-4">
+        <% if @candidate.job_titles&.any? %>
+          <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+            <h3 class="text-lg font-semibold text-[#5b2633]">Expérience professionnelle</h3>
+            <ol class="mt-4 space-y-1">
+              <% @candidate.job_titles.reverse.each_with_index do |title, i| %>
+                <% current_pos = i == 0 %>
+                <li class="flex items-start gap-3">
+                  <div class="flex flex-col items-center">
+                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full shadow-sm text-xs <%= current_pos ? 'bg-[#ed0e64] text-white' : 'border border-[#ead2dc] bg-white text-[#9a5a68]' %>">
+                      <i class="fa-regular fa-building text-[11px]"></i>
+                    </span>
+                    <% unless i == @candidate.job_titles.length - 1 %>
+                      <span class="my-1 h-5 w-px bg-[#ead2dc]"></span>
+                    <% end %>
+                  </div>
+                  <div class="pb-1 pt-1.5">
+                    <p class="text-[15px] font-semibold text-[#4c1f2a]"><%= title %></p>
+                    <% if current_pos %>
+                      <p class="mt-0.5 text-xs font-medium text-[#ed0e64]">Poste actuel</p>
+                    <% end %>
+                  </div>
+                </li>
+              <% end %>
+            </ol>
+          </article>
+        <% end %>
+
+        <% if @candidate.notes.present? %>
+          <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+            <h3 class="text-lg font-semibold text-[#5b2633]">Notes de qualification</h3>
+            <p class="mt-3 text-[15px] leading-relaxed text-[#5f3647]"><%= @candidate.notes %></p>
+          </article>
+        <% end %>
+      </div>
+
+      <%# ── Droite : Actions + Historique ── %>
+      <aside class="space-y-4">
+        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4">
+          <h4 class="text-base font-semibold text-[#5b2633]">Actions</h4>
+          <div class="mt-3 space-y-2">
+            <%= link_to toggle_favorite_candidate_path(@candidate, return_to: request.fullpath),
+                  method: :patch, data: { turbo_method: :patch },
+                  class: "flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm font-medium transition #{is_favorite ? 'border-[#f7c4da] bg-[#fff0f6] text-[#ed0e64]' : 'border-[#ead2dc] bg-white text-[#7b4b5a] hover:bg-[#fff0f6]'}" do %>
+              <i class="fa-<%= is_favorite ? 'solid' : 'regular' %> fa-heart text-[#ed0e64]"></i>
+              <%= is_favorite ? "Retirer des favoris" : "Ajouter aux favoris" %>
+            <% end %>
+            <%= link_to edit_candidate_path(@candidate),
+                  class: "flex w-full items-center gap-3 rounded-2xl border border-[#ead2dc] bg-white px-3 py-2.5 text-sm font-medium text-[#7b4b5a] transition hover:bg-[#fff0f6]" do %>
+              <i class="fa-solid fa-pen-to-square text-[#ed0e64]"></i>
+              Modifier le profil
+            <% end %>
+            <%= link_to candidate_path(@candidate),
+                  data: { turbo_method: :delete, turbo_confirm: "Confirmer la suppression ?" },
+                  class: "flex w-full items-center gap-3 rounded-2xl border border-[#f2c9d8] bg-white px-3 py-2.5 text-sm font-medium text-[#a33d68] transition hover:bg-[#fff1f6]" do %>
+              <i class="fa-solid fa-trash-can text-[#ed0e64]"></i>
+              Supprimer
+            <% end %>
+          </div>
+        </article>
+
+        <% if @candidate.placements.any? %>
+          <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4">
+            <h4 class="text-base font-semibold text-[#5b2633]">Historique</h4>
+            <ul class="mt-3 space-y-2">
+              <% @candidate.placements.includes(mission: { client_contact: :client }).each do |placement| %>
+                <li class="rounded-2xl border border-[#efdbe4] bg-white/80 p-3 text-[13px]">
+                  <p class="font-semibold text-[#4c1f2a]"><%= placement.mission&.title.presence || "Mission" %></p>
+                  <% brand = placement.mission&.client_contact&.client&.brand_name %>
+                  <% if brand.present? %>
+                    <p class="text-[#9a5a68]"><%= brand %></p>
+                  <% end %>
+                  <% if placement.hired_at.present? %>
+                    <p class="mt-0.5 text-xs text-[#c0849a]"><%= l(placement.hired_at, format: :long) %></p>
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
+          </article>
+        <% end %>
+      </aside>
+
+    </div>
+
+    <%# ── Barre contact bas ── %>
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-[#ead2dc] bg-white/80 px-5 py-3 text-[13px] text-[#5c3143]">
+      <% if @candidate.email.present? %>
+        <%= mail_to @candidate.email, class: "flex items-center gap-1.5 hover:text-[#ed0e64] transition" do %>
+          <i class="fa-solid fa-envelope text-[#ed0e64]"></i><%= @candidate.email %>
+        <% end %>
+        <span class="text-[#ead2dc]">·</span>
+      <% end %>
+      <% if @candidate.phone.present? %>
+        <span class="flex items-center gap-1.5"><i class="fa-solid fa-phone text-[#ed0e64]"></i><%= @candidate.phone %></span>
+        <% if @candidate.location.present? %><span class="text-[#ead2dc]">·</span><% end %>
+      <% end %>
+      <% if @candidate.location.present? %>
+        <span class="flex items-center gap-1.5"><i class="fa-solid fa-location-dot text-[#ed0e64]"></i><%= @candidate.location %></span>
+      <% end %>
+    </div>
+
+  </div>
 </div>

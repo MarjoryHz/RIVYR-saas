@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_16_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_17_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -18,14 +18,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_16_120000) do
     t.datetime "created_at", null: false
     t.string "email"
     t.string "first_name"
+    t.string "job_titles", default: [], array: true
     t.string "last_name"
     t.string "linkedin_url"
+    t.string "location"
     t.text "notes"
     t.string "phone"
+    t.string "skills", default: [], array: true
     t.string "source"
     t.string "status"
     t.datetime "updated_at", null: false
     t.bigint "user_id"
+    t.string "website_url"
     t.index ["user_id"], name: "index_candidates_on_user_id", unique: true, where: "(user_id IS NOT NULL)"
   end
 
@@ -71,6 +75,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_16_120000) do
     t.string "status"
     t.datetime "updated_at", null: false
     t.index ["placement_id"], name: "index_commissions_on_placement_id"
+  end
+
+  create_table "favorite_candidates", force: :cascade do |t|
+    t.bigint "candidate_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["candidate_id"], name: "index_favorite_candidates_on_candidate_id"
+    t.index ["user_id", "candidate_id"], name: "index_favorite_candidates_on_user_id_and_candidate_id", unique: true
+    t.index ["user_id"], name: "index_favorite_candidates_on_user_id"
   end
 
   create_table "favorite_missions", force: :cascade do |t|
@@ -291,6 +305,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_16_120000) do
   add_foreign_key "client_contacts", "clients"
   add_foreign_key "client_contacts", "users"
   add_foreign_key "commissions", "placements"
+  add_foreign_key "favorite_candidates", "candidates"
+  add_foreign_key "favorite_candidates", "users"
   add_foreign_key "favorite_missions", "missions"
   add_foreign_key "favorite_missions", "users"
   add_foreign_key "freelance_mission_applications", "freelancer_profiles"
