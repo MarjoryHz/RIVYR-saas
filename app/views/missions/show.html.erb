@@ -232,7 +232,7 @@
           <div class="grid gap-3 rounded-2xl border border-[#ead2dc] bg-[#fff8fb]/95 p-3 md:grid-cols-2 xl:grid-cols-3">
             <div><p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Localisation</p><p class="text-[14px] font-medium text-[#5c3143]"><%= @mission.region.name %></p></div>
             <div><p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Type de poste</p><p class="text-[14px] font-medium text-[#5c3143]"><%= job_type %></p></div>
-            <div><p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Package cible</p><p class="text-[14px] font-medium text-[#5c3143]"><%= @mission.compensation_summary.presence || "-" %></p></div>
+            <div><p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Package cible</p><p class="text-[14px] font-medium text-[#5c3143]"><%= euro_display(@mission.compensation_summary.presence || "-") %></p></div>
           </div>
 
           <% unless mission_assigned %>
@@ -351,7 +351,7 @@
             <div class="flex items-start justify-between gap-3">
               <div>
                 <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Commission freelance estimee</p>
-                <p class="mt-1 text-2xl font-semibold text-[#5f3247]"><%= format_amount(fee_breakdown[:fee_amount]) %>EUR</p>
+                <p class="mt-1 text-2xl font-semibold text-[#5f3247]"><%= format_amount(fee_breakdown[:fee_amount]) %>€</p>
                 <p class="mt-1 text-sm text-[#78505f]">Signature du contrat : <%= (fee_breakdown[:contract_rate] * 100).round %>%</p>
                 <p class="mt-1 text-sm text-[#78505f]">Shortlist attendue : <%= shortlist_deadline_days %> jours</p>
               </div>
@@ -414,7 +414,7 @@
               <article class="mt-4 rounded-2xl border border-[#efdbe4] bg-white/80 p-4">
                 <h4 class="text-lg font-semibold text-[#5b2633]">Avantages</h4>
                 <ul class="mt-3 space-y-2 text-[15px] text-[#5f3647]">
-                  <li><strong>Remuneration:</strong> <%= @mission.compensation_summary.presence || "90 000EUR - 120 000EUR" %></li>
+                  <li><strong>Remuneration:</strong> <%= euro_display(@mission.compensation_summary.presence || "90 000€ - 120 000€") %></li>
                   <li><strong>Voiture de fonction:</strong> Oui</li>
                   <li><strong>13eme mois:</strong> Inclus</li>
                   <li><strong>Tickets restaurants:</strong> Oui</li>
@@ -543,9 +543,9 @@
   <div class="modal-box max-w-lg rounded-2xl border border-[#ead5ce] bg-white">
     <h3 class="text-lg font-semibold text-[#6f332b]">Detail du calcul de commission</h3>
     <div class="mt-3 space-y-3 text-sm text-[#5f3647]">
-      <p><strong>Remuneration brute moyenne:</strong> <%= format_amount(fee_breakdown[:salary_average]) %>EUR</p>
-      <p><strong>Honoraires RIVYR:</strong> <%= format_amount(fee_breakdown[:salary_average]) %> x <%= (fee_breakdown[:contract_rate] * 100).round %>% = <%= format_amount(fee_breakdown[:gross_fee]) %>EUR</p>
-      <p><strong>Part freelance:</strong> <%= format_amount(fee_breakdown[:gross_fee]) %> x <%= (fee_breakdown[:freelance_rate] * 100).round %>% = <%= format_amount(fee_breakdown[:fee_amount]) %>EUR</p>
+      <p><strong>Remuneration brute moyenne:</strong> <%= format_amount(fee_breakdown[:salary_average]) %>€</p>
+      <p><strong>Honoraires RIVYR:</strong> <%= format_amount(fee_breakdown[:salary_average]) %> x <%= (fee_breakdown[:contract_rate] * 100).round %>% = <%= format_amount(fee_breakdown[:gross_fee]) %>€</p>
+      <p><strong>Part freelance:</strong> <%= format_amount(fee_breakdown[:gross_fee]) %> x <%= (fee_breakdown[:freelance_rate] * 100).round %>% = <%= format_amount(fee_breakdown[:fee_amount]) %>€</p>
       <p class="rounded-xl border border-[#efdbe4] bg-[#fff8fb] px-3 py-2 text-[#6f4a58]">
         Formule appliquee: remuneration brute moyenne x honoraires RIVYR x part freelance.
       </p>
