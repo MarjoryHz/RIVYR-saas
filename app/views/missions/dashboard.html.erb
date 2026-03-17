@@ -1,277 +1,249 @@
-<% current_tab = params[:tab].presence_in(%w[general statistics label]) || "general" %>
-<% dashboard_tabs = [
-  { key: "general", label: "General", icon: "fa-house" },
-  { key: "statistics", label: "Statistiques", icon: "fa-chart-line" },
-  { key: "label", label: "Label", icon: "fa-medal" }
-] %>
+<%
+  surface_card_class = "rounded-[1.8rem] border border-[#ead2dc] bg-[#fff8fb]/95 shadow-[0_22px_45px_rgba(100,37,56,0.08)]"
+  soft_card_class = "rounded-[1.5rem] border border-[#efdbe4] bg-white/80"
+  stats_conversion = @dashboard_performance[:conversion_rate].to_i.clamp(0, 100)
+  resumes_envoyes = @dashboard_missions.sum { |item| item[:presented_candidates].to_i }
+  entretiens_realises = @dashboard_pipeline[:interviews].to_i
+  missions_reussies = @dashboard_performance[:won_missions].to_i
+  agenda_items = Array(@dashboard_week_schedule).first(3)
+  todo_preview = Array(@dashboard_todo_preview)
+  feed_preview = Array(@dashboard_feed_preview).presence || Array(@dashboard_rivyr_feed).first(2).map do |item|
+    {
+      title: item[:message],
+      author: "RIVYR",
+      role: "Signal du réseau",
+      time: distance_of_time_in_words_to_now(item[:date]),
+      avatar: "avatars/avatar-05.png",
+      likes: 0,
+      comments: 0
+    }
+  end
+  invoice_chart_points = Array(@dashboard_invoice_snapshot[:trend_points]).each_with_index.map do |value, index|
+    x = 10 + (index * 42)
+    y = 66 - (value.to_f * 42)
+    "#{x},#{y.round(1)}"
+  end.join(" ")
+%>
 
-<div class="w-full max-w-none space-y-5 px-6 py-5 md:px-11 lg:px-10">
-  <div class="rounded-[2rem] border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
-    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div>
-        <h1 class="text-3xl font-semibold tracking-tight text-[#4c1f2a] md:text-4xl">Bonjour <%= @dashboard_greeting_name %></h1>
-        <p class="mt-2 text-[15px] text-[#6b3f4f]">Voici ce qui merite ton attention aujourd hui.</p>
-      </div>
-      <%= link_to dashboard_invoices_path, class: "inline-flex w-fit items-center rounded-full border border-[#f2c9d8] bg-[#fff1f6] px-4 py-2.5 text-sm font-semibold text-[#a33d68]" do %>
-        Portefeuille <strong class="ml-1"><%= number_to_currency(@dashboard_portfolio[:available_cents] / 100.0, unit: "€", precision: 0) %></strong>
-      <% end %>
+<div class="w-full max-w-none space-y-6 px-6 py-5 md:px-11 lg:px-10">
+  <section class="relative overflow-hidden">
+    <div class="relative">
+      <section class="space-y-6">
+        <div class="space-y-3">
+          <h1 class="text-4xl font-semibold tracking-tight text-[#4c1f2a] md:text-5xl">Bonjour <%= @dashboard_greeting_name %> !</h1>
+          <p class="max-w-2xl text-lg text-[#6b3f4f] md:text-xl">
+            Prête à décrocher de nouvelles missions aujourd’hui ?
+          </p>
+        </div>
+
+        <div class="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)] xl:max-w-[52rem]">
+          <div class="grid min-w-0 overflow-hidden rounded-[1.45rem] border border-[#efdbe4] bg-white/82 shadow-[0_16px_35px_rgba(100,37,56,0.06)] md:grid-cols-3">
+            <div class="p-4 md:border-r md:border-[#f0dce4] md:pr-6">
+              <p class="text-3xl font-semibold text-[#4c1f2a]"><%= number_to_currency(@total_potential_cents.to_i / 100.0, unit: "€", precision: 0) %></p>
+              <p class="mt-1 text-base text-[#6b3f4f]/80">Potentiel total</p>
+            </div>
+            <div class="p-4 md:border-r md:border-[#f0dce4] md:px-6">
+              <p class="text-3xl font-semibold text-[#4c1f2a]"><%= @average_open_days.to_i %> jours</p>
+              <p class="mt-1 text-base text-[#6b3f4f]/80">Ouverture moyenne</p>
+            </div>
+            <div class="p-4 md:px-6">
+              <p class="text-3xl font-semibold text-[#4c1f2a]"><%= @total_sent_candidates.to_i %></p>
+              <p class="mt-1 text-base text-[#6b3f4f]/80">Candidats chez le client</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
     </div>
+  </section>
 
-    <div class="mt-5 rounded-[1.5rem] border border-[#efdae3] bg-white/75 p-2">
-      <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-5">
-        <% dashboard_tabs.each do |tab| %>
-          <%= link_to dashboard_path(tab: tab[:key]), class: "flex items-center gap-3 rounded-[1rem] px-4 py-3 text-sm font-semibold transition #{current_tab == tab[:key] ? 'bg-[#4c1f2a] text-white shadow-[0_12px_24px_rgba(76,31,42,0.14)]' : 'text-[#7b4a59] hover:bg-[#fff1f6] hover:text-[#4c1f2a]'}" do %>
-            <i class="fa-solid <%= tab[:icon] %> text-[13px] <%= current_tab == tab[:key] ? 'text-white' : 'text-[#ed0e64]' %>"></i>
-            <span><%= tab[:label] %></span>
+  <section class="grid gap-5" style="grid-template-columns: minmax(360px,1.02fr) minmax(340px,0.85fr) minmax(340px,0.96fr); grid-template-rows: 1fr auto 1fr; min-height: 900px">
+    <section class="<%= surface_card_class %> p-5">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff2f7] text-[#f08d72]">
+            <i class="fa-solid fa-gift text-lg"></i>
+          </span>
+          <h2 class="text-2xl font-semibold text-[#5b2633]">Missions suggérées</h2>
+        </div>
+        <%= link_to "Tout", dashboard_library_missions_path(status: "open"), class: "text-sm font-medium text-[#9a5a68]" %>
+      </div>
+
+      <div class="mt-5">
+        <% if @dashboard_recommended_missions.any? %>
+          <div class="carousel w-full">
+            <% @dashboard_recommended_missions.each_with_index do |item, index| %>
+              <% mission = item[:mission] %>
+              <% slide_id = "dashboard-suggestion-item-#{index + 1}" %>
+              <div id="<%= slide_id %>" class="carousel-item w-full">
+                <div class="w-full">
+                  <%= render "missions/suggestion_card",
+                    mission: mission,
+                    dom_id_suffix: "dashboard",
+                    compact: false %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+
+          <% if @dashboard_recommended_missions.size > 1 %>
+            <div class="flex w-full justify-center gap-2 py-3">
+              <% @dashboard_recommended_missions.each_with_index do |_item, index| %>
+                <button
+                  type="button"
+                  onclick="document.getElementById('dashboard-suggestion-item-<%= index + 1 %>').scrollIntoView({behavior:'smooth',block:'nearest',inline:'start'})"
+                  class="btn btn-xs h-8 min-h-0 w-8 rounded-full border border-[#efdbe4] bg-white/85 px-0 text-[#8f4a58] shadow-sm hover:border-[#ed0e64] hover:bg-[#fff2f7] hover:text-[#ed0e64]">
+                  <%= index + 1 %>
+                </button>
+              <% end %>
+            </div>
           <% end %>
+        <% else %>
+          <p class="rounded-2xl border border-[#efdbe4] bg-white/80 px-4 py-3 text-sm text-[#8a5b6a]">
+            Aucune mission suggérée pour le moment.
+          </p>
         <% end %>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <% if current_tab == "general" %>
-    <section class="grid gap-4 xl:grid-cols-[1.7fr_360px]">
-      <div class="min-w-0 space-y-4">
-        <section class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          <% @dashboard_kpis.each do |kpi| %>
-            <%= link_to kpi[:path], class: "rounded-2xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4 transition hover:border-[#f2c9d8] hover:bg-white" do %>
-              <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]"><%= kpi[:label] %></p>
-              <p class="mt-2 text-2xl font-semibold text-[#4c1f2a]"><%= kpi[:value] %></p>
-            <% end %>
-          <% end %>
-        </section>
-
-        <section class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
-          <div class="flex items-center justify-between gap-3">
-            <h2 class="text-2xl font-semibold text-[#5b2633]">Priorites du jour</h2>
-            <span class="rounded-full border border-[#f2c9d8] bg-[#fff1f6] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#a33d68]"><%= @dashboard_priorities.count %> actions</span>
-          </div>
-          <div class="mt-4 space-y-3">
-            <% @dashboard_priorities.each do |item| %>
-              <div class="flex flex-col gap-3 rounded-2xl border border-[#efdbe4] bg-white/80 p-4 lg:flex-row lg:items-center lg:justify-between">
-                <div class="flex min-w-0 items-start gap-3">
-                  <span class="mt-1 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#fff1f6] text-[#ed0e64]"><i class="fa-solid <%= item[:icon] %>"></i></span>
-                  <div class="min-w-0">
-                    <p class="text-[15px] font-semibold text-[#4c1f2a]"><%= item[:title] %></p>
-                    <p class="text-sm text-[#6b3f4f]"><%= item[:mission] %></p>
-                    <p class="text-xs text-[#9a5a68]"><%= item[:deadline] %></p>
-                  </div>
-                </div>
-                <%= link_to item[:action_label], item[:action_path], class: "btn rounded-full border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] hover:bg-[#fdeef3]" %>
-              </div>
-            <% end %>
-          </div>
-        </section>
-
-        <section class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
-          <div class="flex items-center justify-between gap-3">
-            <h2 class="text-2xl font-semibold text-[#5b2633]">Missions faites pour vous</h2>
-            <%= link_to "Voir toute la bibliotheque", dashboard_library_missions_path(status: "open"), class: "text-sm font-semibold text-[#8b4452] underline" %>
-          </div>
-          <% recommended_scroll = @dashboard_recommended_missions.size > 3 %>
-          <div class="<%= recommended_scroll ? 'mt-4 max-w-full overflow-x-auto pb-2' : 'mt-4' %>">
-            <div class="<%= recommended_scroll ? 'flex w-max min-w-full gap-3' : 'grid gap-3 xl:grid-cols-3' %>">
-            <% @dashboard_recommended_missions.each do |item| %>
-              <div class="<%= recommended_scroll ? 'w-[320px] shrink-0 xl:w-[340px]' : 'w-full' %>">
-                <%= render "suggestion_card", mission: item[:mission], dom_id_suffix: "dashboard", compact: true %>
-              </div>
-            <% end %>
-            </div>
-          </div>
-        </section>
-
-        <section class="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-          <article id="agenda" class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
-            <h2 class="text-2xl font-semibold text-[#5b2633]">Cette semaine</h2>
-            <div class="mt-4 space-y-3">
-              <% @dashboard_week_schedule.each do |item| %>
-                <div class="rounded-2xl border border-[#efdbe4] bg-white/80 p-4">
-                  <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]"><%= item[:when_label] %></p>
-                  <p class="mt-1 text-[15px] font-semibold text-[#4c1f2a]"><%= item[:title] %></p>
-                  <p class="mt-1 text-sm text-[#6b3f4f]"><%= item[:detail] %></p>
-                </div>
-              <% end %>
-            </div>
-          </article>
-
-          <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
-            <h2 id="performance" class="text-2xl font-semibold text-[#5b2633]">Mes performances</h2>
-            <div class="mt-4 grid gap-3 sm:grid-cols-2">
-              <div class="rounded-2xl border border-[#efdbe4] bg-white/75 p-4"><p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Missions remportees</p><p class="mt-2 text-2xl font-semibold text-[#4c1f2a]"><%= @dashboard_performance[:won_missions] %></p></div>
-              <div class="rounded-2xl border border-[#efdbe4] bg-white/75 p-4"><p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Indice RIVYR</p><p class="mt-2 text-2xl font-semibold text-[#4c1f2a]"><%= @dashboard_performance[:rivyr_index] %></p></div>
-              <div class="rounded-2xl border border-[#efdbe4] bg-white/75 p-4"><p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Taux de transformation</p><p class="mt-2 text-2xl font-semibold text-[#4c1f2a]"><%= @dashboard_performance[:conversion_rate] %>%</p></div>
-              <div class="rounded-2xl border border-[#efdbe4] bg-white/75 p-4"><p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Satisfaction client</p><p class="mt-2 text-2xl font-semibold text-[#4c1f2a]"><%= @dashboard_performance[:satisfaction] %>%</p></div>
-            </div>
-          </article>
-        </section>
+    <%= link_to dashboard_my_missions_path, class: "#{surface_card_class} block p-5 transition hover:bg-white", style: "grid-column: span 2" do %>
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff2f7] text-[#f08d72]">
+            <i class="fa-solid fa-users-viewfinder text-lg"></i>
+          </span>
+          <h2 class="text-2xl font-semibold text-[#5b2633]">Missions en cours</h2>
+        </div>
+        <span class="text-sm font-medium text-[#9a5a68]">Tout</span>
       </div>
 
-      <aside class="min-w-0 space-y-4">
-        <section class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
-          <h2 class="text-2xl font-semibold text-[#5b2633]">Mon portefeuille</h2>
-          <div class="mt-4 space-y-3">
-            <% @dashboard_finance_summary.each do |item| %>
-              <div class="rounded-2xl border border-[#efdbe4] bg-white/80 p-4">
-                <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]"><%= item[:label] %></p>
-                <p class="mt-2 text-3xl font-semibold <%= item[:tone] %>"><%= number_to_currency(item[:amount_cents] / 100.0, unit: "€", precision: 0) %></p>
+      <div class="mt-5 space-y-3 max-h-112 overflow-y-auto pr-1">
+        <% @dashboard_missions.each do |item| %>
+          <article class="rounded-[1.35rem] border <%= item[:urgent] ? 'border-[#f2a0a0] bg-[#fff5f5]' : 'border-[#efdbe4] bg-white/80' %> px-4 py-3">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <p class="truncate text-[1.1rem] font-semibold text-[#4c1f2a]"><%= item[:mission].title %></p>
+                  <% if item[:urgent] %>
+                    <span class="shrink-0 inline-flex items-center gap-1 rounded-full bg-[#7f2f2a] px-2 py-0.5 text-[10px] font-semibold text-white">
+                      <i class="fa-solid fa-bolt text-[9px]"></i> Urgent
+                    </span>
+                  <% end %>
+                </div>
+                <p class="mt-1 truncate text-sm text-[#8a5b6a]"><%= item[:company_name] %> · <%= item[:location] %></p>
               </div>
-            <% end %>
-          </div>
-        </section>
+              <span class="rounded-full border px-3 py-1 text-sm font-semibold <%= item[:stage_classes] %>"><%= item[:stage] %></span>
+            </div>
+            <div class="mt-3 flex flex-wrap items-center gap-3 text-sm text-[#7a5562]">
+              <span><i class="fa-regular fa-user mr-1 text-[#ed0e64]"></i><%= item[:presented_candidates] %> candidats</span>
+              <span><i class="fa-regular fa-clock mr-1 text-[#ed0e64]"></i><%= item[:next_event] %></span>
+            </div>
+          </article>
+        <% end %>
+      </div>
+    <% end %>
 
-        <section class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
-          <h2 class="text-2xl font-semibold text-[#5b2633]">Suivi RIVYR</h2>
-          <div class="mt-4 space-y-3">
-            <% @dashboard_rivyr_feed.each do |item| %>
-              <div class="rounded-2xl border border-[#efdbe4] bg-white/80 p-4">
-                <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]"><%= l(item[:date].to_date, format: "%d %b") rescue item[:date].to_date.strftime("%d %b") %></p>
-                <p class="mt-1 text-sm text-[#5f3647]"><%= item[:message] %></p>
+    <%= link_to dashboard_feed_path, class: "#{surface_card_class} block p-4 transition hover:bg-white", style: "grid-column: span 3" do %>
+      <div class="flex items-center gap-4">
+        <div class="flex shrink-0 items-center gap-2 text-[#5b2633]">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-[#fff2f7] text-[#ed7a9d]">
+            <i class="fa-solid fa-newspaper text-sm"></i>
+          </span>
+          <span class="text-base font-semibold">Fil d'actualités</span>
+        </div>
+        <div class="mx-2 h-5 w-px shrink-0 bg-[#efdbe4]"></div>
+        <div class="flex min-w-0 flex-1 gap-4 overflow-hidden">
+          <% feed_preview.each do |item| %>
+            <div class="flex min-w-0 flex-1 items-center gap-3">
+              <div class="h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-[#f7e4eb]">
+                <%= image_tag item[:avatar], alt: item[:author], class: "h-full w-full object-cover" %>
               </div>
-            <% end %>
-          </div>
-        </section>
-      </aside>
+              <div class="min-w-0">
+                <p class="truncate text-sm font-semibold text-[#4c1f2a]"><%= item[:title] %></p>
+                <p class="text-xs text-[#8a5b6a]"><%= item[:author] %> · <%= item[:time] %></p>
+              </div>
+            </div>
+          <% end %>
+        </div>
+        <i class="fa-solid fa-chevron-right shrink-0 text-xs text-[#d9a4b7]"></i>
+      </div>
+    <% end %>
+
+    <section class="<%= surface_card_class %> p-5">
+      <div class="flex items-center gap-3">
+        <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff2f7] text-[#ed0e64]">
+          <i class="fa-regular fa-calendar-days text-lg"></i>
+        </span>
+        <h2 class="text-2xl font-semibold text-[#5b2633]">Agenda</h2>
+      </div>
+
+      <div class="mt-5 space-y-3 overflow-y-auto pr-1" style="max-height: calc(100% - 4rem)">
+        <% agenda_items.each do |item| %>
+          <article class="rounded-[1.2rem] border border-[#efdbe4] bg-white/80 px-4 py-3">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="truncate text-base font-semibold text-[#4c1f2a]"><%= item[:title] %></p>
+                <p class="mt-1 text-sm text-[#8a5b6a]"><%= item[:detail] %></p>
+              </div>
+              <span class="shrink-0 rounded-full bg-[#fff2f7] px-2.5 py-1 text-xs font-semibold text-[#ed0e64]"><%= item[:when_label] %></span>
+            </div>
+          </article>
+        <% end %>
+        <% if agenda_items.empty? %>
+          <p class="rounded-[1.2rem] border border-[#efdbe4] bg-white/80 px-4 py-3 text-sm text-[#8a5b6a]">
+            Aucun rendez-vous planifié pour le moment.
+          </p>
+        <% end %>
+      </div>
     </section>
-  <% elsif current_tab == "statistics" %>
-    <section class="space-y-4">
-      <section class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <div class="rounded-2xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
-          <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Placements realises</p>
-          <p class="mt-2 text-3xl font-semibold text-[#4c1f2a]"><%= @dashboard_performance[:placements] %></p>
-        </div>
-        <div class="rounded-2xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
-          <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Missions remportees</p>
-          <p class="mt-2 text-3xl font-semibold text-[#4c1f2a]"><%= @dashboard_performance[:won_missions] %></p>
-        </div>
-        <div class="rounded-2xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
-          <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Transformation</p>
-          <p class="mt-2 text-3xl font-semibold text-[#4c1f2a]"><%= @dashboard_performance[:conversion_rate] %>%</p>
-        </div>
-        <div class="rounded-2xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
-          <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Satisfaction client</p>
-          <p class="mt-2 text-3xl font-semibold text-[#4c1f2a]"><%= @dashboard_performance[:satisfaction] %>%</p>
-        </div>
-      </section>
 
-      <section class="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-        <article class="min-w-0 rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
-          <h2 class="text-2xl font-semibold text-[#5b2633]">Pipeline de recrutement</h2>
-          <div class="mt-4 grid gap-3 md:grid-cols-3 xl:grid-cols-6">
-            <% {
-              "Sourcing" => @dashboard_pipeline[:sourcing],
-              "Preselection RIVYR" => @dashboard_pipeline[:preselection],
-              "Shortlist envoyee" => @dashboard_pipeline[:shortlist],
-              "Entretiens client" => @dashboard_pipeline[:interviews],
-              "Offre / nego" => @dashboard_pipeline[:offer],
-              "Placements valides" => @dashboard_pipeline[:placements]
-            }.each do |label, count| %>
-              <div class="rounded-2xl border border-[#efdbe4] bg-white/75 p-4 text-center">
-                <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]"><%= label %></p>
-                <p class="mt-2 text-2xl font-semibold text-[#4c1f2a]"><%= count %></p>
-              </div>
-            <% end %>
-          </div>
-        </article>
+    <section class="<%= surface_card_class %> p-5" style="grid-column: span 2">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff2f7] text-[#ed7a9d]">
+            <i class="fa-solid fa-square-check text-lg"></i>
+          </span>
+          <h2 class="text-2xl font-semibold text-[#5b2633]">Ma To-Do List</h2>
+        </div>
+        <%= link_to dashboard_todo_list_path, class: "inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#fff2f7] text-[#a15c70] hover:bg-[#ffe4ef] hover:text-[#ed0e64]" do %>
+          <i class="fa-solid fa-plus text-sm"></i>
+        <% end %>
+      </div>
 
-        <% chart = @dashboard_performance[:rating_chart] %>
-        <article class="min-w-0 rounded-[2rem] border border-[#ead2dc] bg-white p-5 shadow-[0_22px_45px_rgba(99,64,76,0.08)]">
-          <div class="flex items-start justify-between gap-3">
-            <div class="flex items-center gap-3">
-              <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff2f7] text-[#ed0e64]">
-                <i class="fa-solid fa-chart-line text-lg"></i>
-              </span>
-              <div>
-                <p class="text-2xl font-semibold text-[#3f4151]">Customer Ratings</p>
-                <p class="mt-1 text-sm text-[#8f8c97]">Performance mensuelle du freelance</p>
+      <%= turbo_frame_tag "dashboard-todo-list" do %>
+        <div class="mt-5 space-y-3 max-h-56 overflow-y-auto pr-1">
+          <% priority_styles = { "high" => "border-[#f2a0a0] bg-[#fff5f5]", "medium" => "border-[#f2dda0] bg-[#fffdf0]", "low" => "border-[#efdbe4] bg-white/80" } %>
+          <% priority_dot = { "high" => "bg-[#e53e3e]", "medium" => "bg-[#d97706]", "low" => "bg-[#9ca3af]" } %>
+          <% todo_preview.each do |task| %>
+            <div class="flex items-start gap-3 rounded-2xl border px-4 py-3 <%= task[:done] ? 'border-[#efdbe4] bg-white/80' : priority_styles[task[:priority]] %>">
+              <%= form_with url: todo_task_path(task[:id]), method: :patch, data: { turbo_frame: "dashboard-todo-list" } do %>
+                <input type="hidden" name="todo_task[status]" value="<%= task[:done] ? 'todo' : 'done' %>">
+                <input type="hidden" name="return_to" value="<%= dashboard_path %>">
+                <button type="submit" class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center text-[#ed0e64] hover:opacity-70">
+                  <i class="fa-<%= task[:done] ? 'solid fa-circle-check' : 'regular fa-circle' %> text-lg"></i>
+                </button>
+              <% end %>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                  <% unless task[:done] %>
+                    <span class="h-2 w-2 shrink-0 rounded-full <%= priority_dot[task[:priority]] %>"></span>
+                  <% end %>
+                  <p class="truncate text-base font-semibold <%= task[:done] ? 'line-through text-[#b08a96]' : 'text-[#4c1f2a]' %>"><%= task[:title] %></p>
+                </div>
+                <p class="mt-1 text-sm text-[#8a5b6a]"><%= task[:category] %><%= " · #{task[:due_label]}" if task[:due_label].present? %></p>
               </div>
             </div>
-            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#b8b3bd]">
-              <i class="fa-solid fa-ellipsis-vertical"></i>
-            </button>
-          </div>
+          <% end %>
+          <% if todo_preview.empty? %>
+            <p class="rounded-2xl border border-[#efdbe4] bg-white/80 px-4 py-3 text-sm text-[#8a5b6a]">Aucune tâche pour le moment.</p>
+          <% end %>
+        </div>
+      <% end %>
 
-          <div class="mt-6 flex items-end gap-4">
-            <p class="text-5xl font-semibold tracking-tight text-[#3f4151]"><%= format("%.1f", chart[:latest_value]) %></p>
-            <span class="rounded-2xl bg-[#fff6ec] px-4 py-2 text-xl font-semibold text-[#f5a019]">
-              <%= chart[:delta_value] >= 0 ? "+" : "" %><%= format("%.1f", chart[:delta_value]) %>
-            </span>
-            <p class="pb-2 text-sm text-[#7f7b88]">Points from last month</p>
-          </div>
-
-          <div class="mt-4">
-            <svg viewBox="0 0 520 230" class="h-[18rem] w-full overflow-visible">
-              <path d="<%= chart[:previous_path] %>" fill="none" stroke="#d8d8de" stroke-width="4" stroke-dasharray="12 10" stroke-linecap="round" stroke-linejoin="round"></path>
-              <path d="<%= chart[:current_path] %>" fill="none" stroke="#7b52f6" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" class="drop-shadow-[0_14px_16px_rgba(123,82,246,0.18)]"></path>
-
-              <% if chart[:highlight_point].present? %>
-                <circle cx="<%= chart[:highlight_point][:x] %>" cy="<%= chart[:highlight_point][:y] %>" r="10" fill="white" stroke="#18181b" stroke-width="7"></circle>
-              <% end %>
-              <% if chart[:latest_point].present? %>
-                <circle cx="<%= chart[:latest_point][:x] %>" cy="<%= chart[:latest_point][:y] %>" r="10" fill="white" stroke="#7b52f6" stroke-width="7"></circle>
-              <% end %>
-            </svg>
-            <div class="mt-1 grid grid-cols-7 text-center text-[13px] font-medium text-[#6f7281]">
-              <% chart[:months].each do |month| %>
-                <span><%= month %></span>
-              <% end %>
-            </div>
-          </div>
-        </article>
-      </section>
+      <div class="mt-4 flex justify-end border-t border-[#f0dce4] pt-3">
+        <%= link_to "Tout", dashboard_todo_list_path, class: "text-sm font-medium text-[#9a5a68] hover:text-[#ed0e64]" %>
+      </div>
     </section>
-  <% else %>
-    <section class="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-      <article class="min-w-0 rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
-        <div class="flex items-center justify-between gap-3">
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Label RIVYR</p>
-            <h2 class="mt-2 text-2xl font-semibold text-[#5b2633]">Votre positionnement dans le collectif</h2>
-          </div>
-          <span class="rounded-full bg-[#ed0e64] px-4 py-2 text-sm font-semibold text-white">Indice <%= @dashboard_performance[:rivyr_index] %></span>
-        </div>
-        <div class="mt-5 grid gap-4 md:grid-cols-2">
-          <div class="rounded-2xl border border-[#efdbe4] bg-white/80 p-5">
-            <p class="text-sm font-semibold text-[#4c1f2a]">Exigence et execution</p>
-            <p class="mt-2 text-sm leading-7 text-[#6b3f4f]">Le label valorise la qualite des shortlists, la rigueur de pilotage et la capacite a tenir des missions exigeantes jusqu'au placement.</p>
-          </div>
-          <div class="rounded-2xl border border-[#efdbe4] bg-white/80 p-5">
-            <p class="text-sm font-semibold text-[#4c1f2a]">Contribution au collectif</p>
-            <p class="mt-2 text-sm leading-7 text-[#6b3f4f]">Votre indice evolue aussi selon l'activite, la reactivite et la qualite des interactions partagees avec le collectif RIVYR.</p>
-          </div>
-        </div>
-      </article>
 
-      <aside class="min-w-0 space-y-4">
-        <section class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
-          <h2 class="text-2xl font-semibold text-[#5b2633]">Mes reperes label</h2>
-          <div class="mt-4 space-y-3">
-            <div class="rounded-2xl border border-[#efdbe4] bg-white/80 p-4">
-              <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Indice RIVYR</p>
-              <p class="mt-2 text-3xl font-semibold text-[#4c1f2a]"><%= @dashboard_performance[:rivyr_index] %></p>
-            </div>
-            <div class="rounded-2xl border border-[#efdbe4] bg-white/80 p-4">
-              <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Placements reconnus</p>
-              <p class="mt-2 text-3xl font-semibold text-[#4c1f2a]"><%= @dashboard_performance[:placements] %></p>
-            </div>
-            <div class="rounded-2xl border border-[#efdbe4] bg-white/80 p-4">
-              <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Satisfaction client</p>
-              <p class="mt-2 text-3xl font-semibold text-[#4c1f2a]"><%= @dashboard_performance[:satisfaction] %>%</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
-          <h2 class="text-2xl font-semibold text-[#5b2633]">Suivi RIVYR</h2>
-          <div class="mt-4 space-y-3">
-            <% @dashboard_rivyr_feed.first(4).each do |item| %>
-              <div class="rounded-2xl border border-[#efdbe4] bg-white/80 p-4">
-                <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]"><%= l(item[:date].to_date, format: "%d %b") rescue item[:date].to_date.strftime("%d %b") %></p>
-                <p class="mt-1 text-sm text-[#5f3647]"><%= item[:message] %></p>
-              </div>
-            <% end %>
-          </div>
-        </section>
-      </aside>
-    </section>
-  <% end %>
+  </section>
 </div>

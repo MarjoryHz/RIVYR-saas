@@ -96,15 +96,10 @@
       box-shadow: 0 18px 40px rgba(122, 58, 73, 0.16);
     }
 
-    .client-insight-help {
+    #mission-floating-popover {
       position: fixed;
       z-index: 9999;
-      max-width: 16rem;
-    }
-
-    .fee-help {
-      position: fixed;
-      z-index: 9999;
+      display: none;
       max-width: 18rem;
     }
 
@@ -133,34 +128,44 @@
   </style>
   <script>
     window.toggleMissionPopover = function(button, popoverId) {
-      const popover = document.getElementById(popoverId);
-      if (!popover) return;
+      const source = document.getElementById(popoverId);
+      const floating = document.getElementById("mission-floating-popover");
+      if (!source || !floating) return;
 
-      const isOpen = !popover.classList.contains("hidden");
-      document.querySelectorAll("[data-floating='true']").forEach((element) => {
-        element.classList.add("hidden");
-      });
-
-      if (isOpen) return;
+      const sameSource = floating.dataset.sourceId === popoverId;
+      const alreadyOpen = floating.style.display === "block";
+      if (sameSource && alreadyOpen) {
+        floating.style.display = "none";
+        floating.dataset.sourceId = "";
+        floating.innerHTML = "";
+        return;
+      }
 
       const rect = button.getBoundingClientRect();
-      const popoverWidth = 256;
-      const left = Math.min(window.innerWidth - popoverWidth - 16, Math.max(16, rect.right - popoverWidth));
+      const width = source.classList.contains("w-72") ? 288 : 256;
+      const left = Math.min(window.innerWidth - width - 16, Math.max(16, rect.right - width));
       const top = Math.min(window.innerHeight - 16, rect.bottom + 10);
 
-      popover.style.left = `${left}px`;
-      popover.style.top = `${top}px`;
-      popover.classList.remove("hidden");
+      floating.className = source.className.replace(/\bhidden\b/g, "").trim();
+      floating.id = "mission-floating-popover";
+      floating.style.left = `${left}px`;
+      floating.style.top = `${top}px`;
+      floating.style.display = "block";
+      floating.dataset.sourceId = popoverId;
+      floating.innerHTML = source.innerHTML;
     };
 
     document.addEventListener("click", function(event) {
-      if (event.target.closest(".mission-info-trigger") || event.target.closest("[data-floating='true']")) return;
-      document.querySelectorAll("[data-floating='true']").forEach((element) => {
-        element.classList.add("hidden");
-      });
+      const floating = document.getElementById("mission-floating-popover");
+      if (!floating) return;
+      if (event.target.closest(".mission-info-trigger") || event.target.closest("#mission-floating-popover")) return;
+      floating.style.display = "none";
+      floating.dataset.sourceId = "";
+      floating.innerHTML = "";
     });
   </script>
   <h1 class="text-3xl font-semibold tracking-tight text-base-content md:text-4xl">Bibliothèque de missions</h1>
+  <div id="mission-floating-popover" data-source-id=""></div>
 
   <section class="space-y-4">
     <div class="flex items-start justify-between gap-3">
