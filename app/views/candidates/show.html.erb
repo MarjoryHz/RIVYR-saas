@@ -13,11 +13,11 @@
   whatsapp_number = @candidate.phone.to_s.gsub(/\D/, '')
 %>
 
-<div class="w-full max-w-none px-6 py-5 md:px-11 lg:px-10">
+<div class="w-full max-w-none px-6 pt-0 pb-5 md:px-11 lg:px-10">
   <div class="space-y-4">
 
     <%# ── Hero ── %>
-    <section class="relative overflow-hidden rounded-3xl border border-[#ead2dc] bg-gradient-to-br from-[#fff0f6] via-[#fde4ef] to-[#ffd6e8] p-6">
+    <section class="relative overflow-hidden p-6">
       <div class="relative z-10 flex items-center gap-5">
         <%= image_tag "avatars/avatar-#{format('%02d', avatar_index)}.png",
               alt: "#{@candidate.first_name} #{@candidate.last_name}",
@@ -42,23 +42,18 @@
     </section>
 
     <%# ── Tabs ── %>
-    <div class="flex items-center gap-1 rounded-2xl border border-[#ead2dc] bg-[#fff8fb]/95 p-1" id="candidate-tabs">
+    <div class="flex items-center gap-3" id="candidate-tabs">
       <button type="button" onclick="switchTab('profil')" id="tab-profil"
-        class="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-[#5b2633] shadow-sm transition">
-        <i class="fa-regular fa-user text-[#ed0e64]"></i> Profil
+        class="inline-flex items-center gap-2 rounded-xl bg-[#ed0e64] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition">
+        <i class="fa-regular fa-user"></i> Profil
       </button>
-      <button type="button" onclick="switchTab('notes')" id="tab-notes"
-        class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium text-[#9a5a68] transition hover:bg-white/60">
-        <i class="fa-regular fa-note-sticky text-[#ed0e64]"></i> Notes
+      <button type="button" onclick="switchTab('contribution')" id="tab-contribution"
+        class="inline-flex items-center gap-2 rounded-xl border border-[#ead2dc] bg-white px-5 py-2.5 text-sm font-medium text-[#9a5a68] transition">
+        <i class="fa-regular fa-handshake"></i> Contribution
       </button>
-      <button type="button" onclick="switchTab('docs')" id="tab-docs"
-        class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium text-[#9a5a68] transition hover:bg-white/60">
-        <i class="fa-regular fa-file text-[#ed0e64]"></i> CV et Docs
-      </button>
-      <button type="button" onclick="switchTab('historique')" id="tab-historique"
-        class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium text-[#9a5a68] transition hover:bg-white/60">
-        <i class="fa-regular fa-clock text-[#ed0e64]"></i> Historique
-      </button>
+      <button type="button" onclick="switchTab('notes')" id="tab-notes" class="hidden"></button>
+      <button type="button" onclick="switchTab('docs')" id="tab-docs" class="hidden"></button>
+      <button type="button" onclick="switchTab('historique')" id="tab-historique" class="hidden"></button>
     </div>
 
     <%# ══════════════════════════════════ %>
@@ -412,6 +407,12 @@
     </div>
 
     <%# ══════════════════════════════════ %>
+    <%# ── Panneau : Contribution ── %>
+    <%# ══════════════════════════════════ %>
+    <div id="panel-contribution" class="hidden">
+      <%# Contenu à venir %>
+    </div>
+
     <%# ── Panneau : Historique ── %>
     <%# ══════════════════════════════════ %>
     <div id="panel-historique" class="hidden space-y-4">
@@ -775,7 +776,8 @@
 </div>
 
 <script>
-  const TABS = ['profil', 'notes', 'docs', 'historique'];
+  const TABS = ['profil', 'contribution', 'notes', 'docs', 'historique'];
+  switchTab('profil');
 
   let expExpanded = false;
   function toggleExperiences() {
@@ -801,12 +803,16 @@
       const active = tab === name;
 
       panel.classList.toggle('hidden', !active);
-      btn.classList.toggle('bg-white',       active);
-      btn.classList.toggle('shadow-sm',      active);
-      btn.classList.toggle('font-semibold',  active);
-      btn.classList.toggle('text-[#5b2633]', active);
-      btn.classList.toggle('font-medium',    !active);
-      btn.classList.toggle('text-[#9a5a68]', !active);
+      if (!btn) return;
+      btn.classList.toggle('bg-[#ed0e64]',        active);
+      btn.classList.toggle('text-white',           active);
+      btn.classList.toggle('shadow-sm',            active);
+      btn.classList.toggle('font-semibold',        active);
+      btn.classList.toggle('bg-white',             !active);
+      btn.classList.toggle('border',               !active);
+      btn.classList.toggle('border-[#ead2dc]',     !active);
+      btn.classList.toggle('font-medium',          !active);
+      btn.classList.toggle('text-[#9a5a68]',       !active);
     });
   }
 
