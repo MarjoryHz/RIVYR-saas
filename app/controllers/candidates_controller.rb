@@ -5,13 +5,33 @@ class CandidatesController < ApplicationController
     authorize Candidate
     @q = params[:q].to_s.strip
     @status = params[:status].to_s.strip
+    @only_favorites = params[:only_favorites] == "1"
+
     scope = policy_scope(Candidate)
       .includes(placements: { mission: { freelancer_profile: :user } })
       .order(:last_name, :first_name)
       .search(@q)
       .with_status(@status)
+
+    scope = scope.where(id: current_user.favorited_candidates.select(:id)) if @only_favorites
+
     @candidates = paginate(scope)
+    @favorite_candidate_ids = current_user.favorite_candidates.pluck(:candidate_id).to_set
     @candidate_rows = @candidates.map { |candidate| build_candidate_row(candidate) }
+  end
+
+  def toggle_favorite
+    @candidate = Candidate.find(params[:id])
+    authorize @candidate, :show?
+
+    favorite = current_user.favorite_candidates.find_by(candidate_id: @candidate.id)
+    if favorite.present?
+      favorite.destroy!
+    else
+      current_user.favorite_candidates.create!(candidate: @candidate)
+    end
+
+    redirect_to params[:return_to].presence || (request.path.start_with?("/dashboard") ? dashboard_candidates_path : candidates_path)
   end
 
   def show
@@ -119,9 +139,13 @@ class CandidatesController < ApplicationController
       :email,
       :phone,
       :linkedin_url,
+      :website_url,
+      :location,
       :status,
       :notes,
-      :source
+      :source,
+      job_titles: [],
+      skills: []
     )
   end
 end

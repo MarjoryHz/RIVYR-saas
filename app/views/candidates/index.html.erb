@@ -1,157 +1,146 @@
+<% surface_card_class = "rounded-[1.45rem] border border-base-100/70 bg-base-100/88 shadow-lg" %>
 <% tone_classes = {
   "emerald" => "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  "amber" => "bg-amber-50 text-amber-700 ring-amber-200",
-  "slate" => "bg-slate-100 text-slate-600 ring-slate-200",
-  "pink" => "bg-[#FDE7F1] text-[#B40C4D] ring-[#F7C4DA]",
-  "sky" => "bg-sky-50 text-sky-700 ring-sky-200"
+  "amber"   => "bg-amber-50 text-amber-700 ring-amber-200",
+  "slate"   => "bg-slate-100 text-slate-600 ring-slate-200",
+  "pink"    => "bg-[#FDE7F1] text-[#B40C4D] ring-[#F7C4DA]",
+  "sky"     => "bg-sky-50 text-sky-700 ring-sky-200"
 } %>
 
-<div class="w-full max-w-none px-6 py-4 md:px-11 md:py-5 lg:px-10">
-  <div class="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
-    <div class="border-b border-slate-200 bg-gradient-to-r from-slate-50 via-white to-[#FFF3F8] px-6 py-6 sm:px-8">
-      <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <div class="space-y-2">
-          <span class="inline-flex items-center rounded-full bg-[#FDE7F1] px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[#B40C4D]">
-            CVtheque Rivyr
-          </span>
-          <div>
-            <h1 class="text-3xl font-semibold tracking-tight text-slate-900">Profils candidats</h1>
-            <p class="mt-2 max-w-3xl text-sm text-slate-500">
-              Une vue claire des candidats vus par le collectif, de leur niveau de qualification et des actions a engager.
-            </p>
-          </div>
-        </div>
+<div class="mx-auto max-w-7xl p-4 md:p-6">
+  <section class="space-y-6">
 
-        <div class="flex flex-wrap items-center gap-3">
-          <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-right shadow-sm">
-            <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Profils suivis</p>
-            <p class="mt-1 text-2xl font-semibold text-slate-900"><%= @candidate_rows.size %></p>
-          </div>
-          <%= link_to "Nouveau candidat", new_candidate_path, class: "inline-flex items-center rounded-full bg-[#ED0E64] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(237,14,100,0.24)] transition hover:brightness-105" %>
-        </div>
+    <header class="space-y-5">
+      <div class="space-y-2">
+        <h1 class="text-3xl font-semibold tracking-tight text-base-content md:text-4xl">CVthèque</h1>
+        <p class="text-base text-base-content/60">Une vue claire des candidats vus par le collectif, de leur niveau de qualification et des actions à engager.</p>
       </div>
 
-      <div class="mt-6 rounded-[24px] border border-slate-200 bg-white/90 p-4 shadow-sm">
-        <%= form_with url: request.path, method: :get, local: true, class: "grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_220px_auto]" do %>
-          <div class="relative">
-            <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
-              <i class="fa-solid fa-magnifying-glass"></i>
-            </span>
-            <%= text_field_tag :q, @q, placeholder: "Rechercher un candidat, une source, un email...", class: "w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-[#ED0E64] focus:bg-white focus:ring-4 focus:ring-[#FDE7F1]" %>
-          </div>
+    </header>
 
-          <%= select_tag :status,
-                options_for_select([["Tous les statuts", ""]] + Candidate.statuses.keys.map { |value| [value.humanize, value] }, @status),
-                class: "rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-[#ED0E64] focus:bg-white focus:ring-4 focus:ring-[#FDE7F1]" %>
+    <div class="<%= surface_card_class %> overflow-hidden">
+      <div class="border-b border-base-200/70 px-6 py-4">
+        <div class="relative">
+          <div class="flex flex-wrap gap-3">
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-2xl border border-base-200 bg-base-100/75 px-5 py-3 text-base font-medium text-base-content/70 shadow-sm transition hover:bg-base-100/95"
+              aria-controls="candidates-filtres"
+              aria-expanded="false"
+              onclick="document.getElementById('candidates-filtres').classList.toggle('hidden'); this.setAttribute('aria-expanded', String(!document.getElementById('candidates-filtres').classList.contains('hidden')));">
+              <i class="fa-solid fa-sliders text-[#ed0e64]"></i>
+              Filtres
+              <i class="fa-solid fa-angle-down text-xs text-[#ed0e64]"></i>
+            </button>
 
-          <div class="flex gap-3">
-            <%= submit_tag "Filtrer", class: "inline-flex cursor-pointer items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800" %>
-            <% if @q.present? || @status.present? %>
-              <%= link_to "Reset", request.path, class: "inline-flex items-center justify-center rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900" %>
+            <%= link_to request.path + "?only_favorites=#{@only_favorites ? '0' : '1'}",
+                  class: "inline-flex items-center gap-2 rounded-2xl border px-5 py-3 text-base font-medium shadow-sm transition #{@only_favorites ? 'border-[#f1a38b] bg-[#f4a58a] text-white' : 'border-base-200 bg-base-100/75 text-base-content/70 hover:bg-base-100/95'}" do %>
+              <i class="fa-<%= @only_favorites ? 'solid' : 'regular' %> fa-heart text-[#ed0e64]"></i>
+              Favoris
+            <% end %>
+
+            <%= link_to new_candidate_path, class: "inline-flex items-center gap-2 rounded-2xl border border-[#f1a38b] bg-[#f4a58a] px-5 py-3 text-base font-medium text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" do %>
+              <i class="fa-solid fa-plus"></i>
+              Nouveau candidat
             <% end %>
           </div>
-        <% end %>
-      </div>
-    </div>
 
-    <div class="overflow-hidden">
-      <div class="hidden min-[1180px]:grid min-[1180px]:grid-cols-[88px_minmax(280px,1.8fr)_180px_220px_200px_220px] items-center gap-4 border-b border-slate-200 bg-slate-50/90 px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400 sm:px-8">
-        <span>Selection</span>
-        <span>Profil</span>
-        <span>Qualification</span>
-        <span>Vu par</span>
-        <span>Dernier poste</span>
-        <span class="text-right">Actions</span>
+          <div id="candidates-filtres" class="absolute inset-x-0 top-full z-30 mt-3 hidden rounded-[1.45rem] border border-base-200 bg-base-100 p-4 shadow-xl">
+            <%= form_with url: request.path, method: :get, local: true, class: "grid gap-3 md:grid-cols-2 xl:grid-cols-4", html: { onsubmit: "document.getElementById('candidates-filtres').classList.add('hidden')" } do %>
+              <div>
+                <label class="mb-1 block text-sm font-medium text-base-content/70">Recherche</label>
+                <%= text_field_tag :q, @q, placeholder: "Nom, email, source...", class: "input input-bordered w-full" %>
+              </div>
+
+              <div>
+                <label class="mb-1 block text-sm font-medium text-base-content/70">Statut</label>
+                <%= select_tag :status,
+                      options_for_select([["Tous les statuts", ""]] + Candidate.statuses.keys.map { |v| [v.humanize, v] }, @status),
+                      class: "select select-bordered w-full" %>
+              </div>
+
+              <div class="flex items-end gap-2 md:col-span-2 xl:col-span-2">
+                <%= submit_tag "Appliquer", class: "btn btn-primary flex-1" %>
+                <% if @q.present? || @status.present? %>
+                  <%= link_to "Réinitialiser", request.path, class: "btn btn-ghost" %>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
       </div>
 
       <% if @candidate_rows.any? %>
-        <div class="divide-y divide-slate-200">
+        <div class="divide-y divide-base-200/70">
           <% @candidate_rows.each do |row| %>
             <% candidate = row[:candidate] %>
-            <% search_badge = row[:search_status] %>
             <% status_badge = row[:status_badge] %>
-            <div class="px-6 py-5 transition hover:bg-slate-50/80 sm:px-8">
-              <div class="grid gap-5 min-[1180px]:grid-cols-[88px_minmax(280px,1.8fr)_180px_220px_200px_220px] min-[1180px]:items-center">
-                <div class="flex items-center gap-3">
-                  <label class="inline-flex cursor-pointer items-center">
-                    <input type="checkbox" class="h-5 w-5 rounded-md border-slate-300 text-[#ED0E64] focus:ring-[#ED0E64]" />
-                  </label>
-                  <div class="relative">
-                    <%= image_tag row[:avatar_path], alt: row[:full_name], class: "h-12 w-12 rounded-full object-cover ring-2 ring-[#F7C4DA]" %>
-                    <% if row[:certified] %>
-                      <span class="absolute -bottom-1 -right-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#ED0E64] text-[10px] text-white ring-2 ring-white" title="Profil qualifie par Rivyr">
-                        <i class="fa-solid fa-certificate"></i>
-                      </span>
-                    <% end %>
-                  </div>
+            <% search_badge = row[:search_status] %>
+            <article class="px-6 py-5 transition hover:bg-base-100/60">
+              <div class="grid items-center gap-4 xl:grid-cols-[auto_minmax(0,1fr)_auto]">
+
+                <div class="relative shrink-0">
+                  <%= image_tag row[:avatar_path], alt: row[:full_name], class: "h-12 w-12 rounded-full object-cover ring-2 ring-[#F7C4DA]" %>
+                  <% if row[:certified] %>
+                    <span class="absolute -bottom-1 -right-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#ED0E64] text-[10px] text-white ring-2 ring-white" title="Profil qualifié par Rivyr">
+                      <i class="fa-solid fa-certificate"></i>
+                    </span>
+                  <% end %>
                 </div>
 
-                <div class="min-w-0">
+                <div class="min-w-0 space-y-1.5">
                   <div class="flex flex-wrap items-center gap-2">
-                    <h2 class="truncate text-xl font-semibold text-slate-900"><%= row[:full_name] %></h2>
+                    <h2 class="truncate text-xl font-semibold text-base-content"><%= row[:full_name] %></h2>
                     <% if row[:seen] %>
-                      <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                        deja vu
-                      </span>
+                      <span class="inline-flex items-center rounded-full bg-base-200/70 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-base-content/50">déjà vu</span>
                     <% end %>
+                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 <%= tone_classes.fetch(status_badge[:tone]) %>"><%= status_badge[:label] %></span>
+                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 <%= tone_classes.fetch(search_badge[:tone]) %>"><%= search_badge[:label] %></span>
                   </div>
-                  <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-slate-500">
-                    <span><%= candidate.email.presence || "Email non renseigne" %></span>
-                    <span class="hidden text-slate-300 sm:inline">•</span>
-                    <span><%= candidate.phone.presence || "Telephone non renseigne" %></span>
+                  <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-base-content/55">
+                    <span><i class="fa-solid fa-envelope mr-1"></i><%= candidate.email.presence || "Email non renseigné" %></span>
+                    <span class="text-base-content/20">•</span>
+                    <span><i class="fa-solid fa-phone mr-1"></i><%= candidate.phone.presence || "Téléphone non renseigné" %></span>
                   </div>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2 min-[1180px]:justify-start">
-                  <span class="inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold ring-1 <%= tone_classes.fetch(status_badge[:tone]) %>">
-                    <%= status_badge[:label] %>
-                  </span>
-                  <span class="inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold ring-1 <%= tone_classes.fetch(search_badge[:tone]) %>">
-                    <%= search_badge[:label] %>
-                  </span>
-                </div>
-
-                <div class="min-w-0">
-                  <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Freelance du label</p>
-                  <p class="mt-1 truncate text-sm font-medium text-slate-700"><%= row[:freelance_name].presence || "Pas encore partage" %></p>
-                </div>
-
-                <div class="min-w-0">
-                  <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Dernier poste</p>
-                  <p class="mt-1 truncate text-sm font-medium text-slate-700"><%= row[:last_position] %></p>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-2 min-[1180px]:justify-end">
-                  <%= link_to (request.path.start_with?("/dashboard") ? dashboard_candidate_path(candidate) : candidate_path(candidate)), class: "inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-900", title: "Voir la fiche" do %>
+                <div class="flex flex-wrap items-center gap-2 xl:justify-end">
+                  <% is_favorite = @favorite_candidate_ids.include?(candidate.id) %>
+                  <%= link_to toggle_favorite_candidate_path(candidate, return_to: request.fullpath), method: :patch, data: { turbo_method: :patch },
+                        class: "inline-flex h-10 w-10 items-center justify-center rounded-full border transition #{is_favorite ? 'border-[#f7c4da] bg-[#fff0f6] text-[#ed0e64]' : 'border-base-200 bg-base-100/75 text-base-content/40 hover:text-[#ed0e64]'}",
+                        title: is_favorite ? "Retirer des favoris" : "Ajouter aux favoris" do %>
+                    <i class="fa-<%= is_favorite ? 'solid' : 'regular' %> fa-heart"></i>
+                  <% end %>
+                  <%= link_to (request.path.start_with?("/dashboard") ? dashboard_candidate_path(candidate) : candidate_path(candidate)),
+                        class: "inline-flex h-10 w-10 items-center justify-center rounded-full border border-base-200 bg-base-100/75 text-base-content/60 transition hover:border-base-300 hover:text-base-content",
+                        title: "Voir la fiche" do %>
                     <i class="fa-regular fa-eye"></i>
                   <% end %>
-                  <%= link_to dashboard_freelancer_profiles_path(candidate_id: candidate.id), class: "inline-flex items-center rounded-full border border-[#F7C4DA] bg-[#FFF3F8] px-3.5 py-2 text-sm font-semibold text-[#B40C4D] transition hover:bg-[#FDE7F1]" do %>
-                    <i class="fa-solid fa-share-nodes mr-2"></i>
-                    Proposer
-                  <% end %>
                 </div>
+
               </div>
-            </div>
+            </article>
           <% end %>
         </div>
       <% else %>
-        <div class="px-6 py-16 text-center sm:px-8">
-          <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+        <div class="p-8 text-center text-base-content/65">
+          <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-base-200/60 text-base-content/40">
             <i class="fa-solid fa-folder-open text-xl"></i>
           </div>
-          <h2 class="mt-5 text-xl font-semibold text-slate-900">Aucun candidat a afficher</h2>
-          <p class="mt-2 text-sm text-slate-500">Ajuste tes filtres ou ajoute un nouveau profil dans la CVtheque.</p>
-          <%= link_to "Creer un candidat", new_candidate_path, class: "mt-6 inline-flex items-center rounded-full bg-[#ED0E64] px-4 py-2.5 text-sm font-semibold text-white" %>
+          <h2 class="mt-5 text-xl font-semibold text-base-content">Aucun candidat à afficher</h2>
+          <p class="mt-2 text-sm text-base-content/55">Ajuste tes filtres ou ajoute un nouveau profil dans la CVthèque.</p>
+          <%= link_to "Créer un candidat", new_candidate_path, class: "mt-6 inline-flex items-center gap-2 rounded-full border border-[#f1a38b] bg-[#f4a58a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" %>
         </div>
       <% end %>
+
+      <div class="border-t border-base-200/70 px-6 py-4">
+        <%= render "shared/pagination",
+              page: @page,
+              total_pages: @total_pages,
+              extra_params: { q: @q, status: @status },
+              path: ->(params) { request.path.start_with?("/dashboard") ? dashboard_candidates_path(params) : candidates_path(params) } %>
+      </div>
     </div>
 
-    <div class="border-t border-slate-200 bg-slate-50 px-6 py-4 sm:px-8">
-      <%= render "shared/pagination",
-            page: @page,
-            total_pages: @total_pages,
-            extra_params: { q: @q, status: @status },
-            path: ->(params) { request.path.start_with?("/dashboard") ? dashboard_candidates_path(params) : candidates_path(params) } %>
-    </div>
-  </div>
+  </section>
 </div>
