@@ -1,3 +1,5 @@
+require_dependency Rails.root.join("app/services/pages/feed_showcase").to_s
+
 class FreelanceDashboardBuilder
   attr_reader :context, :current_user
 
@@ -31,6 +33,7 @@ class FreelanceDashboardBuilder
       library_missions: recent_library_missions,
       dashboard_greeting_name: current_user.first_name.presence || "Julie",
       dashboard_portfolio: portfolio,
+      dashboard_invoice_snapshot: build_dashboard_invoice_snapshot(placements, portfolio),
       dashboard_kpis: build_dashboard_kpis(current_missions_scope, pending_applications, placements, portfolio, recommended_missions),
       dashboard_priorities: build_dashboard_priorities(current_missions_scope.limit(5), pending_applications.first(3), placements.first(4), urgent_preferences),
       dashboard_missions: current_missions_scope.limit(5).map { |mission| build_dashboard_mission_card(mission, urgent_preferences.include?(mission.id)) },
@@ -38,9 +41,11 @@ class FreelanceDashboardBuilder
       dashboard_recommended_missions: recommended_missions.map { |mission| build_dashboard_recommended_card(mission) },
       dashboard_pipeline: build_dashboard_pipeline(current_missions_scope),
       dashboard_finance_summary: build_dashboard_finance_summary(portfolio),
+      dashboard_todo_preview: build_dashboard_todo_preview,
       dashboard_upcoming_payments: build_dashboard_upcoming_payment_rows(placements.first(5)),
       dashboard_signatures: build_dashboard_signature_rows(current_missions_scope.limit(5), placements.first(4)),
       dashboard_rivyr_feed: build_dashboard_rivyr_feed(placements.first(6), pending_applications.first(3)),
+      dashboard_feed_preview: build_dashboard_feed_preview,
       dashboard_week_schedule: build_dashboard_week_schedule(current_missions_scope.limit(4)),
       dashboard_documents: build_dashboard_documents(current_missions_scope.limit(4), placements.first(4)),
       dashboard_performance: build_dashboard_performance(current_missions_scope, placements)
@@ -79,6 +84,7 @@ class FreelanceDashboardBuilder
       .order(created_at: :desc)
       .limit(18)
       .to_a
+    candidate_missions = context.send(:fallback_library_missions) if candidate_missions.empty?
 
     context.instance_variable_set(
       :@client_insights,
@@ -89,9 +95,9 @@ class FreelanceDashboardBuilder
     context.instance_variable_set(:@mission_scores, mission_scores)
     context.instance_variable_set(:@mission_score_details, mission_score_details)
 
-    context.send(:sort_missions_by_score, candidate_missions).first(3)
+    context.send(:sort_missions_by_score, candidate_missions).first(4)
   rescue StandardError
-    recent_library_missions
+    recent_library_missions.first(4)
   end
 
   def urgent_preferences_for(freelancer_profile, current_missions_scope)
@@ -308,6 +314,34 @@ class FreelanceDashboardBuilder
     ]
   end
 
+  def build_dashboard_invoice_snapshot(placements, portfolio)
+    freelancer_invoices = placements.filter_map(&:freelancer_invoice)
+    issued_invoices = freelancer_invoices.select(&:status_issued?)
+    paid_invoices = freelancer_invoices.select(&:status_paid?)
+
+    current_month_total_cents = freelancer_invoices
+      .select { |invoice| (invoice.issue_date || invoice.created_at.to_date).month == Date.current.month && (invoice.issue_date || invoice.created_at.to_date).year == Date.current.year }
+      .sum(&:amount_cents)
+
+    if current_month_total_cents.zero?
+      current_month_total_cents = portfolio[:available_cents].positive? ? portfolio[:available_cents] : freelancer_invoices.sum(&:amount_cents)
+    end
+
+    trend_points = if current_month_total_cents.positive?
+      [0.34, 0.42, 0.51, 0.57, 0.68, 0.82]
+    else
+      [0.28, 0.32, 0.37, 0.35, 0.41, 0.46]
+    end
+
+    {
+      current_month_total_cents: current_month_total_cents,
+      issued_count: issued_invoices.count,
+      paid_count: paid_invoices.count,
+      pending_count: [issued_invoices.count - paid_invoices.count, 0].max,
+      trend_points: trend_points
+    }
+  end
+
   def build_dashboard_upcoming_payment_rows(placements)
     placements.map do |placement|
       client_invoice = placement.client_invoice
@@ -390,6 +424,24 @@ class FreelanceDashboardBuilder
     events.sort_by { |event| event[:date] }.reverse.first(6)
   end
 
+  def build_dashboard_feed_preview
+    payload = ::Pages::FeedShowcase.new.payload
+
+    payload.fetch(:feed_posts, []).first(2).map do |post|
+      {
+        title: post[:title],
+        author: post[:author],
+        role: post[:role],
+        time: post[:time],
+        avatar: post[:avatar],
+        likes: post.dig(:stats, :likes).to_i,
+        comments: post.dig(:stats, :comments).to_i
+      }
+    end
+  rescue StandardError
+    []
+  end
+
   def build_dashboard_week_schedule(missions)
     weekday_labels = %w[Lundi Mardi Mercredi Jeudi Vendredi]
     missions.each_with_index.map do |mission, index|
@@ -399,6 +451,23 @@ class FreelanceDashboardBuilder
         detail: mission.region&.name || "Visio"
       }
     end.first(4)
+  end
+
+  def build_dashboard_todo_preview
+    current_user.todo_tasks
+      .includes(:todo_category)
+      .ordered
+      .limit(4)
+      .map do |task|
+        {
+          id: task.id,
+          title: task.title,
+          category: task.todo_category.name,
+          done: task.status_done?,
+          priority: task.priority,
+          due_label: task.due_on.present? ? I18n.l(task.due_on, format: "%d %b") : nil
+        }
+      end
   end
 
   def build_dashboard_documents(missions, placements)
