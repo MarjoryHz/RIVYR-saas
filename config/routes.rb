@@ -43,7 +43,11 @@ Rails.application.routes.draw do
       post :toggle_favorite
     end
   end
-  resources :candidates
+  resources :candidates do
+    member do
+      patch :toggle_favorite
+    end
+  end
   resources :placements
   resources :invoices do
     post :create_note, on: :member

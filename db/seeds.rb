@@ -426,6 +426,46 @@ CANDIDATE_NOTES = [
   "Experience solide, discours clair, niveau d energie bon et motivations alignees avec des contextes de croissance ou de transformation."
 ].freeze
 
+CANDIDATE_PROFILES = [
+  {
+    job_titles: ["Commercial terrain", "Responsable grands comptes", "Directeur commercial"],
+    skills: ["Prospection B2B", "Negociation grands comptes", "Developpement de portefeuille clients", "Management d equipe commerciale", "Pilotage de la performance commerciale"]
+  },
+  {
+    job_titles: ["Charge de recrutement", "Responsable RH", "DRH"],
+    skills: ["Acquisition de talents", "Gestion des relations sociales", "Pilotage de la masse salariale", "Conduite du changement", "Droit social"]
+  },
+  {
+    job_titles: ["Controleur de gestion", "Responsable financier", "Directeur Administratif et Financier"],
+    skills: ["Controle de gestion", "Consolidation comptable", "Pilotage budgetaire", "Reporting financier", "Analyse de rentabilite"]
+  },
+  {
+    job_titles: ["Chef de projet marketing", "Responsable marketing", "Directeur marketing"],
+    skills: ["Strategie de marque", "Marketing digital", "Gestion de campagnes", "Analyse de donnees", "Lancement de produit"]
+  },
+  {
+    job_titles: ["Responsable logistique", "Responsable supply chain", "Directeur des operations"],
+    skills: ["Gestion des flux", "Optimisation des processus", "Lean management", "Pilotage fournisseurs", "Management multisites"]
+  },
+  {
+    job_titles: ["Responsable production", "Directeur de site", "Directeur industriel"],
+    skills: ["Pilotage de la production", "Management d equipes terrain", "Amelioration continue", "Gestion budgetaire industrielle", "Securite et conformite"]
+  },
+  {
+    job_titles: ["Chef de projet", "Responsable bureau d etudes", "Directeur technique"],
+    skills: ["Gestion de projet", "Coordination pluridisciplinaire", "Analyse technique", "Pilotage de budgets projets", "Validation et mise en service"]
+  },
+  {
+    job_titles: ["Charge de developpement", "Responsable business development", "Directeur du developpement"],
+    skills: ["Developpement commercial", "Analyse de marche", "Negociation partenariale", "Elaboration de business plans", "Structuration d alliances"]
+  }
+].freeze
+
+CANDIDATE_LOCATIONS = [
+  'Lille', 'Paris', 'Lyon', 'Bordeaux', 'Nantes', 'Strasbourg', 'Rennes',
+  'Marseille', 'Toulouse', 'Bruxelles', 'Rouen', 'Amiens', 'Grenoble', 'Montpellier'
+].freeze
+
 CANDIDATE_STATUSES = ['new', 'qualified', 'presented', 'interviewing', 'placed'].freeze
 CANDIDATE_SOURCES = ['linkedin', 'network', 'jobboard', 'referral', 'direct'].freeze
 MISSION_ORIGINS = ['rivyr', 'freelancer', 'partner'].freeze
@@ -799,14 +839,29 @@ candidates = []
   last_name = "#{LAST_NAMES[index % LAST_NAMES.size]}#{index + 1}"
   email = "#{first_name.parameterize}.#{last_name.parameterize}@candidate.rivyr.test"
 
+  profile = CANDIDATE_PROFILES[index % CANDIDATE_PROFILES.size]
+  status = CANDIDATE_STATUSES[index % CANDIDATE_STATUSES.size]
+  # Nombre d intitules de poste selon le niveau de maturite du candidat (statut)
+  titles_count = case status
+  when 'new'          then 1
+  when 'qualified'    then 2
+  when 'presented'    then 2
+  when 'interviewing' then 3
+  when 'placed'       then 3
+  else 1
+  end
+
   candidate = upsert_record(Candidate, { email: email }, {
     first_name: first_name,
     last_name: last_name,
     phone: safe_phone(200 + index),
     linkedin_url: "https://www.linkedin.com/in/#{first_name.parameterize}-#{last_name.parameterize}",
-    status: CANDIDATE_STATUSES[index % CANDIDATE_STATUSES.size],
+    status: status,
     notes: CANDIDATE_NOTES[index % CANDIDATE_NOTES.size],
-    source: CANDIDATE_SOURCES[index % CANDIDATE_SOURCES.size]
+    source: CANDIDATE_SOURCES[index % CANDIDATE_SOURCES.size],
+    job_titles: profile[:job_titles].first(titles_count),
+    skills: profile[:skills],
+    location: CANDIDATE_LOCATIONS[index % CANDIDATE_LOCATIONS.size]
   })
 
   candidates << candidate
