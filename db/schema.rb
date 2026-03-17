@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_17_190000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_17_220000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -31,6 +31,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_190000) do
     t.string "email"
     t.string "first_name"
     t.string "job_titles", default: [], array: true
+    t.jsonb "languages", default: []
     t.string "last_name"
     t.string "linkedin_url"
     t.string "location"
@@ -89,6 +90,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_190000) do
     t.string "status"
     t.datetime "updated_at", null: false
     t.index ["placement_id"], name: "index_commissions_on_placement_id"
+  end
+
+  create_table "contributions", force: :cascade do |t|
+    t.bigint "candidate_id", null: false
+    t.text "content", null: false
+    t.datetime "created_at", null: false
+    t.string "kind", null: false
+    t.boolean "published", default: false, null: false
+    t.datetime "published_at"
+    t.text "question"
+    t.datetime "updated_at", null: false
+    t.index ["candidate_id"], name: "index_contributions_on_candidate_id"
   end
 
   create_table "educations", force: :cascade do |t|
@@ -350,6 +363,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_190000) do
   add_foreign_key "client_contacts", "clients"
   add_foreign_key "client_contacts", "users"
   add_foreign_key "commissions", "placements"
+  add_foreign_key "contributions", "candidates"
   add_foreign_key "educations", "candidates"
   add_foreign_key "favorite_candidates", "candidates"
   add_foreign_key "favorite_candidates", "users"

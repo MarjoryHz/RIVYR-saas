@@ -23,7 +23,24 @@
               alt: "#{@candidate.first_name} #{@candidate.last_name}",
               class: "h-24 w-24 rounded-full object-cover ring-4 ring-white shadow-md shrink-0" %>
         <div class="space-y-2">
-          <h1 class="text-3xl font-bold text-[#3d1a24] md:text-4xl"><%= @candidate.first_name %> <%= @candidate.last_name %></h1>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="text-3xl font-bold text-[#3d1a24] md:text-4xl"><%= @candidate.first_name %> <%= @candidate.last_name %></h1>
+            <% if @candidate.languages&.any? %>
+              <div class="flex items-center gap-1">
+                <% @candidate.languages.each do |lang| %>
+                  <% code  = lang["code"]  || lang[:code] %>
+                  <% level = lang["level"] || lang[:level] %>
+                  <div class="relative group">
+                    <span class="cursor-default text-xl leading-none"><%= Candidate::LANGUAGE_FLAGS[code] %></span>
+                    <div class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-xl bg-[#3d1a24] px-2.5 py-1.5 text-[11px] font-medium text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                      <%= Candidate::LANGUAGE_NAMES[code] %> · <%= Candidate::LANGUAGE_LEVELS[level] %>
+                      <span class="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-[#3d1a24]"></span>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
           <% if last_title.present? %>
             <p class="text-[15px] font-medium text-[#7b4b5a]"><%= last_title %></p>
           <% end %>
@@ -409,8 +426,47 @@
     <%# ══════════════════════════════════ %>
     <%# ── Panneau : Contribution ── %>
     <%# ══════════════════════════════════ %>
-    <div id="panel-contribution" class="hidden">
-      <%# Contenu à venir %>
+    <div id="panel-contribution" class="hidden space-y-4">
+      <% contributions = @candidate.contributions.published %>
+
+      <%# Empty state %>
+      <% if contributions.empty? %>
+        <div class="flex flex-col items-center justify-center rounded-3xl border border-dashed border-[#ead2dc] bg-[#fff8fb]/60 py-16 text-center">
+          <span class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#fff0f6] text-[#ed0e64]">
+            <i class="fa-solid fa-brain text-xl"></i>
+          </span>
+          <p class="text-base font-semibold text-[#5b2633]">Aucune contribution publiée</p>
+          <p class="mt-1 text-[13px] text-[#9a5a68]">Les réponses aux thématiques IA et les publications apparaîtront ici.</p>
+        </div>
+      <% else %>
+        <div class="space-y-3">
+          <% contributions.each do |contribution| %>
+            <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+              <div class="flex items-start gap-4">
+                <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full <%= contribution.kind_ai_response? ? 'bg-[#e8e0f5] text-[#6b4fa8]' : contribution.kind_open_to_opportunity? ? 'bg-[#dcfce7] text-[#16a34a]' : contribution.kind_new_experience? ? 'bg-[#fff0f6] text-[#ed0e64]' : 'bg-[#fef3e2] text-[#c47c1a]' %>">
+                  <i class="<%= Contribution::KIND_ICONS[contribution.kind] %> text-sm"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-[11px] font-semibold uppercase tracking-wide <%= contribution.kind_ai_response? ? 'text-[#6b4fa8]' : contribution.kind_open_to_opportunity? ? 'text-[#16a34a]' : contribution.kind_new_experience? ? 'text-[#ed0e64]' : 'text-[#c47c1a]' %>">
+                      <%= Contribution::KIND_LABELS[contribution.kind] %>
+                    </span>
+                    <% if contribution.published_at.present? %>
+                      <span class="text-[11px] text-[#9a5a68]">· <%= contribution.published_at.strftime("%-d %b %Y") %></span>
+                    <% end %>
+                  </div>
+                  <% if contribution.kind_ai_response? && contribution.question.present? %>
+                    <p class="mt-2 rounded-xl border border-[#e8e0f5] bg-[#f5f0fc] px-3 py-2 text-[12px] font-medium italic text-[#6b4fa8]">
+                      <i class="fa-solid fa-brain mr-1.5 text-[10px]"></i><%= contribution.question %>
+                    </p>
+                  <% end %>
+                  <p class="mt-2 text-[13px] leading-relaxed text-[#4c1f2a]"><%= contribution.content %></p>
+                </div>
+              </div>
+            </article>
+          <% end %>
+        </div>
+      <% end %>
     </div>
 
     <%# ── Panneau : Historique ── %>

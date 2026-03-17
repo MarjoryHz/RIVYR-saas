@@ -27,6 +27,7 @@ ClientContact.destroy_all
 Client.destroy_all
 WorkExperience.destroy_all
 Education.destroy_all
+Contribution.destroy_all
 Candidate.destroy_all
 FreelancerProfile.destroy_all
 User.destroy_all
@@ -575,6 +576,17 @@ CANDIDATE_SALARY_RANGES = [
   '75 – 90k€', '90 – 110k€', '> 110k€'
 ].freeze
 
+CANDIDATE_LANGUAGES = [
+  [ { code: "fr", level: "bilingual" }, { code: "en", level: "professional" } ],
+  [ { code: "fr", level: "bilingual" }, { code: "en", level: "bilingual" }, { code: "de", level: "partial" } ],
+  [ { code: "fr", level: "bilingual" }, { code: "en", level: "professional" }, { code: "es", level: "partial" } ],
+  [ { code: "fr", level: "bilingual" }, { code: "en", level: "bilingual" } ],
+  [ { code: "fr", level: "bilingual" }, { code: "nl", level: "professional" }, { code: "en", level: "professional" } ],
+  [ { code: "fr", level: "bilingual" }, { code: "en", level: "professional" }, { code: "it", level: "partial" } ],
+  [ { code: "fr", level: "bilingual" }, { code: "en", level: "bilingual" }, { code: "pt", level: "partial" } ],
+  [ { code: "fr", level: "bilingual" }, { code: "ar", level: "bilingual" }, { code: "en", level: "professional" } ]
+].freeze
+
 CANDIDATE_STATUSES = ['new', 'qualified', 'presented', 'interviewing', 'placed'].freeze
 CANDIDATE_SOURCES = ['linkedin', 'network', 'jobboard', 'referral', 'direct'].freeze
 MISSION_ORIGINS = ['rivyr', 'freelancer', 'partner'].freeze
@@ -976,7 +988,8 @@ candidates = []
     mobility_zone:  CANDIDATE_MOBILITY_ZONES[index % CANDIDATE_MOBILITY_ZONES.size],
     availability:   CANDIDATE_AVAILABILITIES[index % CANDIDATE_AVAILABILITIES.size],
     contract_types: CANDIDATE_CONTRACT_TYPES[index % CANDIDATE_CONTRACT_TYPES.size],
-    salary_range:   CANDIDATE_SALARY_RANGES[index % CANDIDATE_SALARY_RANGES.size]
+    salary_range:   CANDIDATE_SALARY_RANGES[index % CANDIDATE_SALARY_RANGES.size],
+    languages:      CANDIDATE_LANGUAGES[index % CANDIDATE_LANGUAGES.size]
   })
 
   experiences.each_with_index do |exp, pos|
@@ -1005,6 +1018,53 @@ candidates = []
         position:    pos
       )
       e.save!
+    end
+  end
+
+  # Contributions
+  contribution_data = [
+    {
+      kind:      "ai_response",
+      question:  "Selon vous, quelles sont les clés d'un leadership efficace dans un contexte de transformation organisationnelle ?",
+      content:   "Pour moi, le leadership en 2025 passe avant tout par la capacité à créer un environnement de confiance. J'ai appris que les équipes performantes ne sont pas celles qu'on contrôle, mais celles qu'on inspire. Dans mon dernier poste, j'ai mis en place des rituels hebdomadaires courts — 15 minutes — pour donner de la visibilité sur les priorités et recueillir les blocages. Le résultat : une réduction de 30% du turnover sur 18 mois.",
+      published: true
+    },
+    {
+      kind:      "open_to_opportunity",
+      question:  nil,
+      content:   "Je suis actuellement à l'écoute d'opportunités dans mon domaine. Fort de mes expériences en management et développement stratégique, je recherche un nouveau challenge à la hauteur de mes ambitions. N'hésitez pas à me contacter pour échanger.",
+      published: true
+    },
+    {
+      kind:      "new_experience",
+      question:  nil,
+      content:   "Je suis ravi d'annoncer que j'ai rejoint une nouvelle structure dans le cadre d'un projet ambitieux. Cette nouvelle étape s'inscrit dans la continuité de mon parcours et me permet d'explorer de nouveaux challenges passionnants.",
+      published: true
+    },
+    {
+      kind:      "ai_response",
+      question:  "La transformation digitale est-elle avant tout un enjeu technologique ou humain ? Partagez votre expérience.",
+      content:   "La transformation digitale des organisations est souvent perçue comme un enjeu technologique. Je pense au contraire que c'est avant tout un enjeu humain. Accompagner les équipes dans le changement, lever les résistances, co-construire de nouveaux modes de travail : voilà le vrai défi. La technologie n'est que l'outil.",
+      published: true
+    },
+    {
+      kind:      "new_education",
+      question:  nil,
+      content:   "Je viens d'obtenir une nouvelle certification dans mon domaine d'expertise. Cette formation m'a permis d'approfondir mes connaissances et d'acquérir de nouvelles compétences directement applicables dans mon quotidien professionnel.",
+      published: [ true, false ].sample
+    }
+  ]
+
+  contribution_data.first([ 1, 2, 3 ].sample).each_with_index do |data, pos|
+    published_at = (index + pos + 1).weeks.ago
+    Contribution.find_or_initialize_by(candidate: candidate, kind: data[:kind], content: data[:content].first(50)).tap do |c|
+      c.assign_attributes(
+        question:     data[:question],
+        content:      data[:content],
+        published:    data[:published],
+        published_at: data[:published] ? published_at : nil
+      )
+      c.save!
     end
   end
 

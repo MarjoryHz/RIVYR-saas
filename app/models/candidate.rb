@@ -36,11 +36,30 @@ class Candidate < ApplicationRecord
     "60 – 75k€", "75 – 90k€", "90 – 110k€", "> 110k€"
   ].freeze
 
+  LANGUAGE_FLAGS = {
+    "fr" => "🇫🇷", "en" => "🇬🇧", "es" => "🇪🇸", "de" => "🇩🇪",
+    "it" => "🇮🇹", "pt" => "🇵🇹", "nl" => "🇳🇱", "ar" => "🇲🇦",
+    "zh" => "🇨🇳", "ja" => "🇯🇵"
+  }.freeze
+
+  LANGUAGE_NAMES = {
+    "fr" => "Français", "en" => "Anglais",    "es" => "Espagnol", "de" => "Allemand",
+    "it" => "Italien",  "pt" => "Portugais",  "nl" => "Néerlandais", "ar" => "Arabe",
+    "zh" => "Chinois",  "ja" => "Japonais"
+  }.freeze
+
+  LANGUAGE_LEVELS = {
+    "bilingual"    => "Bilingue",
+    "professional" => "Professionnel",
+    "partial"      => "Notions"
+  }.freeze
+
   has_many :placements, dependent: :nullify
   has_many :favorite_candidates, dependent: :destroy
   has_many :candidate_notes, dependent: :destroy
   has_many :work_experiences, -> { ordered }, dependent: :destroy
   has_many :educations,       -> { ordered }, dependent: :destroy
+  has_many :contributions, dependent: :destroy
   belongs_to :user, optional: true
 
   validates :first_name, presence: true
