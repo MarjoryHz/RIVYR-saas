@@ -20,6 +20,7 @@ class User < ApplicationRecord
   has_many :favorite_missions, dependent: :destroy
   has_many :favorited_missions, through: :favorite_missions, source: :mission
   has_many :favorite_candidates, dependent: :destroy
+  has_many :candidate_notes, dependent: :destroy
   has_many :favorited_candidates, through: :favorite_candidates, source: :candidate
 
   validates :first_name, presence: true

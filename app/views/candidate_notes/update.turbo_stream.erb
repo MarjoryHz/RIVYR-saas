@@ -1,0 +1,3 @@
+<%= turbo_stream.replace "candidate-note-#{@note.id}" do %>
+  <%= render "candidate_notes/candidate_note", note: @note %>
+<% end %>

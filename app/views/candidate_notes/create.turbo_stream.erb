@@ -1,0 +1,19 @@
+<%# Supprime l'état vide si présent %>
+<%= turbo_stream.remove "notes-empty" %>
+
+<%# Ajoute la note en tête de liste %>
+<%= turbo_stream.prepend "notes-list",
+      partial: "candidate_notes/candidate_note",
+      locals: { note: @note } %>
+
+<%# Réinitialise le formulaire %>
+<%= turbo_stream.replace "notes-form" do %>
+  <%= render "candidate_notes/form", candidate: @candidate, note: CandidateNote.new %>
+<% end %>
+
+<%# Met à jour le compteur %>
+<%= turbo_stream.replace "notes-count" do %>
+  <span id="notes-count" class="ml-1.5 inline-flex items-center justify-center rounded-full bg-[#fff0f6] px-2 py-0.5 text-[11px] font-semibold text-[#ed0e64]">
+    <%= @candidate.candidate_notes.count %>
+  </span>
+<% end %>

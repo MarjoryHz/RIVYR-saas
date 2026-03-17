@@ -9,21 +9,38 @@
   }
   badge = status_config[@candidate.status] || status_config["new"]
   avatar_index = (@candidate.id || @candidate.email.to_s.sum) % 10 + 1
-  last_title = @candidate.job_titles&.last
+  last_title = @candidate.work_experiences.first&.title || @candidate.job_titles&.last
   whatsapp_number = @candidate.phone.to_s.gsub(/\D/, '')
 %>
 
-<div class="w-full max-w-none px-6 py-5 md:px-11 lg:px-10">
+<div class="w-full max-w-none px-6 pt-0 pb-5 md:px-11 lg:px-10">
   <div class="space-y-4">
 
     <%# ── Hero ── %>
-    <section class="relative overflow-hidden rounded-3xl border border-[#ead2dc] bg-gradient-to-br from-[#fff0f6] via-[#fde4ef] to-[#ffd6e8] p-6">
+    <section class="relative overflow-hidden p-6">
       <div class="relative z-10 flex items-center gap-5">
         <%= image_tag "avatars/avatar-#{format('%02d', avatar_index)}.png",
               alt: "#{@candidate.first_name} #{@candidate.last_name}",
               class: "h-24 w-24 rounded-full object-cover ring-4 ring-white shadow-md shrink-0" %>
         <div class="space-y-2">
-          <h1 class="text-3xl font-bold text-[#3d1a24] md:text-4xl"><%= @candidate.first_name %> <%= @candidate.last_name %></h1>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="text-3xl font-bold text-[#3d1a24] md:text-4xl"><%= @candidate.first_name %> <%= @candidate.last_name %></h1>
+            <% if @candidate.languages&.any? %>
+              <div class="flex items-center gap-1">
+                <% @candidate.languages.each do |lang| %>
+                  <% code  = lang["code"]  || lang[:code] %>
+                  <% level = lang["level"] || lang[:level] %>
+                  <div class="relative group">
+                    <span class="cursor-default text-xl leading-none"><%= Candidate::LANGUAGE_FLAGS[code] %></span>
+                    <div class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-xl bg-[#3d1a24] px-2.5 py-1.5 text-[11px] font-medium text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                      <%= Candidate::LANGUAGE_NAMES[code] %> · <%= Candidate::LANGUAGE_LEVELS[level] %>
+                      <span class="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-[#3d1a24]"></span>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
           <% if last_title.present? %>
             <p class="text-[15px] font-medium text-[#7b4b5a]"><%= last_title %></p>
           <% end %>
@@ -42,58 +59,58 @@
     </section>
 
     <%# ── Tabs ── %>
-    <div class="flex items-center gap-1 rounded-2xl border border-[#ead2dc] bg-[#fff8fb]/95 p-1">
-      <span class="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-[#5b2633] shadow-sm">
-        <i class="fa-regular fa-user text-[#ed0e64]"></i> Profil
-      </span>
-      <span class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium text-[#9a5a68]">
-        <i class="fa-regular fa-note-sticky text-[#ed0e64]"></i> Notes
-      </span>
-      <span class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium text-[#9a5a68]">
-        <i class="fa-regular fa-file text-[#ed0e64]"></i> CV et Docs
-      </span>
-      <span class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium text-[#9a5a68]">
-        <i class="fa-regular fa-clock text-[#ed0e64]"></i> Historique
-      </span>
+    <div class="flex items-center gap-3" id="candidate-tabs">
+      <button type="button" onclick="switchTab('profil')" id="tab-profil"
+        class="inline-flex items-center gap-2 rounded-xl bg-[#ed0e64] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition">
+        <i class="fa-regular fa-user"></i> Profil
+      </button>
+      <button type="button" onclick="switchTab('contribution')" id="tab-contribution"
+        class="inline-flex items-center gap-2 rounded-xl border border-[#ead2dc] bg-white px-5 py-2.5 text-sm font-medium text-[#9a5a68] transition">
+        <i class="fa-regular fa-handshake"></i> Contribution
+      </button>
+      <button type="button" onclick="switchTab('notes')" id="tab-notes" class="hidden"></button>
+      <button type="button" onclick="switchTab('docs')" id="tab-docs" class="hidden"></button>
+      <button type="button" onclick="switchTab('historique')" id="tab-historique" class="hidden"></button>
     </div>
 
-    <%# ── 3 colonnes ── %>
-    <div class="grid gap-4 xl:grid-cols-[1fr_2fr_1fr]">
+    <%# ══════════════════════════════════ %>
+    <%# ── Panneau : Profil ── %>
+    <%# ══════════════════════════════════ %>
+    <div id="panel-profil" class="grid gap-4 xl:grid-cols-[1fr_2fr_1fr]">
 
-      <%# ── Gauche : Informations + contacts ── %>
+      <%# Gauche %>
       <div class="space-y-4">
-        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
-          <h3 class="text-lg font-semibold text-[#5b2633]">Informations</h3>
-          <dl class="mt-4 space-y-3 text-[14px]">
-            <div class="flex items-center justify-between gap-2">
-              <dt class="text-[#9a5a68]">Statut</dt>
-              <dd><span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 <%= badge[:bg] %> <%= badge[:text] %> <%= badge[:ring] %>"><%= badge[:label] %></span></dd>
+        <div class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4 space-y-2.5 text-[13px] text-[#5c3143]">
+          <h4 class="text-base font-semibold text-[#5b2633]">Informations</h4>
+          <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5">
+              <% if @candidate.linkedin_url.present? %>
+                <%= link_to @candidate.linkedin_url, target: "_blank", rel: "noopener",
+                      class: "inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#0A66C2] text-white hover:bg-[#004182] transition" do %>
+                  <i class="fa-brands fa-linkedin-in text-xs"></i>
+                <% end %>
+              <% else %>
+                <span class="inline-flex h-7 w-7 items-center justify-center rounded-full border border-base-200 bg-base-200/50 text-base-content/25"><i class="fa-brands fa-linkedin-in text-xs"></i></span>
+              <% end %>
+              <% if whatsapp_number.present? %>
+                <%= link_to "https://wa.me/#{whatsapp_number}", target: "_blank", rel: "noopener",
+                      class: "inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#25D366] text-white hover:bg-[#1da851] transition" do %>
+                  <i class="fa-brands fa-whatsapp text-xs"></i>
+                <% end %>
+              <% else %>
+                <span class="inline-flex h-7 w-7 items-center justify-center rounded-full border border-base-200 bg-base-200/50 text-base-content/25"><i class="fa-brands fa-whatsapp text-xs"></i></span>
+              <% end %>
+              <% if @candidate.website_url.present? %>
+                <%= link_to @candidate.website_url, target: "_blank", rel: "noopener",
+                      class: "inline-flex h-7 w-7 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#6b3f4f] hover:bg-[#fff0f6] transition" do %>
+                  <i class="fa-solid fa-globe text-xs"></i>
+                <% end %>
+              <% else %>
+                <span class="inline-flex h-7 w-7 items-center justify-center rounded-full border border-base-200 bg-base-200/50 text-base-content/25"><i class="fa-solid fa-globe text-xs"></i></span>
+              <% end %>
             </div>
-            <% if @candidate.source.present? %>
-              <div class="flex items-center justify-between gap-2">
-                <dt class="text-[#9a5a68]">Source</dt>
-                <dd class="font-semibold text-[#4c1f2a]"><%= @candidate.source.humanize %></dd>
-              </div>
-            <% end %>
-            <div class="flex items-center justify-between gap-2">
-              <dt class="text-[#9a5a68]">Placements</dt>
-              <dd class="font-semibold text-[#4c1f2a]"><%= @candidate.placements.size %></dd>
-            </div>
-            <% if @candidate.skills&.any? %>
-              <div>
-                <dt class="mb-2 text-[#9a5a68]">Compétences</dt>
-                <dd class="flex flex-wrap gap-1.5">
-                  <% @candidate.skills.each do |skill| %>
-                    <span class="rounded-full border border-[#ead2dc] bg-white px-2.5 py-1 text-xs font-semibold text-[#6b3f4f]"><%= skill %></span>
-                  <% end %>
-                </dd>
-              </div>
-            <% end %>
-          </dl>
-        </article>
-
-        <%# Contact card %>
-        <div class="rounded-2xl border border-[#ead2dc] bg-white/80 p-4 space-y-2.5 text-[13px] text-[#5c3143]">
+          </div>
+          <div class="border-t border-[#ead2dc] pt-2.5 space-y-2.5">
           <% if @candidate.email.present? %>
             <%= mail_to @candidate.email, class: "flex items-center gap-2 hover:text-[#ed0e64] transition" do %>
               <i class="fa-solid fa-envelope w-4 text-center text-[#ed0e64]"></i>
@@ -112,62 +129,145 @@
               <span><%= @candidate.location %></span>
             </p>
           <% end %>
-          <div class="flex items-center gap-2 pt-1">
-            <% if @candidate.linkedin_url.present? %>
-              <%= link_to @candidate.linkedin_url, target: "_blank", rel: "noopener",
-                    class: "inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#0A66C2] text-white hover:bg-[#004182] transition" do %>
-                <i class="fa-brands fa-linkedin-in text-xs"></i>
-              <% end %>
-            <% else %>
-              <span class="inline-flex h-7 w-7 items-center justify-center rounded-full border border-base-200 bg-base-200/50 text-base-content/25">
-                <i class="fa-brands fa-linkedin-in text-xs"></i>
-              </span>
-            <% end %>
-            <% if whatsapp_number.present? %>
-              <%= link_to "https://wa.me/#{whatsapp_number}", target: "_blank", rel: "noopener",
-                    class: "inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#25D366] text-white hover:bg-[#1da851] transition" do %>
-                <i class="fa-brands fa-whatsapp text-xs"></i>
-              <% end %>
-            <% else %>
-              <span class="inline-flex h-7 w-7 items-center justify-center rounded-full border border-base-200 bg-base-200/50 text-base-content/25">
-                <i class="fa-brands fa-whatsapp text-xs"></i>
-              </span>
-            <% end %>
-            <% if @candidate.website_url.present? %>
-              <%= link_to @candidate.website_url, target: "_blank", rel: "noopener",
-                    class: "inline-flex h-7 w-7 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#6b3f4f] hover:bg-[#fff0f6] transition" do %>
-                <i class="fa-solid fa-globe text-xs"></i>
-              <% end %>
-            <% else %>
-              <span class="inline-flex h-7 w-7 items-center justify-center rounded-full border border-base-200 bg-base-200/50 text-base-content/25">
-                <i class="fa-solid fa-globe text-xs"></i>
-              </span>
-            <% end %>
           </div>
         </div>
+
+        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4 space-y-3 text-[13px] text-[#5c3143]">
+          <h4 class="text-base font-semibold text-[#5b2633]">Recherche</h4>
+
+          <%# Disponibilité %>
+          <div>
+            <p class="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-[#9a5a68]">Disponibilité</p>
+            <% if @candidate.availability.present? %>
+              <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ead2dc] bg-white px-2.5 py-1 text-xs font-medium text-[#4c1f2a]">
+                <i class="fa-regular fa-calendar-check text-[#ed0e64] text-[10px]"></i>
+                <%= Candidate::AVAILABILITY_LABELS[@candidate.availability] %>
+              </span>
+            <% else %>
+              <span class="text-[12px] text-[#c4a0b0] italic">Non renseignée</span>
+            <% end %>
+          </div>
+
+          <%# Zone de mobilité %>
+          <div>
+            <p class="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-[#9a5a68]">Zone de mobilité</p>
+            <% if @candidate.mobility_zone.present? %>
+              <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ead2dc] bg-white px-2.5 py-1 text-xs font-medium text-[#4c1f2a]">
+                <i class="fa-solid fa-location-dot text-[#ed0e64] text-[10px]"></i>
+                <%= @candidate.mobility_zone %>
+              </span>
+            <% else %>
+              <span class="text-[12px] text-[#c4a0b0] italic">Non renseignée</span>
+            <% end %>
+          </div>
+
+          <%# Types de contrat %>
+          <div>
+            <p class="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-[#9a5a68]">Contrats souhaités</p>
+            <% if @candidate.contract_types&.any? %>
+              <div class="flex flex-wrap gap-1">
+                <% @candidate.contract_types.each do |ct| %>
+                  <span class="rounded-full border border-[#ead2dc] bg-white px-2.5 py-1 text-xs font-medium text-[#6b3f4f]">
+                    <%= Candidate::CONTRACT_LABELS[ct] || ct %>
+                  </span>
+                <% end %>
+              </div>
+            <% else %>
+              <span class="text-[12px] text-[#c4a0b0] italic">Non renseignés</span>
+            <% end %>
+          </div>
+
+          <%# Rémunération %>
+          <div>
+            <p class="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-[#9a5a68]">Rémunération souhaitée</p>
+            <% if @candidate.salary_range.present? %>
+              <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ead2dc] bg-white px-2.5 py-1 text-xs font-medium text-[#4c1f2a]">
+                <i class="fa-solid fa-euro-sign text-[#ed0e64] text-[10px]"></i>
+                <%= @candidate.salary_range %>
+              </span>
+            <% else %>
+              <span class="text-[12px] text-[#c4a0b0] italic">Non renseignée</span>
+            <% end %>
+          </div>
+        </article>
+
       </div>
 
-      <%# ── Centre : Expérience + Notes ── %>
+      <%# Centre %>
       <div class="space-y-4">
-        <% if @candidate.job_titles&.any? %>
+        <% experiences = @candidate.work_experiences %>
+        <% if experiences.any? %>
           <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
             <h3 class="text-lg font-semibold text-[#5b2633]">Expérience professionnelle</h3>
-            <ol class="mt-4 space-y-1">
-              <% @candidate.job_titles.reverse.each_with_index do |title, i| %>
-                <% current_pos = i == 0 %>
-                <li class="flex items-start gap-3">
+            <ol class="mt-4" id="experiences-list">
+              <% experiences.each_with_index do |exp, i| %>
+                <li class="flex gap-3<%= i >= 4 ? ' exp-extra hidden' : '' %>">
                   <div class="flex flex-col items-center">
-                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full shadow-sm text-xs <%= current_pos ? 'bg-[#ed0e64] text-white' : 'border border-[#ead2dc] bg-white text-[#9a5a68]' %>">
+                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full shadow-sm text-xs <%= exp.current? ? 'bg-[#ed0e64] text-white' : 'border border-[#ead2dc] bg-white text-[#ed0e64]' %>">
                       <i class="fa-regular fa-building text-[11px]"></i>
                     </span>
-                    <% unless i == @candidate.job_titles.length - 1 %>
-                      <span class="my-1 h-5 w-px bg-[#ead2dc]"></span>
+                    <% unless i == experiences.length - 1 %>
+                      <span class="my-1.5 flex-1 w-px bg-[#ead2dc] exp-line<%= i >= 3 ? ' hidden' : '' %>"></span>
                     <% end %>
                   </div>
-                  <div class="pb-1 pt-1.5">
-                    <p class="text-[15px] font-semibold text-[#4c1f2a]"><%= title %></p>
-                    <% if current_pos %>
-                      <p class="mt-0.5 text-xs font-medium text-[#ed0e64]">Poste actuel</p>
+                  <div class="pb-4 pt-1">
+                    <p class="text-[15px] font-semibold text-[#4c1f2a]"><%= exp.title %></p>
+                    <% if exp.company.present? %>
+                      <p class="mt-0.5 text-[13px] font-medium text-[#7b4b5a]"><%= exp.company %></p>
+                    <% end %>
+                    <p class="mt-0.5 text-[11px] text-[#9a5a68]"><%= exp.date_range %></p>
+                    <% if exp.skills.any? %>
+                      <div class="mt-2 flex flex-wrap gap-1">
+                        <% exp.skills.each do |skill| %>
+                          <span class="rounded-full border border-[#ead2dc] bg-white px-2 py-0.5 text-[11px] font-medium text-[#6b3f4f]"><%= skill %></span>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  </div>
+                </li>
+              <% end %>
+            </ol>
+            <% if experiences.length > 4 %>
+              <button id="exp-toggle-btn" onclick="toggleExperiences()" class="mt-2 flex items-center gap-1.5 text-[12px] font-medium text-[#ed0e64] hover:text-[#c40b52] transition-colors">
+                <i id="exp-toggle-icon" class="fa-solid fa-chevron-down text-[10px]"></i>
+                <span id="exp-toggle-label">Voir plus (<%= experiences.length - 4 %> de plus)</span>
+              </button>
+            <% end %>
+          </article>
+        <% end %>
+
+        <%
+          diplomas       = @candidate.educations.select(&:diploma?)
+          certifications = @candidate.educations.select(&:certification?)
+          formations     = @candidate.educations.select(&:formation?)
+        %>
+
+        <% if diplomas.any? %>
+          <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+            <div class="mb-4 flex items-center gap-2">
+              <span class="flex h-7 w-7 items-center justify-center rounded-full bg-[#fff0f6] text-[#ed0e64]">
+                <i class="fa-solid fa-graduation-cap text-xs"></i>
+              </span>
+              <h3 class="text-base font-semibold text-[#5b2633]">Diplômes</h3>
+            </div>
+            <ol>
+              <% diplomas.each_with_index do |edu, i| %>
+                <li class="flex gap-3">
+                  <div class="flex flex-col items-center">
+                    <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#ed0e64]">
+                      <i class="fa-solid fa-scroll text-[10px]"></i>
+                    </span>
+                    <% unless i == diplomas.length - 1 %>
+                      <span class="my-1.5 flex-1 w-px bg-[#ead2dc]"></span>
+                    <% end %>
+                  </div>
+                  <div class="pb-4 pt-0.5">
+                    <p class="text-[13px] font-semibold text-[#4c1f2a]"><%= edu.title %></p>
+                    <% if edu.institution.present? %>
+                      <p class="text-[12px] font-medium text-[#7b4b5a]"><%= edu.institution %></p>
+                    <% end %>
+                    <% if edu.date_range.present? %>
+                      <p class="mt-0.5 text-[11px] text-[#9a5a68]"><%= edu.date_range %></p>
                     <% end %>
                   </div>
                 </li>
@@ -176,78 +276,742 @@
           </article>
         <% end %>
 
-        <% if @candidate.notes.present? %>
+        <% if certifications.any? %>
           <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
-            <h3 class="text-lg font-semibold text-[#5b2633]">Notes de qualification</h3>
-            <p class="mt-3 text-[15px] leading-relaxed text-[#5f3647]"><%= @candidate.notes %></p>
+            <div class="mb-4 flex items-center gap-2">
+              <span class="flex h-7 w-7 items-center justify-center rounded-full bg-[#e8e0f5] text-[#6b4fa8]">
+                <i class="fa-solid fa-certificate text-xs"></i>
+              </span>
+              <h3 class="text-base font-semibold text-[#5b2633]">Certifications</h3>
+            </div>
+            <ol>
+              <% certifications.each_with_index do |edu, i| %>
+                <li class="flex gap-3">
+                  <div class="flex flex-col items-center">
+                    <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#ed0e64]">
+                      <i class="fa-solid fa-check text-[10px]"></i>
+                    </span>
+                    <% unless i == certifications.length - 1 %>
+                      <span class="my-1.5 flex-1 w-px bg-[#ead2dc]"></span>
+                    <% end %>
+                  </div>
+                  <div class="pb-4 pt-0.5">
+                    <p class="text-[13px] font-semibold text-[#4c1f2a]"><%= edu.title %></p>
+                    <% if edu.institution.present? %>
+                      <p class="text-[12px] font-medium text-[#7b4b5a]"><%= edu.institution %></p>
+                    <% end %>
+                    <% if edu.date_range.present? %>
+                      <p class="mt-0.5 text-[11px] text-[#9a5a68]"><%= edu.date_range %></p>
+                    <% end %>
+                  </div>
+                </li>
+              <% end %>
+            </ol>
           </article>
         <% end %>
+
+        <% if formations.any? %>
+          <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+            <div class="mb-4 flex items-center gap-2">
+              <span class="flex h-7 w-7 items-center justify-center rounded-full bg-[#fef3e2] text-[#c47c1a]">
+                <i class="fa-solid fa-chalkboard-user text-xs"></i>
+              </span>
+              <h3 class="text-base font-semibold text-[#5b2633]">Formations</h3>
+            </div>
+            <ol>
+              <% formations.each_with_index do |edu, i| %>
+                <li class="flex gap-3">
+                  <div class="flex flex-col items-center">
+                    <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#ed0e64]">
+                      <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                    </span>
+                    <% unless i == formations.length - 1 %>
+                      <span class="my-1.5 flex-1 w-px bg-[#ead2dc]"></span>
+                    <% end %>
+                  </div>
+                  <div class="pb-4 pt-0.5">
+                    <p class="text-[13px] font-semibold text-[#4c1f2a]"><%= edu.title %></p>
+                    <% if edu.institution.present? %>
+                      <p class="text-[12px] font-medium text-[#7b4b5a]"><%= edu.institution %></p>
+                    <% end %>
+                    <% if edu.date_range.present? %>
+                      <p class="mt-0.5 text-[11px] text-[#9a5a68]"><%= edu.date_range %></p>
+                    <% end %>
+                  </div>
+                </li>
+              <% end %>
+            </ol>
+          </article>
+        <% end %>
+
       </div>
 
-      <%# ── Droite : Actions + Historique ── %>
+      <%# Droite : CV & Docs + Historique résumé %>
       <aside class="space-y-4">
+
+        <%# CV & Docs %>
         <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4">
-          <h4 class="text-base font-semibold text-[#5b2633]">Actions</h4>
-          <div class="mt-3 space-y-2">
-            <%= link_to toggle_favorite_candidate_path(@candidate, return_to: request.fullpath),
-                  method: :patch, data: { turbo_method: :patch },
-                  class: "flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm font-medium transition #{is_favorite ? 'border-[#f7c4da] bg-[#fff0f6] text-[#ed0e64]' : 'border-[#ead2dc] bg-white text-[#7b4b5a] hover:bg-[#fff0f6]'}" do %>
-              <i class="fa-<%= is_favorite ? 'solid' : 'regular' %> fa-heart text-[#ed0e64]"></i>
-              <%= is_favorite ? "Retirer des favoris" : "Ajouter aux favoris" %>
-            <% end %>
-            <%= link_to edit_candidate_path(@candidate),
-                  class: "flex w-full items-center gap-3 rounded-2xl border border-[#ead2dc] bg-white px-3 py-2.5 text-sm font-medium text-[#7b4b5a] transition hover:bg-[#fff0f6]" do %>
-              <i class="fa-solid fa-pen-to-square text-[#ed0e64]"></i>
-              Modifier le profil
-            <% end %>
-            <%= link_to candidate_path(@candidate),
-                  data: { turbo_method: :delete, turbo_confirm: "Confirmer la suppression ?" },
-                  class: "flex w-full items-center gap-3 rounded-2xl border border-[#f2c9d8] bg-white px-3 py-2.5 text-sm font-medium text-[#a33d68] transition hover:bg-[#fff1f6]" do %>
-              <i class="fa-solid fa-trash-can text-[#ed0e64]"></i>
-              Supprimer
-            <% end %>
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-base font-semibold text-[#5b2633]">CV & Docs</h4>
+            <button onclick="switchTab('docs')" class="text-[12px] font-medium text-[#ed0e64] hover:text-[#c40b52] transition">Voir tout</button>
+          </div>
+          <div class="space-y-2">
+            <button class="flex w-full items-center gap-2.5 rounded-2xl border border-[#ead2dc] bg-white px-3.5 py-2.5 text-left hover:bg-[#fff0f6] transition">
+              <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#fff0f6] text-[#ed0e64]">
+                <i class="fa-regular fa-file-lines text-xs"></i>
+              </span>
+              <span class="text-[13px] font-medium text-[#4c1f2a]">Générer CV blindé</span>
+            </button>
+            <button class="flex w-full items-center gap-2.5 rounded-2xl border border-[#ead2dc] bg-white px-3.5 py-2.5 text-left hover:bg-[#fff0f6] transition">
+              <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#fff0f6] text-[#ed0e64]">
+                <i class="fa-regular fa-file-pdf text-xs"></i>
+              </span>
+              <span class="text-[13px] font-medium text-[#4c1f2a]">Générer CV complet</span>
+            </button>
+            <button onclick="switchTab('docs')" class="flex w-full items-center gap-2.5 rounded-2xl border border-dashed border-[#ead2dc] bg-white/60 px-3.5 py-2.5 text-left hover:bg-[#fff0f6] transition">
+              <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#fff0f6] text-[#ed0e64]">
+                <i class="fa-solid fa-arrow-up-from-bracket text-xs"></i>
+              </span>
+              <span class="text-[13px] font-medium text-[#9a5a68]">Stocker un document</span>
+            </button>
           </div>
         </article>
 
-        <% if @candidate.placements.any? %>
-          <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4">
+        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4">
+          <div class="flex items-center justify-between">
             <h4 class="text-base font-semibold text-[#5b2633]">Historique</h4>
-            <ul class="mt-3 space-y-2">
-              <% @candidate.placements.includes(mission: { client_contact: :client }).each do |placement| %>
-                <li class="rounded-2xl border border-[#efdbe4] bg-white/80 p-3 text-[13px]">
-                  <p class="font-semibold text-[#4c1f2a]"><%= placement.mission&.title.presence || "Mission" %></p>
-                  <% brand = placement.mission&.client_contact&.client&.brand_name %>
-                  <% if brand.present? %>
-                    <p class="text-[#9a5a68]"><%= brand %></p>
-                  <% end %>
-                  <% if placement.hired_at.present? %>
-                    <p class="mt-0.5 text-xs text-[#c0849a]"><%= l(placement.hired_at, format: :long) %></p>
-                  <% end %>
-                </li>
-              <% end %>
-            </ul>
+            <button onclick="switchTab('historique')" class="text-[12px] font-medium text-[#ed0e64] hover:text-[#c40b52] transition">Voir tout</button>
+          </div>
+          <ul class="mt-3 space-y-3 text-[13px]">
+            <li class="flex items-start gap-2">
+              <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#ed0e64]"></span>
+              <div>
+                <p class="font-semibold text-[#4c1f2a]">Entretien de qualification</p>
+                <p class="text-[#9a5a68]">03/04/2024 · 11:00</p>
+              </div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#c88ea1]"></span>
+              <div>
+                <p class="font-semibold text-[#4c1f2a]">Résumé envoyé à Hexa Retail</p>
+                <p class="text-[#9a5a68]">01/04/2024</p>
+              </div>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#c88ea1]"></span>
+              <div>
+                <p class="font-semibold text-[#4c1f2a]">CV transmis au client</p>
+                <p class="text-[#9a5a68]">30/03/2024</p>
+              </div>
+            </li>
+          </ul>
+        </article>
+
+        <% if @candidate.notes.present? %>
+          <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-semibold text-[#5b2633]">Notes</h3>
+              <button onclick="switchTab('notes')" class="text-[12px] font-medium text-[#ed0e64] hover:text-[#c40b52] transition">Voir tout</button>
+            </div>
+            <p class="mt-2 text-[13px] leading-relaxed text-[#5f3647]"
+               style="overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;">
+              <%= @candidate.notes %>
+            </p>
           </article>
         <% end %>
       </aside>
 
     </div>
 
-    <%# ── Barre contact bas ── %>
-    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-[#ead2dc] bg-white/80 px-5 py-3 text-[13px] text-[#5c3143]">
-      <% if @candidate.email.present? %>
-        <%= mail_to @candidate.email, class: "flex items-center gap-1.5 hover:text-[#ed0e64] transition" do %>
-          <i class="fa-solid fa-envelope text-[#ed0e64]"></i><%= @candidate.email %>
-        <% end %>
-        <span class="text-[#ead2dc]">·</span>
+    <%# ══════════════════════════════════ %>
+    <%# ── Panneau : Contribution ── %>
+    <%# ══════════════════════════════════ %>
+    <div id="panel-contribution" class="hidden space-y-4">
+      <% contributions = @candidate.contributions.published %>
+
+      <%# Empty state %>
+      <% if contributions.empty? %>
+        <div class="flex flex-col items-center justify-center rounded-3xl border border-dashed border-[#ead2dc] bg-[#fff8fb]/60 py-16 text-center">
+          <span class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#fff0f6] text-[#ed0e64]">
+            <i class="fa-solid fa-brain text-xl"></i>
+          </span>
+          <p class="text-base font-semibold text-[#5b2633]">Aucune contribution publiée</p>
+          <p class="mt-1 text-[13px] text-[#9a5a68]">Les réponses aux thématiques IA et les publications apparaîtront ici.</p>
+        </div>
+      <% else %>
+        <div class="space-y-3">
+          <% contributions.each do |contribution| %>
+            <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+              <div class="flex items-start gap-4">
+                <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full <%= contribution.kind_ai_response? ? 'bg-[#e8e0f5] text-[#6b4fa8]' : contribution.kind_open_to_opportunity? ? 'bg-[#dcfce7] text-[#16a34a]' : contribution.kind_new_experience? ? 'bg-[#fff0f6] text-[#ed0e64]' : 'bg-[#fef3e2] text-[#c47c1a]' %>">
+                  <i class="<%= Contribution::KIND_ICONS[contribution.kind] %> text-sm"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-[11px] font-semibold uppercase tracking-wide <%= contribution.kind_ai_response? ? 'text-[#6b4fa8]' : contribution.kind_open_to_opportunity? ? 'text-[#16a34a]' : contribution.kind_new_experience? ? 'text-[#ed0e64]' : 'text-[#c47c1a]' %>">
+                      <%= Contribution::KIND_LABELS[contribution.kind] %>
+                    </span>
+                    <% if contribution.published_at.present? %>
+                      <span class="text-[11px] text-[#9a5a68]">· <%= contribution.published_at.strftime("%-d %b %Y") %></span>
+                    <% end %>
+                  </div>
+                  <% if contribution.kind_ai_response? && contribution.question.present? %>
+                    <p class="mt-2 rounded-xl border border-[#e8e0f5] bg-[#f5f0fc] px-3 py-2 text-[12px] font-medium italic text-[#6b4fa8]">
+                      <i class="fa-solid fa-brain mr-1.5 text-[10px]"></i><%= contribution.question %>
+                    </p>
+                  <% end %>
+                  <p class="mt-2 text-[13px] leading-relaxed text-[#4c1f2a]"><%= contribution.content %></p>
+                </div>
+              </div>
+            </article>
+          <% end %>
+        </div>
       <% end %>
-      <% if @candidate.phone.present? %>
-        <span class="flex items-center gap-1.5"><i class="fa-solid fa-phone text-[#ed0e64]"></i><%= @candidate.phone %></span>
-        <% if @candidate.location.present? %><span class="text-[#ead2dc]">·</span><% end %>
-      <% end %>
-      <% if @candidate.location.present? %>
-        <span class="flex items-center gap-1.5"><i class="fa-solid fa-location-dot text-[#ed0e64]"></i><%= @candidate.location %></span>
-      <% end %>
+    </div>
+
+    <%# ── Panneau : Historique ── %>
+    <%# ══════════════════════════════════ %>
+    <div id="panel-historique" class="hidden space-y-4">
+
+      <div class="grid gap-4 xl:grid-cols-[1fr_1fr]">
+
+        <%# Grandes étapes collectives %>
+        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+          <h3 class="text-lg font-semibold text-[#5b2633]">Activité du collectif</h3>
+          <p class="mt-1 text-xs text-[#9a5a68]">Actions des autres freelances sur ce profil</p>
+          <ul class="mt-4 space-y-4">
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                <i class="fa-solid fa-check text-xs"></i>
+              </span>
+              <div class="text-[13px]">
+                <p class="font-semibold text-[#4c1f2a]">Recruté sur <span class="text-emerald-600">Directeur Commercial</span></p>
+                <p class="text-[#9a5a68]">par Antoine Mercier · Hexa Retail Performance</p>
+                <p class="mt-0.5 text-xs text-[#c0849a]">05/04/2024</p>
+              </div>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#ed0e64]">
+                <i class="fa-solid fa-paper-plane text-xs"></i>
+              </span>
+              <div class="text-[13px]">
+                <p class="font-semibold text-[#4c1f2a]">Poussé sur <span class="text-[#ed0e64]">Directeur Commercial</span></p>
+                <p class="text-[#9a5a68]">par Antoine Mercier · Hexa Retail Performance</p>
+                <p class="mt-0.5 text-xs text-[#c0849a]">28/03/2024</p>
+              </div>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-50 text-slate-400">
+                <i class="fa-solid fa-xmark text-xs"></i>
+              </span>
+              <div class="text-[13px]">
+                <p class="font-semibold text-[#4c1f2a]">Refusé sur <span class="text-slate-500">Key Account Director</span></p>
+                <p class="text-[#9a5a68]">par Claire Dumont · Nord Logistics Group</p>
+                <p class="mt-0.5 text-xs text-[#c0849a]">22/03/2024</p>
+              </div>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#ed0e64]">
+                <i class="fa-solid fa-paper-plane text-xs"></i>
+              </span>
+              <div class="text-[13px]">
+                <p class="font-semibold text-[#4c1f2a]">Poussé sur <span class="text-[#ed0e64]">Key Account Director</span></p>
+                <p class="text-[#9a5a68]">par Claire Dumont · Nord Logistics Group</p>
+                <p class="mt-0.5 text-xs text-[#c0849a]">15/03/2024</p>
+              </div>
+            </li>
+          </ul>
+        </article>
+
+        <%# Mon historique avec ce candidat %>
+        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+          <h3 class="text-lg font-semibold text-[#5b2633]">Mon historique</h3>
+          <p class="mt-1 text-xs text-[#9a5a68]">Mes interactions personnelles avec ce candidat</p>
+          <ul class="mt-4 space-y-4">
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#ed0e64]">
+                <i class="fa-regular fa-comment text-xs"></i>
+              </span>
+              <div class="text-[13px]">
+                <p class="font-semibold text-[#4c1f2a]">Entretien de qualification</p>
+                <p class="mt-0.5 text-[#5f3647]">Échange de 45 min. Très bon niveau, disponible sous 3 mois.</p>
+                <p class="mt-0.5 text-xs text-[#c0849a]">03/04/2024 · 11:00</p>
+              </div>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#ed0e64]">
+                <i class="fa-regular fa-envelope text-xs"></i>
+              </span>
+              <div class="text-[13px]">
+                <p class="font-semibold text-[#4c1f2a]">Résumé envoyé à Hexa Retail</p>
+                <p class="mt-0.5 text-xs text-[#c0849a]">01/04/2024</p>
+              </div>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#ed0e64]">
+                <i class="fa-regular fa-file text-xs"></i>
+              </span>
+              <div class="text-[13px]">
+                <p class="font-semibold text-[#4c1f2a]">CV transmis à Hexa Retail</p>
+                <p class="mt-0.5 text-xs text-[#c0849a]">30/03/2024</p>
+              </div>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#ed0e64]">
+                <i class="fa-solid fa-paper-plane text-xs"></i>
+              </span>
+              <div class="text-[13px]">
+                <p class="font-semibold text-[#4c1f2a]">Poussé sur <span class="text-[#ed0e64]">Directeur Commercial</span></p>
+                <p class="text-[#9a5a68]">Hexa Retail Performance</p>
+                <p class="mt-0.5 text-xs text-[#c0849a]">28/03/2024</p>
+              </div>
+            </li>
+          </ul>
+          <p class="mt-5 rounded-2xl border border-dashed border-[#ead2dc] bg-white/60 px-4 py-3 text-center text-xs text-[#9a5a68]">
+            <i class="fa-regular fa-clock mr-1"></i>Historique complet disponible via API — à brancher
+          </p>
+        </article>
+
+      </div>
+    </div>
+
+    <%# ══════════════════════════════════ %>
+    <%# ── Panneaux placeholder ── %>
+    <%# ══════════════════════════════════ %>
+    <div id="panel-notes" class="hidden">
+      <div class="grid gap-4 xl:grid-cols-[340px_1fr]">
+
+        <%# Formulaire de création %>
+        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-6">
+          <h3 class="text-lg font-semibold text-[#5b2633]">Nouvelle note</h3>
+          <p class="mt-1 text-sm text-[#9a5a68]">Visible uniquement par vous.</p>
+          <div class="mt-4">
+            <%= render "candidate_notes/form",
+                  candidate: @candidate,
+                  note: CandidateNote.new %>
+          </div>
+        </article>
+
+        <%# Liste des notes %>
+        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-6">
+          <div class="mb-4 flex items-center">
+            <h3 class="text-lg font-semibold text-[#5b2633]">Notes</h3>
+            <span id="notes-count" class="ml-1.5 inline-flex items-center justify-center rounded-full bg-[#fff0f6] px-2 py-0.5 text-[11px] font-semibold text-[#ed0e64]">
+              <%= @candidate.candidate_notes.count %>
+            </span>
+          </div>
+
+          <div id="notes-list" class="space-y-3">
+            <% notes = @candidate.candidate_notes.includes(:user).recent %>
+            <% if notes.any? %>
+              <%= render partial: "candidate_notes/candidate_note", collection: notes, as: :note %>
+            <% else %>
+              <div id="notes-empty" class="rounded-2xl border border-dashed border-[#ead2dc] bg-white/60 p-8 text-center">
+                <i class="fa-regular fa-note-sticky mb-2 text-2xl text-[#ead2dc]"></i>
+                <p class="text-sm text-[#9a5a68]">Aucune note pour l'instant.</p>
+              </div>
+            <% end %>
+          </div>
+        </article>
+
+      </div>
+    </div>
+    <div id="panel-docs" class="hidden">
+      <div class="grid gap-4 xl:grid-cols-2">
+
+        <%# Bloc gauche : Générer un document %>
+        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-6">
+          <h3 class="text-lg font-semibold text-[#5b2633]">Générer un document</h3>
+          <p class="mt-1 text-sm text-[#9a5a68]">Créez les documents liés à ce profil candidat.</p>
+          <div class="mt-6 space-y-4">
+            <div>
+              <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">CV candidat</p>
+              <div class="flex gap-3">
+                <button type="button"
+                  class="flex w-full items-center gap-4 rounded-2xl border border-[#ead2dc] bg-white px-6 py-4 text-left transition hover:bg-[#fff0f6]">
+                  <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#fff0f6] text-[#ed0e64]">
+                    <i class="fa-regular fa-file-lines text-lg"></i>
+                  </span>
+                  <div>
+                    <p class="font-semibold text-[#4c1f2a]">CV complet</p>
+                    <p class="mt-0.5 text-xs text-[#9a5a68]">Nom, coordonnées et parcours visibles</p>
+                  </div>
+                </button>
+                <button type="button"
+                  class="flex w-full items-center gap-4 rounded-2xl border border-[#ead2dc] bg-white px-6 py-4 text-left transition hover:bg-[#fff0f6]">
+                  <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e8e0f5] text-[#6b4fa8]">
+                    <i class="fa-solid fa-eye-slash text-lg"></i>
+                  </span>
+                  <div>
+                    <p class="font-semibold text-[#4c1f2a]">CV blindé</p>
+                    <p class="mt-0.5 text-xs text-[#9a5a68]">Identité et coordonnées masquées</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Documents juridiques</p>
+              <button type="button"
+                class="flex w-full items-center gap-4 rounded-2xl border border-[#ead2dc] bg-white px-6 py-4 text-left transition hover:bg-[#fff0f6]">
+                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#fef3e2] text-[#c47c1a]">
+                  <i class="fa-solid fa-shield-halved text-lg"></i>
+                </span>
+                <div>
+                  <p class="font-semibold text-[#4c1f2a]">Accord de confidentialité</p>
+                  <p class="mt-0.5 text-xs text-[#9a5a68]">Générer un NDA lié à ce profil candidat</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <%# Bloc droit : Documents stockés %>
+        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-6">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 class="text-lg font-semibold text-[#5b2633]">Documents stockés</h3>
+              <p class="mt-1 text-sm text-[#9a5a68]">Fichiers importés pour ce candidat.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="inline-flex items-center gap-1 rounded-full bg-[#fff0f6] px-2.5 py-1 text-[11px] font-semibold text-[#ed0e64]">
+                <i class="fa-solid fa-lock text-[10px]"></i> Suppression auto · 2 ans
+              </span>
+              <button type="button" onclick="openDocRequestModal()"
+                class="inline-flex items-center gap-1.5 rounded-full bg-[#ed0e64] px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-[#c4084e]">
+                <i class="fa-solid fa-paper-plane text-[10px]"></i> Demander des documents
+              </button>
+            </div>
+          </div>
+
+          <%#
+            Catégories :
+            - standard : suppression auto 2 ans depuis import
+            - sensitive : alerte dès 2 mois restants (RGPD)
+            États factices : uploaded | missing
+          %>
+          <%
+            doc_rows = [
+              { key: "diplomes",          label: "Diplômes",                      icon: "fa-graduation-cap",    type: :standard,  uploaded: true,  imported_at: "15/01/2024", expires_at: "15/01/2026", months_left: 22 },
+              { key: "motivation",        label: "Lettre de motivation",          icon: "fa-envelope-open-text",type: :standard,  uploaded: true,  imported_at: "15/01/2024", expires_at: "15/01/2026", months_left: 22 },
+              { key: "recommandation",    label: "Lettre de recommandation",      icon: "fa-star",              type: :standard,  uploaded: false, imported_at: nil,           expires_at: nil,           months_left: nil },
+              { key: "prise_reference",   label: "Accord de prise de référence",  icon: "fa-handshake",         type: :standard,  uploaded: false, imported_at: nil,           expires_at: nil,           months_left: nil },
+              { key: "autorisation",      label: "Autorisation de travail",       icon: "fa-id-card",           type: :sensitive, uploaded: true,  imported_at: "01/02/2024", expires_at: "01/02/2026", months_left: 1  },
+              { key: "permis",            label: "Permis de conduire",            icon: "fa-car",               type: :sensitive, uploaded: true,  imported_at: "01/02/2024", expires_at: "01/02/2026", months_left: 2  },
+            ]
+          %>
+
+          <div class="mt-4 space-y-2">
+            <% doc_rows.each do |doc| %>
+              <div class="flex items-center justify-between gap-3 rounded-2xl border <%= doc[:uploaded] ? 'border-[#ead2dc] bg-white' : 'border-dashed border-[#ead2dc] bg-base-100/50' %> px-4 py-3">
+                <div class="flex items-center gap-3">
+                  <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full <%= doc[:uploaded] ? 'bg-[#fff0f6] text-[#ed0e64]' : 'bg-base-200/60 text-base-content/30' %>">
+                    <i class="fa-solid <%= doc[:icon] %> text-xs"></i>
+                  </span>
+                  <div>
+                    <p class="text-[13px] font-semibold <%= doc[:uploaded] ? 'text-[#4c1f2a]' : 'text-base-content/40' %>"><%= doc[:label] %></p>
+                    <% if doc[:uploaded] %>
+                      <p class="text-[11px] text-[#9a5a68]">Importé le <%= doc[:imported_at] %> · exp. <%= doc[:expires_at] %></p>
+                    <% else %>
+                      <p class="text-[11px] text-base-content/35">Non importé</p>
+                    <% end %>
+                  </div>
+                </div>
+
+                <div class="flex shrink-0 items-center gap-2">
+                  <% if doc[:uploaded] && doc[:months_left] %>
+                    <% if doc[:months_left] <= 2 %>
+                      <span class="relative group">
+                        <span class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-red-50 text-red-500 ring-1 ring-red-200">
+                          <i class="fa-solid fa-circle-info text-[11px]"></i>
+                        </span>
+                        <span class="pointer-events-none absolute bottom-full right-0 z-40 mb-2 hidden w-52 rounded-xl border border-red-100 bg-white px-3 py-2 text-[11px] text-red-700 shadow-lg group-hover:block">
+                          <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                          <strong><%= doc[:months_left] %> mois restant<%= doc[:months_left] > 1 ? 's' : '' %></strong> avant suppression automatique (RGPD).
+                        </span>
+                      </span>
+                    <% else %>
+                      <span class="relative group">
+                        <span class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-[#fff0f6] text-[#ed0e64] ring-1 ring-[#f7c4da]">
+                          <i class="fa-solid fa-circle-info text-[11px]"></i>
+                        </span>
+                        <span class="pointer-events-none absolute bottom-full right-0 z-40 mb-2 hidden w-52 rounded-xl border border-[#ead2dc] bg-white px-3 py-2 text-[11px] text-[#5f3647] shadow-lg group-hover:block">
+                          <strong><%= doc[:months_left] %> mois restants</strong> avant suppression automatique (RGPD · 2 ans).
+                        </span>
+                      </span>
+                    <% end %>
+                  <% end %>
+
+                  <% if doc[:uploaded] %>
+                    <button type="button" class="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#9a5a68] transition hover:text-[#ed0e64]" title="Télécharger">
+                      <i class="fa-solid fa-download text-[11px]"></i>
+                    </button>
+                    <button type="button" class="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#9a5a68] transition hover:text-red-500" title="Supprimer">
+                      <i class="fa-solid fa-trash-can text-[11px]"></i>
+                    </button>
+                  <% else %>
+                    <button type="button" class="inline-flex items-center gap-1.5 rounded-full border border-dashed border-[#ead2dc] bg-white px-3 py-1 text-[11px] font-medium text-[#9a5a68] transition hover:border-[#ed0e64] hover:text-[#ed0e64]">
+                      <i class="fa-solid fa-plus text-[10px]"></i> Importer
+                    </button>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </article>
+
+      </div>
+    </div>
+
+
+  </div>
+</div>
+
+<%# ===== MODAL : Demander des documents ===== %>
+<div id="doc-request-modal"
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+  onclick="closeDocRequestModal(event)">
+  <div class="relative flex max-h-[90vh] w-full max-w-4xl flex-col rounded-3xl bg-white shadow-2xl"
+    onclick="event.stopPropagation()">
+
+    <%# Header %>
+    <div class="flex items-center justify-between border-b border-[#ead2dc] px-6 py-4">
+      <div>
+        <h2 class="text-lg font-semibold text-[#5b2633]">Demander des documents</h2>
+        <p class="text-sm text-[#9a5a68]">
+          Sélectionnez les documents à demander à
+          <strong><%= @candidate.first_name %></strong>
+        </p>
+      </div>
+      <button type="button" onclick="closeDocRequestModal()"
+        class="flex h-8 w-8 items-center justify-center rounded-full border border-[#ead2dc] text-[#9a5a68] transition hover:text-[#ed0e64]">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+
+    <%# Body %>
+    <div class="flex min-h-0 flex-1 overflow-hidden">
+
+      <%# Gauche : sélection des documents %>
+      <div class="w-72 shrink-0 overflow-y-auto border-r border-[#ead2dc] p-5">
+        <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Documents à demander</p>
+        <div id="doc-checkboxes" class="space-y-2"></div>
+        <p class="mt-5 text-[11px] leading-relaxed text-[#9a5a68]">
+          Les documents déjà importés sont décochés par défaut.
+        </p>
+      </div>
+
+      <%# Droite : aperçu du message %>
+      <div class="flex min-w-0 flex-1 flex-col overflow-y-auto p-5">
+        <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Aperçu du message</p>
+        <pre id="email-preview"
+          class="flex-1 rounded-2xl border border-[#ead2dc] bg-[#fff8fb] p-4 text-[12px] leading-relaxed text-[#4c1f2a] whitespace-pre-wrap font-mono overflow-y-auto"></pre>
+      </div>
+
+    </div>
+
+    <%# Footer %>
+    <div class="flex items-center justify-between border-t border-[#ead2dc] px-6 py-4">
+      <button type="button" onclick="closeDocRequestModal()"
+        class="rounded-full border border-[#ead2dc] px-4 py-2 text-sm font-medium text-[#9a5a68] transition hover:text-[#5b2633]">
+        Annuler
+      </button>
+      <div class="flex gap-2">
+        <button type="button" onclick="copyEmailPreview()"
+          class="inline-flex items-center gap-2 rounded-full border border-[#ead2dc] bg-white px-4 py-2 text-sm font-medium text-[#5b2633] transition hover:bg-[#fff0f6]">
+          <i class="fa-regular fa-copy text-xs"></i> Copier le message
+        </button>
+        <button type="button"
+          class="inline-flex items-center gap-2 rounded-full bg-[#ed0e64] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#c4084e]">
+          <i class="fa-solid fa-paper-plane text-xs"></i> Envoyer par email
+        </button>
+      </div>
     </div>
 
   </div>
 </div>
+
+<script>
+  const TABS = ['profil', 'contribution', 'notes', 'docs', 'historique'];
+  switchTab('profil');
+
+  let expExpanded = false;
+  function toggleExperiences() {
+    expExpanded = !expExpanded;
+    document.querySelectorAll('.exp-extra').forEach(el => el.classList.toggle('hidden', !expExpanded));
+    document.querySelectorAll('.exp-line').forEach(el => el.classList.toggle('hidden', !expExpanded));
+    const icon  = document.getElementById('exp-toggle-icon');
+    const label = document.getElementById('exp-toggle-label');
+    const count = document.querySelectorAll('.exp-extra').length;
+    if (expExpanded) {
+      icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+      label.textContent = 'Voir moins';
+    } else {
+      icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+      label.textContent = 'Voir plus (' + count + ' de plus)';
+    }
+  }
+
+  function switchTab(name) {
+    TABS.forEach(tab => {
+      const btn   = document.getElementById('tab-' + tab);
+      const panel = document.getElementById('panel-' + tab);
+      const active = tab === name;
+
+      panel.classList.toggle('hidden', !active);
+      if (!btn) return;
+      btn.classList.toggle('bg-[#ed0e64]',        active);
+      btn.classList.toggle('text-white',           active);
+      btn.classList.toggle('shadow-sm',            active);
+      btn.classList.toggle('font-semibold',        active);
+      btn.classList.toggle('bg-white',             !active);
+      btn.classList.toggle('border',               !active);
+      btn.classList.toggle('border-[#ead2dc]',     !active);
+      btn.classList.toggle('font-medium',          !active);
+      btn.classList.toggle('text-[#9a5a68]',       !active);
+    });
+  }
+
+  // ===== Notes : édition inline =====
+
+  function editNote(id) {
+    const card = document.getElementById('candidate-note-' + id);
+    card.querySelector('.note-display').classList.add('hidden');
+    card.querySelector('.note-edit').classList.remove('hidden');
+    card.querySelector('.note-edit textarea').focus();
+  }
+
+  function cancelEdit(id) {
+    const card = document.getElementById('candidate-note-' + id);
+    card.querySelector('.note-edit').classList.add('hidden');
+    card.querySelector('.note-display').classList.remove('hidden');
+  }
+
+  // ===== Demande de documents =====
+
+  const CANDIDATE_FIRST_NAME = '<%= @candidate.first_name %>';
+  const CANDIDATE_ID         = '<%= @candidate.id %>';
+
+  const DOC_CATALOG = [
+    { key: 'diplomes',        label: 'Diplômes',                      uploaded: true,  duration: '2 ans' },
+    { key: 'motivation',      label: 'Lettre de motivation',          uploaded: true,  duration: '2 ans' },
+    { key: 'recommandation',  label: 'Lettre de recommandation',      uploaded: false, duration: '2 ans' },
+    { key: 'prise_reference', label: 'Accord de prise de référence',  uploaded: false, duration: '2 ans' },
+    { key: 'autorisation',    label: 'Autorisation de travail',       uploaded: true,  duration: '2 ans' },
+    { key: 'permis',          label: 'Permis de conduire',            uploaded: true,  duration: '2 ans' },
+  ];
+
+  function openDocRequestModal() {
+    const modal = document.getElementById('doc-request-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+
+    // Render checkboxes
+    const container = document.getElementById('doc-checkboxes');
+    container.innerHTML = DOC_CATALOG.map(doc => `
+      <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-[#ead2dc] bg-white px-3 py-2.5 transition hover:bg-[#fff0f6]">
+        <input type="checkbox" class="doc-checkbox h-4 w-4 accent-[#ed0e64]"
+          data-key="${doc.key}" data-label="${doc.label}" data-duration="${doc.duration}"
+          ${!doc.uploaded ? 'checked' : ''}>
+        <span class="text-[13px] font-medium text-[#4c1f2a]">${doc.label}</span>
+        ${doc.uploaded ? '<span class="ml-auto text-[10px] text-[#9a5a68]">déjà importé</span>' : ''}
+      </label>
+    `).join('');
+
+    document.querySelectorAll('.doc-checkbox').forEach(cb =>
+      cb.addEventListener('change', updateEmailPreview)
+    );
+
+    updateEmailPreview();
+  }
+
+  function closeDocRequestModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    const modal = document.getElementById('doc-request-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+
+  function getCheckedDocs() {
+    return Array.from(document.querySelectorAll('.doc-checkbox:checked')).map(cb => ({
+      key:      cb.dataset.key,
+      label:    cb.dataset.label,
+      duration: cb.dataset.duration,
+    }));
+  }
+
+  function uploadLink(key) {
+    // Placeholder — à brancher sur la vraie route upload
+    return `https://app.rivyr.com/candidats/${CANDIDATE_ID}/documents/${key}/deposer?token=TOKEN_UNIQUE`;
+  }
+
+  function updateEmailPreview() {
+    const docs  = getCheckedDocs();
+    const preview = document.getElementById('email-preview');
+
+    if (docs.length === 0) {
+      preview.textContent = 'Sélectionnez au moins un document pour générer le message.';
+      return;
+    }
+
+    const docLines = docs.map(d =>
+      `  • ${d.label}\n    → ${uploadLink(d.key)}`
+    ).join('\n\n');
+
+    const consentLines = docs.map(d =>
+      `  • ${d.label} : conservé ${d.duration} à compter du dépôt`
+    ).join('\n');
+
+    preview.textContent = [
+`Objet : Votre dossier candidat – Documents à compléter`,
+``,
+`Bonjour ${CANDIDATE_FIRST_NAME},`,
+``,
+`Dans le cadre de votre profil candidat, nous souhaitons compléter votre dossier.`,
+`Merci de bien vouloir déposer les documents suivants en cliquant sur les liens ci-dessous :`,
+``,
+docLines,
+``,
+`Chaque lien est personnel et sécurisé — il vous permet de déposer directement`,
+`le document au bon endroit dans votre dossier.`,
+``,
+`─────────────────────────────────────────────`,
+`ACCORD DE CONSERVATION DES DONNÉES (RGPD)`,
+`─────────────────────────────────────────────`,
+``,
+`En déposant vos documents via les liens ci-dessus, vous acceptez les conditions`,
+`suivantes concernant la conservation de vos données personnelles :`,
+``,
+`Durée de conservation par document :`,
+consentLines,
+``,
+`• Sécurité : vos documents sont stockés de manière sécurisée et ne sont`,
+`  transmis qu'aux clients directement concernés par vos candidatures.`,
+``,
+`• Droit de suppression : vous pouvez demander la suppression de l'ensemble`,
+`  ou d'une partie de vos documents à tout moment, en répondant simplement`,
+`  à cet email. Votre demande sera traitée sous 72 h.`,
+``,
+`• Droit d'accès : vous pouvez à tout moment demander à consulter les`,
+`  documents que nous conservons vous concernant.`,
+``,
+`Le dépôt de vos documents via les liens ci-dessus vaut acceptation de ces`,
+`conditions de conservation.`,
+``,
+`─────────────────────────────────────────────`,
+``,
+`Cordialement,`,
+`L'équipe RIVYR`,
+    ].join('\n');
+  }
+
+  function copyEmailPreview() {
+    const text = document.getElementById('email-preview').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = event.currentTarget;
+      const original = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-check text-xs"></i> Copié !';
+      setTimeout(() => { btn.innerHTML = original; }, 2000);
+    });
+  }
+</script>

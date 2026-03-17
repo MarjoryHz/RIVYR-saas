@@ -1,0 +1,9 @@
+<%# Supprime la note %>
+<%= turbo_stream.remove "candidate-note-#{@note.id}" %>
+
+<%# Met à jour le compteur %>
+<%= turbo_stream.replace "notes-count" do %>
+  <span id="notes-count" class="ml-1.5 inline-flex items-center justify-center rounded-full bg-[#fff0f6] px-2 py-0.5 text-[11px] font-semibold text-[#ed0e64]">
+    <%= @candidate.candidate_notes.count %>
+  </span>
+<% end %>

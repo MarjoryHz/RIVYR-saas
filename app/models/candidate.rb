@@ -7,8 +7,59 @@ class Candidate < ApplicationRecord
     placed: "placed"
   }, prefix: true
 
+  enum :availability, {
+    immediate:      "immediate",
+    one_month:      "one_month",
+    three_months:   "three_months",
+    six_months:     "six_months",
+    other:          "other"
+  }, prefix: true, allow_nil: true
+
+  AVAILABILITY_LABELS = {
+    "immediate"    => "Immédiate",
+    "one_month"    => "Préavis d'1 mois",
+    "three_months" => "Préavis de 3 mois",
+    "six_months"   => "Préavis de 6 mois",
+    "other"        => "Autre"
+  }.freeze
+
+  CONTRACT_LABELS = {
+    "cdi"                   => "CDI",
+    "cdd"                   => "CDD",
+    "freelance"             => "Freelance",
+    "interim"               => "Intérim",
+    "management_transition" => "Management de transition"
+  }.freeze
+
+  SALARY_RANGES = [
+    "< 30k€", "30 – 40k€", "40 – 50k€", "50 – 60k€",
+    "60 – 75k€", "75 – 90k€", "90 – 110k€", "> 110k€"
+  ].freeze
+
+  LANGUAGE_FLAGS = {
+    "fr" => "🇫🇷", "en" => "🇬🇧", "es" => "🇪🇸", "de" => "🇩🇪",
+    "it" => "🇮🇹", "pt" => "🇵🇹", "nl" => "🇳🇱", "ar" => "🇲🇦",
+    "zh" => "🇨🇳", "ja" => "🇯🇵"
+  }.freeze
+
+  LANGUAGE_NAMES = {
+    "fr" => "Français", "en" => "Anglais",    "es" => "Espagnol", "de" => "Allemand",
+    "it" => "Italien",  "pt" => "Portugais",  "nl" => "Néerlandais", "ar" => "Arabe",
+    "zh" => "Chinois",  "ja" => "Japonais"
+  }.freeze
+
+  LANGUAGE_LEVELS = {
+    "bilingual"    => "Bilingue",
+    "professional" => "Professionnel",
+    "partial"      => "Notions"
+  }.freeze
+
   has_many :placements, dependent: :nullify
   has_many :favorite_candidates, dependent: :destroy
+  has_many :candidate_notes, dependent: :destroy
+  has_many :work_experiences, -> { ordered }, dependent: :destroy
+  has_many :educations,       -> { ordered }, dependent: :destroy
+  has_many :contributions, dependent: :destroy
   belongs_to :user, optional: true
 
   validates :first_name, presence: true
