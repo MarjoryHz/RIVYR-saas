@@ -25,6 +25,8 @@ Placement.destroy_all
 Mission.destroy_all
 ClientContact.destroy_all
 Client.destroy_all
+WorkExperience.destroy_all
+Education.destroy_all
 Candidate.destroy_all
 FreelancerProfile.destroy_all
 User.destroy_all
@@ -420,50 +422,157 @@ PAYMENT_TERMS = [
 ].freeze
 
 CANDIDATE_NOTES = [
-  "Parcours coherent, bonne densite d experience et communication claire. Le candidat presente un bon niveau de maturite professionnelle.",
-  "Profil credible sur des environnements exigeants, avec une posture rassurante et une motivation bien argumentee.",
-  "Candidat structure, a l aise dans des fonctions a responsabilite, avec une lecture business interessante et une bonne capacite d adaptation.",
-  "Experience solide, discours clair, niveau d energie bon et motivations alignees avec des contextes de croissance ou de transformation."
+  "Parcours cohérent, bonne densité d'expérience et communication claire. Le candidat présente un bon niveau de maturité professionnelle.",
+  "Profil crédible sur des environnements exigeants, avec une posture rassurante et une motivation bien argumentée.",
+  "Candidat structuré, à l'aise dans des fonctions à responsabilité, avec une lecture business intéressante et une bonne capacité d'adaptation.",
+  "Expérience solide, discours clair, niveau d'énergie bon et motivations alignées avec des contextes de croissance ou de transformation."
 ].freeze
 
 CANDIDATE_PROFILES = [
   {
-    job_titles: ["Commercial terrain", "Responsable grands comptes", "Directeur commercial"],
-    skills: ["Prospection B2B", "Negociation grands comptes", "Developpement de portefeuille clients", "Management d equipe commerciale", "Pilotage de la performance commerciale"]
+    experiences: [
+      { title: "Commercial terrain",                   company: "Groupe Nord Distribution", start_year: 2014, start_month: 3,  end_year: 2017, end_month: 6,   skills: [ "Prospection B2B", "Négociation clients" ] },
+      { title: "Responsable grands comptes",           company: "Alliance Commerce Sud",     start_year: 2017, start_month: 9,  end_year: 2020, end_month: 12,  skills: [ "Gestion de portefeuille clients", "Négociation grands comptes" ] },
+      { title: "Directeur commercial",                 company: "Euromarket Retail",         start_year: 2021, start_month: 1,  end_year: nil,  end_month: nil, skills: [ "Management d'équipe commerciale", "Pilotage de la performance commerciale", "Développement de portefeuille" ] }
+    ]
   },
   {
-    job_titles: ["Charge de recrutement", "Responsable RH", "DRH"],
-    skills: ["Acquisition de talents", "Gestion des relations sociales", "Pilotage de la masse salariale", "Conduite du changement", "Droit social"]
+    experiences: [
+      { title: "Chargé de recrutement",                company: "Axia Conseil RH",           start_year: 2013, start_month: 6,  end_year: 2016, end_month: 9,   skills: [ "Sourcing", "Acquisition de talents" ] },
+      { title: "Responsable RH",                       company: "Optima Services",           start_year: 2016, start_month: 10, end_year: 2020, end_month: 3,   skills: [ "Gestion des relations sociales", "Pilotage de la masse salariale" ] },
+      { title: "DRH",                                  company: "Vectalis Groupe",           start_year: 2020, start_month: 4,  end_year: nil,  end_month: nil, skills: [ "Conduite du changement", "Droit social", "Stratégie RH" ] }
+    ]
   },
   {
-    job_titles: ["Controleur de gestion", "Responsable financier", "Directeur Administratif et Financier"],
-    skills: ["Controle de gestion", "Consolidation comptable", "Pilotage budgetaire", "Reporting financier", "Analyse de rentabilite"]
+    experiences: [
+      { title: "Contrôleur de gestion",                company: "Finax Groupe",              start_year: 2012, start_month: 9,  end_year: 2016, end_month: 6,   skills: [ "Contrôle de gestion", "Reporting financier" ] },
+      { title: "Responsable financier",                company: "Meridia Capital",           start_year: 2016, start_month: 7,  end_year: 2019, end_month: 12,  skills: [ "Consolidation comptable", "Pilotage budgétaire" ] },
+      { title: "Directeur Administratif et Financier", company: "Scala Industries",          start_year: 2020, start_month: 2,  end_year: nil,  end_month: nil, skills: [ "Analyse de rentabilité", "Stratégie financière", "Gestion de trésorerie" ] }
+    ]
   },
   {
-    job_titles: ["Chef de projet marketing", "Responsable marketing", "Directeur marketing"],
-    skills: ["Strategie de marque", "Marketing digital", "Gestion de campagnes", "Analyse de donnees", "Lancement de produit"]
+    experiences: [
+      { title: "Chef de projet marketing",             company: "Media & Co",                start_year: 2015, start_month: 3,  end_year: 2018, end_month: 7,   skills: [ "Marketing digital", "Gestion de campagnes" ] },
+      { title: "Responsable marketing",                company: "Brandex Solutions",         start_year: 2018, start_month: 9,  end_year: 2021, end_month: 5,   skills: [ "Stratégie de marque", "Analyse de données" ] },
+      { title: "Directeur marketing",                  company: "Lumio Group",               start_year: 2021, start_month: 6,  end_year: nil,  end_month: nil, skills: [ "Lancement de produit", "Direction d'équipe marketing", "Budget marketing" ] }
+    ]
   },
   {
-    job_titles: ["Responsable logistique", "Responsable supply chain", "Directeur des operations"],
-    skills: ["Gestion des flux", "Optimisation des processus", "Lean management", "Pilotage fournisseurs", "Management multisites"]
+    experiences: [
+      { title: "Responsable logistique",               company: "Transit Nord",              start_year: 2013, start_month: 4,  end_year: 2017, end_month: 8,   skills: [ "Gestion des flux", "Pilotage fournisseurs" ] },
+      { title: "Responsable supply chain",             company: "Logitrans Europe",          start_year: 2017, start_month: 9,  end_year: 2020, end_month: 6,   skills: [ "Optimisation des processus", "Lean management" ] },
+      { title: "Directeur des opérations",             company: "Norexia Logistics",         start_year: 2020, start_month: 7,  end_year: nil,  end_month: nil, skills: [ "Management multisites", "Stratégie supply chain", "Budget opérationnel" ] }
+    ]
   },
   {
-    job_titles: ["Responsable production", "Directeur de site", "Directeur industriel"],
-    skills: ["Pilotage de la production", "Management d equipes terrain", "Amelioration continue", "Gestion budgetaire industrielle", "Securite et conformite"]
+    experiences: [
+      { title: "Responsable production",               company: "Méca Industries",           start_year: 2011, start_month: 2,  end_year: 2015, end_month: 9,   skills: [ "Pilotage de la production", "Gestion budgétaire industrielle" ] },
+      { title: "Directeur de site",                    company: "Flandres Manufacturing",    start_year: 2015, start_month: 10, end_year: 2019, end_month: 3,   skills: [ "Management d'équipes terrain", "Amélioration continue" ] },
+      { title: "Directeur industriel",                 company: "Arctis Process",            start_year: 2019, start_month: 4,  end_year: nil,  end_month: nil, skills: [ "Sécurité et conformité", "Stratégie industrielle", "Transformation lean" ] }
+    ]
   },
   {
-    job_titles: ["Chef de projet", "Responsable bureau d etudes", "Directeur technique"],
-    skills: ["Gestion de projet", "Coordination pluridisciplinaire", "Analyse technique", "Pilotage de budgets projets", "Validation et mise en service"]
+    experiences: [
+      { title: "Chef de projet",                       company: "Ingenia Solutions",         start_year: 2012, start_month: 9,  end_year: 2016, end_month: 6,   skills: [ "Gestion de projet", "Coordination pluridisciplinaire" ] },
+      { title: "Responsable bureau d'études",          company: "Techno Engineering",        start_year: 2016, start_month: 7,  end_year: 2020, end_month: 2,   skills: [ "Analyse technique", "Pilotage de budgets projets" ] },
+      { title: "Directeur technique",                  company: "Nexion Systems",            start_year: 2020, start_month: 3,  end_year: nil,  end_month: nil, skills: [ "Validation et mise en service", "Innovation technique", "Management d'experts" ] }
+    ]
   },
   {
-    job_titles: ["Charge de developpement", "Responsable business development", "Directeur du developpement"],
-    skills: ["Developpement commercial", "Analyse de marche", "Negociation partenariale", "Elaboration de business plans", "Structuration d alliances"]
+    experiences: [
+      { title: "Chargé de développement",              company: "Nexus Partners",            start_year: 2014, start_month: 6,  end_year: 2018, end_month: 4,   skills: [ "Développement commercial", "Analyse de marché" ] },
+      { title: "Responsable business development",     company: "Expansion Group",           start_year: 2018, start_month: 5,  end_year: 2021, end_month: 9,   skills: [ "Négociation partenariale", "Élaboration de business plans" ] },
+      { title: "Directeur du développement",           company: "Stratelia Conseil",         start_year: 2021, start_month: 10, end_year: nil,  end_month: nil, skills: [ "Structuration d'alliances", "Stratégie de croissance", "Management de partenariats" ] }
+    ]
   }
+].freeze
+
+CANDIDATE_EDUCATIONS = [
+  # Profil 0 — Commercial
+  [
+    { category: "diploma",       title: "Master Marketing & Ventes",              institution: "IAE Lille",                    start_year: 2011, start_month: 9, end_year: 2013, end_month: 6 },
+    { category: "diploma",       title: "Licence Administration des Entreprises", institution: "Université de Lille",          start_year: 2008, start_month: 9, end_year: 2011, end_month: 6 },
+    { category: "certification", title: "Certified Sales Professional (CSP)",     institution: "Sales Management Association", start_year: nil,  start_month: nil, end_year: 2018, end_month: 3 },
+    { category: "formation",     title: "Négociation grands comptes",             institution: "Mercuri International",        start_year: nil,  start_month: nil, end_year: 2019, end_month: 10 }
+  ],
+  # Profil 1 — RH
+  [
+    { category: "diploma",       title: "Master Gestion des Ressources Humaines", institution: "Sciences Po Lille",            start_year: 2010, start_month: 9, end_year: 2012, end_month: 6 },
+    { category: "diploma",       title: "Licence Droit Social",                   institution: "Université Paris II",          start_year: 2007, start_month: 9, end_year: 2010, end_month: 6 },
+    { category: "certification", title: "SHRM-CP",                                institution: "SHRM",                         start_year: nil,  start_month: nil, end_year: 2017, end_month: 5 },
+    { category: "formation",     title: "Leadership et management d'équipe",      institution: "Cegos",                        start_year: nil,  start_month: nil, end_year: 2020, end_month: 2 }
+  ],
+  # Profil 2 — Finance
+  [
+    { category: "diploma",       title: "DSCG",                                   institution: "INTEC Paris",                  start_year: 2009, start_month: 9, end_year: 2012, end_month: 6 },
+    { category: "diploma",       title: "DCG",                                    institution: "Université Paris-Dauphine",     start_year: 2006, start_month: 9, end_year: 2009, end_month: 6 },
+    { category: "certification", title: "Expert-Comptable stagiaire",             institution: "CNEC",                         start_year: nil,  start_month: nil, end_year: 2014, end_month: 11 },
+    { category: "formation",     title: "Pilotage financier et tableaux de bord", institution: "EFE Formation",                start_year: nil,  start_month: nil, end_year: 2017, end_month: 4 }
+  ],
+  # Profil 3 — Marketing
+  [
+    { category: "diploma",       title: "Master Marketing Digital",               institution: "ESCP Business School",         start_year: 2012, start_month: 9, end_year: 2014, end_month: 6 },
+    { category: "diploma",       title: "Bachelor Commerce & Communication",      institution: "Sup de Pub Paris",             start_year: 2009, start_month: 9, end_year: 2012, end_month: 6 },
+    { category: "certification", title: "Google Analytics Certification",          institution: "Google",                       start_year: nil,  start_month: nil, end_year: 2020, end_month: 1 },
+    { category: "formation",     title: "Stratégie de marque et brand content",   institution: "ADETEM",                       start_year: nil,  start_month: nil, end_year: 2021, end_month: 3 }
+  ],
+  # Profil 4 — Supply Chain
+  [
+    { category: "diploma",       title: "Master Supply Chain Management",         institution: "KEDGE Business School",        start_year: 2010, start_month: 9, end_year: 2012, end_month: 6 },
+    { category: "diploma",       title: "Licence Logistique et Transport",        institution: "IUT de Nantes",                start_year: 2007, start_month: 9, end_year: 2010, end_month: 6 },
+    { category: "certification", title: "APICS CSCP",                             institution: "APICS",                        start_year: nil,  start_month: nil, end_year: 2016, end_month: 6 },
+    { category: "formation",     title: "Lean Management appliqué",               institution: "Institut Lean France",         start_year: nil,  start_month: nil, end_year: 2018, end_month: 9 }
+  ],
+  # Profil 5 — Industrie
+  [
+    { category: "diploma",       title: "Diplôme d'Ingénieur Génie Industriel",   institution: "Arts et Métiers ParisTech",     start_year: 2006, start_month: 9, end_year: 2009, end_month: 6 },
+    { category: "diploma",       title: "BTS Maintenance Industrielle",           institution: "Lycée Pasteur Lille",          start_year: 2004, start_month: 9, end_year: 2006, end_month: 6 },
+    { category: "certification", title: "Black Belt Lean Six Sigma",              institution: "Institut de la Qualité",       start_year: nil,  start_month: nil, end_year: 2014, end_month: 4 },
+    { category: "formation",     title: "Management de la performance industrielle", institution: "AFNOR Compétences",         start_year: nil,  start_month: nil, end_year: 2019, end_month: 11 }
+  ],
+  # Profil 6 — Ingénierie
+  [
+    { category: "diploma",       title: "Diplôme d'Ingénieur Génie Civil",        institution: "École Centrale de Lille",      start_year: 2008, start_month: 9, end_year: 2011, end_month: 6 },
+    { category: "diploma",       title: "Classe Préparatoire MPSI",               institution: "Lycée Faidherbe Lille",        start_year: 2006, start_month: 9, end_year: 2008, end_month: 6 },
+    { category: "certification", title: "PMP – Project Management Professional",  institution: "PMI",                          start_year: nil,  start_month: nil, end_year: 2015, end_month: 7 },
+    { category: "formation",     title: "BIM et maquette numérique",              institution: "CSTB Formation",               start_year: nil,  start_month: nil, end_year: 2021, end_month: 5 }
+  ],
+  # Profil 7 — Business Development
+  [
+    { category: "diploma",       title: "MBA Strategy & Business Development",    institution: "HEC Paris",                    start_year: 2011, start_month: 9, end_year: 2013, end_month: 6 },
+    { category: "diploma",       title: "Master Économie Internationale",         institution: "Université Paris I Panthéon",  start_year: 2008, start_month: 9, end_year: 2011, end_month: 6 },
+    { category: "certification", title: "Certified Business Development Expert",  institution: "BDPA",                         start_year: nil,  start_month: nil, end_year: 2017, end_month: 9 },
+    { category: "formation",     title: "Structuration de partenariats stratégiques", institution: "CCI Paris Île-de-France", start_year: nil,  start_month: nil, end_year: 2020, end_month: 6 }
+  ]
 ].freeze
 
 CANDIDATE_LOCATIONS = [
   'Lille', 'Paris', 'Lyon', 'Bordeaux', 'Nantes', 'Strasbourg', 'Rennes',
   'Marseille', 'Toulouse', 'Bruxelles', 'Rouen', 'Amiens', 'Grenoble', 'Montpellier'
+].freeze
+
+CANDIDATE_MOBILITY_ZONES = [
+  'Lille et métropole', 'Île-de-France', 'Grand Nord (59/62)', 'France entière',
+  'Nord et Paris', 'Hauts-de-France', 'Lyon et région Auvergne-Rhône-Alpes',
+  'Bordeaux et Nouvelle-Aquitaine', 'Télétravail complet', 'Europe'
+].freeze
+
+CANDIDATE_AVAILABILITIES = %w[immediate one_month three_months six_months other].freeze
+
+CANDIDATE_CONTRACT_TYPES = [
+  %w[cdi],
+  %w[cdi cdd],
+  %w[freelance management_transition],
+  %w[cdi freelance],
+  %w[cdd interim],
+  %w[cdi cdd freelance],
+  %w[management_transition],
+  %w[freelance interim management_transition]
+].freeze
+
+CANDIDATE_SALARY_RANGES = [
+  '30 – 40k€', '40 – 50k€', '50 – 60k€', '60 – 75k€',
+  '75 – 90k€', '90 – 110k€', '> 110k€'
 ].freeze
 
 CANDIDATE_STATUSES = ['new', 'qualified', 'presented', 'interviewing', 'placed'].freeze
@@ -841,8 +950,7 @@ candidates = []
 
   profile = CANDIDATE_PROFILES[index % CANDIDATE_PROFILES.size]
   status = CANDIDATE_STATUSES[index % CANDIDATE_STATUSES.size]
-  # Nombre d intitules de poste selon le niveau de maturite du candidat (statut)
-  titles_count = case status
+  exp_count = case status
   when 'new'          then 1
   when 'qualified'    then 2
   when 'presented'    then 2
@@ -850,6 +958,9 @@ candidates = []
   when 'placed'       then 3
   else 1
   end
+
+  experiences = profile[:experiences].first(exp_count)
+  all_skills   = experiences.flat_map { |e| e[:skills] }.uniq
 
   candidate = upsert_record(Candidate, { email: email }, {
     first_name: first_name,
@@ -859,10 +970,43 @@ candidates = []
     status: status,
     notes: CANDIDATE_NOTES[index % CANDIDATE_NOTES.size],
     source: CANDIDATE_SOURCES[index % CANDIDATE_SOURCES.size],
-    job_titles: profile[:job_titles].first(titles_count),
-    skills: profile[:skills],
-    location: CANDIDATE_LOCATIONS[index % CANDIDATE_LOCATIONS.size]
+    job_titles: experiences.map { |e| e[:title] },
+    skills: all_skills,
+    location: CANDIDATE_LOCATIONS[index % CANDIDATE_LOCATIONS.size],
+    mobility_zone:  CANDIDATE_MOBILITY_ZONES[index % CANDIDATE_MOBILITY_ZONES.size],
+    availability:   CANDIDATE_AVAILABILITIES[index % CANDIDATE_AVAILABILITIES.size],
+    contract_types: CANDIDATE_CONTRACT_TYPES[index % CANDIDATE_CONTRACT_TYPES.size],
+    salary_range:   CANDIDATE_SALARY_RANGES[index % CANDIDATE_SALARY_RANGES.size]
   })
+
+  experiences.each_with_index do |exp, pos|
+    WorkExperience.find_or_initialize_by(candidate: candidate, title: exp[:title], company: exp[:company]).tap do |we|
+      we.assign_attributes(
+        start_year:  exp[:start_year],
+        start_month: exp[:start_month],
+        end_year:    exp[:end_year],
+        end_month:   exp[:end_month],
+        skills:      exp[:skills],
+        position:    pos
+      )
+      we.save!
+    end
+  end
+
+  CANDIDATE_EDUCATIONS[index % CANDIDATE_EDUCATIONS.size].each_with_index do |edu, pos|
+    Education.find_or_initialize_by(candidate: candidate, title: edu[:title]).tap do |e|
+      e.assign_attributes(
+        category:    edu[:category],
+        institution: edu[:institution],
+        start_year:  edu[:start_year],
+        start_month: edu[:start_month],
+        end_year:    edu[:end_year],
+        end_month:   edu[:end_month],
+        position:    pos
+      )
+      e.save!
+    end
+  end
 
   candidates << candidate
 end

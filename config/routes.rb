@@ -47,6 +47,7 @@ Rails.application.routes.draw do
     member do
       patch :toggle_favorite
     end
+    resources :candidate_notes, only: [ :create, :update, :destroy ]
   end
   resources :placements
   resources :invoices do

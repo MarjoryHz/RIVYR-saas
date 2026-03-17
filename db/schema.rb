@@ -10,11 +10,23 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_17_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_17_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
+  create_table "candidate_notes", force: :cascade do |t|
+    t.text "body", null: false
+    t.bigint "candidate_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["candidate_id"], name: "index_candidate_notes_on_candidate_id"
+    t.index ["user_id"], name: "index_candidate_notes_on_user_id"
+  end
+
   create_table "candidates", force: :cascade do |t|
+    t.string "availability"
+    t.string "contract_types", default: [], array: true
     t.datetime "created_at", null: false
     t.string "email"
     t.string "first_name"
@@ -22,8 +34,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_150000) do
     t.string "last_name"
     t.string "linkedin_url"
     t.string "location"
+    t.string "mobility_zone"
     t.text "notes"
     t.string "phone"
+    t.string "salary_range"
     t.string "skills", default: [], array: true
     t.string "source"
     t.string "status"
@@ -75,6 +89,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_150000) do
     t.string "status"
     t.datetime "updated_at", null: false
     t.index ["placement_id"], name: "index_commissions_on_placement_id"
+  end
+
+  create_table "educations", force: :cascade do |t|
+    t.bigint "candidate_id", null: false
+    t.string "category", null: false
+    t.datetime "created_at", null: false
+    t.integer "end_month"
+    t.integer "end_year"
+    t.string "institution"
+    t.integer "position", default: 0
+    t.integer "start_month"
+    t.integer "start_year"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["candidate_id"], name: "index_educations_on_candidate_id"
   end
 
   create_table "favorite_candidates", force: :cascade do |t|
@@ -184,7 +213,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_150000) do
     t.string "mission_type"
     t.date "opened_at"
     t.string "origin_type"
-    t.string "pipeline_stage", default: "sourcing_candidates", null: false
     t.string "priority_level"
     t.string "reference"
     t.bigint "region_id", null: false
@@ -301,10 +329,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_150000) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  create_table "work_experiences", force: :cascade do |t|
+    t.bigint "candidate_id", null: false
+    t.string "company"
+    t.datetime "created_at", null: false
+    t.integer "end_month"
+    t.integer "end_year"
+    t.integer "position", default: 0
+    t.string "skills", default: [], array: true
+    t.integer "start_month"
+    t.integer "start_year"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["candidate_id"], name: "index_work_experiences_on_candidate_id"
+  end
+
+  add_foreign_key "candidate_notes", "candidates"
+  add_foreign_key "candidate_notes", "users"
   add_foreign_key "candidates", "users"
   add_foreign_key "client_contacts", "clients"
   add_foreign_key "client_contacts", "users"
   add_foreign_key "commissions", "placements"
+  add_foreign_key "educations", "candidates"
   add_foreign_key "favorite_candidates", "candidates"
   add_foreign_key "favorite_candidates", "users"
   add_foreign_key "favorite_missions", "missions"
@@ -332,4 +378,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_150000) do
   add_foreign_key "todo_categories", "users"
   add_foreign_key "todo_tasks", "todo_categories"
   add_foreign_key "todo_tasks", "users"
+  add_foreign_key "work_experiences", "candidates"
 end
