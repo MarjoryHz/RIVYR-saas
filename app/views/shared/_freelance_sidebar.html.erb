@@ -28,18 +28,15 @@
           <%= link_to dashboard_missions_path, class: ["freelance-sidebar__item", ("freelance-sidebar__item--active" if active_controller == "missions" && active_action == "index")] do %>
             <i class="fa-solid fa-briefcase"></i>
             <span>Missions</span>
+            <% if freelance_attention_count.positive? %>
+              <span class="freelance-sidebar__item-badge"><%= freelance_attention_count %></span>
+            <% end %>
           <% end %>
         </li>
         <li class="freelance-sidebar__menu-item">
-          <%= link_to dashboard_test_mission_path, class: ["freelance-sidebar__item", ("freelance-sidebar__item--active" if active_controller == "missions" && active_action == "show_test")] do %>
-            <i class="fa-solid fa-flask"></i>
-            <span>Missions tests</span>
-          <% end %>
-        </li>
-        <li class="freelance-sidebar__menu-item">
-          <%= link_to dashboard_invoices_path, class: ["freelance-sidebar__item", ("freelance-sidebar__item--active" if active_controller == "invoices")] do %>
-            <i class="fa-solid fa-file-invoice"></i>
-            <span>Facturation</span>
+          <%= link_to dashboard_freelance_finance_path, class: ["freelance-sidebar__item", ("freelance-sidebar__item--active" if active_controller.in?(%w[freelance_finances invoices placements]))] do %>
+            <i class="fa-solid fa-wallet"></i>
+            <span>Finance</span>
           <% end %>
         </li>
         <li class="freelance-sidebar__menu-item">

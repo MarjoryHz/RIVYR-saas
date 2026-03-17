@@ -1,24 +1,30 @@
 class PlacementsController < ApplicationController
-  before_action :set_placement, only: [ :show, :edit, :update, :destroy ]
+  before_action :set_placement, only: [ :show, :edit, :update, :destroy, :validate_compliance, :refuse_compliance ]
   before_action :set_form_collections, only: [ :new, :create, :edit, :update ]
 
   def index
     authorize Placement
     @q = params[:q].to_s.strip
-    @status = params[:status].to_s.strip
-    @scope = params[:scope].to_s.strip
+    @tab = params[:tab].presence_in(%w[in_progress validated refused]) || "in_progress"
     @company_filter = params[:company].to_s.strip
     @region_filter = params[:region].to_s.strip
     @amount_filter = params[:amount].to_s.strip
-    scope = policy_scope(Placement).includes(:mission, :candidate).order(created_at: :desc).search(@q).with_status(@status)
+    base_scope = policy_scope(Placement)
+      .includes(:candidate, :commission, :freelancer_profile, mission: [ :region, { client_contact: :client } ])
+      .order(updated_at: :desc, created_at: :desc)
+      .search(@q)
 
-    if current_user.role_freelance? && @scope == "closed_missions"
-      scope = scope.joins(:mission).where(missions: { status: "closed" })
-      load_closed_missions_dashboard(scope)
-      return
-    end
+    @placement_counts = {
+      "in_progress" => base_scope.with_workflow_status("in_progress").count,
+      "validated" => base_scope.with_workflow_status("validated").count,
+      "refused" => base_scope.with_workflow_status("refused").count
+    }
 
-    @placements = paginate(scope)
+    placement_rows = base_scope.with_workflow_status(@tab).map { |placement| build_placement_row(placement) }
+    @company_options = placement_rows.map { |row| row[:company_name] }.compact.uniq.sort
+    @region_options = placement_rows.map { |row| row[:region_name] }.compact.uniq.sort
+    @placement_rows = filter_placement_rows(placement_rows)
+    @placement_metrics = build_placement_metrics(base_scope)
   end
 
   def show
@@ -82,13 +88,44 @@ class PlacementsController < ApplicationController
     end
   end
 
+  def validate_compliance
+    authorize @placement, :validate_compliance?
+    return redirect_to placement_path(@placement), alert: "Les informations du placement sont incomplètes." unless @placement.ready_for_admin_review?
+
+    Placement.transaction do
+      @placement.sync_commission!
+      @placement.update!(
+        workflow_status: "validated",
+        admin_reviewed_at: Time.current,
+        admin_reviewed_by_id: current_user.id,
+        admin_review_note: params[:admin_review_note].presence
+      )
+    end
+
+    redirect_to placement_path(@placement), notice: "Le placement a été validé."
+  end
+
+  def refuse_compliance
+    authorize @placement, :refuse_compliance?
+
+    @placement.update!(
+      workflow_status: "refused",
+      admin_reviewed_at: Time.current,
+      admin_reviewed_by_id: current_user.id,
+      admin_review_note: params[:admin_review_note].presence
+    )
+
+    redirect_to placement_path(@placement), notice: "Le placement a été refusé."
+  end
+
   private
 
   def set_placement
     @placement = Placement.includes(
       :candidate,
       :commission,
-      mission: { client_contact: :client },
+      :freelancer_profile,
+      mission: { client_contact: :client, freelancer_profile: :user },
       client_invoice: :invoice_notes,
       freelancer_invoice: :payout_requests
     ).find(params[:id])
@@ -100,15 +137,21 @@ class PlacementsController < ApplicationController
   end
 
   def placement_params
-    params.require(:placement).permit(
+    permitted = [
       :mission_id,
       :candidate_id,
       :status,
       :hired_at,
       :annual_salary_cents,
       :placement_fee_cents,
-      :notes
-    )
+      :notes,
+      :package_summary,
+      :client_offer_compliant,
+      :candidate_accepted
+    ]
+    permitted.concat([ :workflow_status, :admin_review_note ]) if current_user&.role_admin?
+
+    params.require(:placement).permit(*permitted)
   end
 
   def estimate_client_payment_date
@@ -155,14 +198,24 @@ class PlacementsController < ApplicationController
         detail: @mission.opened_at.present? ? "Signé le #{I18n.l(@mission.opened_at)}" : "Date non renseignée"
       },
       {
-        label: "Promesse d'embauche",
-        ok: @placement.hired_at.present?,
-        detail: @placement.hired_at.present? ? "Démarrage le #{I18n.l(@placement.hired_at)}" : "À renseigner"
+        label: "Rémunération renseignée",
+        ok: @placement.annual_salary_cents.to_i.positive?,
+        detail: @placement.annual_salary_cents.to_i.positive? ? helpers.number_to_currency(@placement.annual_salary_cents / 100.0, unit: "€", precision: 0) : "À renseigner"
       },
       {
-        label: "Candidat accepté",
-        ok: @candidate.status == "placed" || @placement.hired_at.present?,
-        detail: "Statut candidat: #{@candidate.status}"
+        label: "Package validé",
+        ok: @placement.package_summary.present?,
+        detail: @placement.package_summary.presence || "À renseigner"
+      },
+      {
+        label: "Conformité à l'offre client",
+        ok: @placement.client_offer_compliant == true,
+        detail: @placement.client_offer_compliant.nil? ? "À vérifier" : (@placement.client_offer_compliant? ? "Conforme" : "Non conforme")
+      },
+      {
+        label: "Acceptation du candidat",
+        ok: @placement.candidate_accepted == true,
+        detail: @placement.candidate_accepted.nil? ? "À confirmer" : (@placement.candidate_accepted? ? "Accepté" : "Refusé")
       },
       {
         label: "Facture client créée",
@@ -376,6 +429,71 @@ class PlacementsController < ApplicationController
       end
 
       matches_company && matches_region && matches_amount
+    end
+  end
+
+  def build_placement_row(placement)
+    mission = placement.mission
+    client = mission.client_contact.client
+
+    {
+      placement: placement,
+      mission_title: mission.title,
+      mission_reference: mission.reference,
+      company_name: client.brand_name.presence || client.legal_name,
+      company_logo: client.logo,
+      region_name: mission.region&.name,
+      candidate_name: [ placement.candidate.first_name, placement.candidate.last_name ].compact.join(" "),
+      candidate_status: placement.candidate.status,
+      salary_cents: placement.annual_salary_cents.to_i,
+      workflow_label: workflow_label_for(placement),
+      workflow_badge_class: workflow_badge_class_for(placement),
+      compliance_label: placement.client_offer_compliant.nil? ? "À vérifier" : (placement.client_offer_compliant? ? "Conforme à l'offre client" : "Écart à traiter"),
+      package_summary: placement.package_summary.presence || "Package à confirmer",
+      updated_at: placement.updated_at
+    }
+  end
+
+  def filter_placement_rows(rows)
+    rows.select do |row|
+      matches_company = @company_filter.blank? || row[:company_name] == @company_filter
+      matches_region = @region_filter.blank? || row[:region_name] == @region_filter
+      matches_amount =
+        case @amount_filter
+        when "under_5000" then row[:salary_cents] < 500_000
+        when "5000_10000" then row[:salary_cents] >= 500_000 && row[:salary_cents] <= 1_000_000
+        when "10000_20000" then row[:salary_cents] > 1_000_000 && row[:salary_cents] <= 2_000_000
+        when "over_20000" then row[:salary_cents] > 2_000_000
+        else true
+        end
+
+      matches_company && matches_region && matches_amount
+    end
+  end
+
+  def build_placement_metrics(scope)
+    placements = scope.to_a
+
+    {
+      signatures_count: placements.count { |placement| placement.mission.contract_signed? },
+      placements_count: placements.count(&:workflow_validated?),
+      payments_count: placements.count { |placement| placement.client_invoice&.status_paid? }
+    }
+  end
+
+  def workflow_label_for(placement)
+    case placement.workflow_status
+    when "validated" then "Validé"
+    when "refused" then "Refusé"
+    else "En cours"
+    end
+  end
+
+  def workflow_badge_class_for(placement)
+    case placement.workflow_status
+    when "validated" then "border-[#d7e9dc] bg-[#edf8f0] text-[#2f6b3c]"
+    when "refused" then "border-[#f1c9d3] bg-[#fff1f4] text-[#b14360]"
+    else "border-[#f3dfc8] bg-[#fff3e8] text-[#ba6d2f]"
     end
   end
 end

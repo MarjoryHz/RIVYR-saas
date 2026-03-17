@@ -45,7 +45,10 @@
                         <% end %>
                       </p>
                     </div>
-                    <i class="fa-solid fa-angle-right text-[#ed0e64]"></i>
+                    <div class="flex items-center gap-3">
+                      <%= render "missions/origin_badge", mission: mission %>
+                      <i class="fa-solid fa-angle-right text-[#ed0e64]"></i>
+                    </div>
                   </div>
                 <% end %>
               <% else %>
@@ -88,7 +91,10 @@
                         <%= mission.mission_type.presence || mission.specialty&.name || "Mission ouverte" %>
                       </p>
                     </div>
-                    <i class="fa-solid fa-angle-right text-[#ed0e64]"></i>
+                    <div class="flex items-center gap-3">
+                      <%= render "missions/origin_badge", mission: mission %>
+                      <i class="fa-solid fa-angle-right text-[#ed0e64]"></i>
+                    </div>
                   </div>
                 <% end %>
               <% else %>
@@ -129,6 +135,7 @@
               <% if policy(Mission).view_client_identity? %>
                 <th>Client</th>
               <% end %>
+              <th>Origine</th>
               <th>Statut</th>
               <th></th>
             </tr>
@@ -141,6 +148,7 @@
                 <% if policy(Mission).view_client_identity? %>
                   <td><%= mission.client_contact.client.legal_name %></td>
                 <% end %>
+                <td><%= render "missions/origin_badge", mission: mission %></td>
                 <td><%= mission.status %></td>
                 <td class="text-right">
                   <%= link_to "Voir", mission_path(mission), class: "btn btn-sm" %>

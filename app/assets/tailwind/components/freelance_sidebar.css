@@ -187,6 +187,22 @@
     flex-shrink: 0;
   }
 
+  .freelance-sidebar__item-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.65rem;
+    height: 1.65rem;
+    margin-left: auto;
+    padding: 0 0.45rem;
+    border-radius: 999px;
+    background: #ed0e64;
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    box-shadow: 0 10px 20px rgba(237, 14, 100, 0.22);
+  }
+
   .freelance-sidebar__item:hover:not(.freelance-sidebar__item--active) {
     background: var(--freelance-sidebar-surface);
     transform: translateX(2px);

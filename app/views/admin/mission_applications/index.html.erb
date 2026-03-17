@@ -1,0 +1,160 @@
+<div class="mx-auto max-w-7xl space-y-6 px-6 py-6 md:px-10">
+  <section class="rounded-[2rem] border border-[#ead2dc] bg-[#fff8fb]/95 p-6 shadow-[0_24px_45px_rgba(91,38,51,0.08)]">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-[0.28em] text-[#a15c70]">Admin RIVYR</p>
+        <h1 class="mt-2 text-4xl font-semibold tracking-tight text-[#4c1f2a]">Validations de candidatures</h1>
+        <p class="mt-2 max-w-2xl text-base text-[#7b4b5a]">Sélectionne le freelance à affecter sur chaque mission, ou refuse une candidature avec un motif explicite.</p>
+      </div>
+
+      <div class="inline-flex items-center rounded-full border border-[#f0bfd0] bg-white px-5 py-3 text-sm font-semibold text-[#7f2f4d] shadow-sm">
+        <span><%= @pending_applications_count %> candidature<%= "s" if @pending_applications_count != 1 %> à traiter</span>
+      </div>
+    </div>
+  </section>
+
+  <% if @closed_missions_alerts.any? %>
+    <section class="rounded-[2rem] border border-[#ead2dc] bg-[#fff8fb]/95 p-6 shadow-[0_20px_42px_rgba(91,38,51,0.07)]">
+      <div class="flex items-center gap-3">
+        <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff2f7] text-[#ed0e64]">
+          <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+        </span>
+        <div>
+          <h2 class="text-2xl font-semibold text-[#5b2633]">Missions clôturées par des freelances</h2>
+          <p class="mt-1 text-sm text-[#7b4b5a]">Ces alertes concernent uniquement les missions d’origine RIVYR.</p>
+        </div>
+      </div>
+
+      <div class="mt-5 grid gap-4 xl:grid-cols-2">
+        <% @closed_missions_alerts.each do |mission| %>
+          <article class="rounded-[1.5rem] border border-[#efdbe4] bg-white/85 p-5 shadow-[0_14px_30px_rgba(91,38,51,0.05)]">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <p class="text-sm font-semibold uppercase tracking-[0.22em] text-[#a15c70]"><%= mission.reference %></p>
+                <h3 class="mt-2 text-xl font-semibold text-[#4c1f2a]"><%= mission.title %></h3>
+                <p class="mt-2 text-sm text-[#7b4b5a]">
+                  Freelance: <%= [mission.freelancer_profile.user.first_name, mission.freelancer_profile.user.last_name].compact.join(" ") %>
+                </p>
+                <% if mission.region.present? %>
+                  <p class="mt-1 text-sm text-[#7b4b5a]">Région: <%= mission.region.name %></p>
+                <% end %>
+              </div>
+              <%= link_to mission_path(mission), class: "inline-flex shrink-0 items-center gap-2 rounded-full border border-[#f1a38b] bg-[#f4a58a] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" do %>
+                <i class="fa-solid fa-eye"></i>
+                Voir
+              <% end %>
+            </div>
+
+            <div class="mt-4 rounded-2xl border border-[#f1c8d3] bg-[#fff1f4] px-4 py-3 text-sm text-[#6b3f4f]">
+              <p><strong>Motif:</strong> <%= mission.closure_reason.presence || "Non renseigné" %></p>
+              <% if mission.closure_note.present? %>
+                <p class="mt-2"><strong>Détail:</strong> <%= mission.closure_note %></p>
+              <% end %>
+            </div>
+          </article>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <% if @mission_application_groups.any? %>
+    <div class="space-y-6">
+      <% @mission_application_groups.each do |group| %>
+        <% mission = group[:mission] %>
+        <section class="rounded-[2rem] border border-[#ead2dc] bg-[#fff8fb]/95 p-6 shadow-[0_20px_42px_rgba(91,38,51,0.07)]">
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p class="text-sm font-semibold uppercase tracking-[0.24em] text-[#a15c70]"><%= mission.reference %></p>
+              <h2 class="mt-2 text-2xl font-semibold text-[#4c1f2a]"><%= mission.title %></h2>
+              <p class="mt-2 text-sm text-[#7b4b5a]">
+                <%= mission.client_contact.client.brand_name.presence || mission.client_contact.client.legal_name %>
+                <% if mission.region.present? %>
+                  · <%= mission.region.name %>
+                <% end %>
+                <% if mission.specialty.present? %>
+                  · <%= mission.specialty.name %>
+                <% end %>
+              </p>
+            </div>
+
+            <%= link_to mission_path(mission), class: "inline-flex items-center gap-2 rounded-full border border-[#f1a38b] bg-[#f4a58a] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" do %>
+              <i class="fa-solid fa-eye"></i>
+              Voir la mission
+            <% end %>
+          </div>
+
+          <div class="mt-6 grid gap-4 xl:grid-cols-2">
+            <% group[:applications].each do |row| %>
+              <% application = row[:application] %>
+              <% freelancer = row[:freelancer_user] %>
+              <% profile = row[:freelancer_profile] %>
+              <% compatibility = row[:compatibility] %>
+              <article class="rounded-[1.6rem] border border-[#efdbe4] bg-white/85 p-5 shadow-[0_14px_30px_rgba(91,38,51,0.05)]">
+                <div class="flex items-start justify-between gap-4">
+                  <div class="min-w-0">
+                    <h3 class="truncate text-xl font-semibold text-[#4c1f2a]"><%= [freelancer.first_name, freelancer.last_name].compact.join(" ") %></h3>
+                    <p class="mt-1 text-sm text-[#7b4b5a]"><%= freelancer.email %></p>
+                    <div class="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold">
+                      <% if profile.specialty.present? %>
+                        <span class="rounded-full border border-[#e8d3dc] bg-[#fff4f7] px-3 py-1 text-[#8c5665]"><%= profile.specialty.name %></span>
+                      <% end %>
+                      <% if profile.region.present? %>
+                        <span class="rounded-full border border-[#d9e8df] bg-[#edf8f0] px-3 py-1 text-[#2f6b3c]"><%= profile.region.name %></span>
+                      <% end %>
+                      <span class="rounded-full border border-[#e6d9ef] bg-[#f8f1fc] px-3 py-1 text-[#7b4b8f]">Indice profil: <%= profile.rivyr_score_current.to_i %></span>
+                    </div>
+                  </div>
+
+                  <div class="shrink-0 text-center">
+                    <div class="inline-flex h-16 w-16 items-center justify-center rounded-full border-4 <%= compatibility[:total] >= 75 ? 'border-[#ed0e64] text-[#ed0e64]' : 'border-[#d9c3cc] text-[#7b4b5a]' %> bg-white text-lg font-semibold shadow-sm">
+                      <%= compatibility[:total] %>
+                    </div>
+                    <p class="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Compatibilité</p>
+                  </div>
+                </div>
+
+                <div class="mt-5 grid gap-2 sm:grid-cols-3">
+                  <div class="rounded-2xl border border-[#efdbe4] bg-[#fff8fb] px-3 py-2 text-sm text-[#6b3f4f]">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Spécialité</p>
+                    <p class="mt-1 font-semibold"><%= compatibility[:specialty] %> pts</p>
+                  </div>
+                  <div class="rounded-2xl border border-[#efdbe4] bg-[#fff8fb] px-3 py-2 text-sm text-[#6b3f4f]">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Région</p>
+                    <p class="mt-1 font-semibold"><%= compatibility[:region] %> pts</p>
+                  </div>
+                  <div class="rounded-2xl border border-[#efdbe4] bg-[#fff8fb] px-3 py-2 text-sm text-[#6b3f4f]">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Historique</p>
+                    <p class="mt-1 font-semibold"><%= compatibility[:recruited_same_type] %> pts</p>
+                  </div>
+                </div>
+
+                <div class="mt-5 flex flex-wrap gap-3">
+                  <%= button_to accept_admin_mission_application_path(application), method: :patch, class: "inline-flex items-center justify-center gap-2 rounded-full border border-[#ed0e64] bg-[#ed0e64] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:border-[#cf0c57] hover:bg-[#cf0c57]" do %>
+                    <i class="fa-solid fa-circle-check"></i>
+                    Accepter
+                  <% end %>
+                </div>
+
+                <%= form_with model: application, url: reject_admin_mission_application_path(application), method: :patch, class: "mt-4 space-y-3" do |form| %>
+                  <div>
+                    <%= form.label :review_reason, "Motif du refus", class: "mb-2 block text-sm font-semibold text-[#6b3f4f]" %>
+                    <%= form.text_area :review_reason, rows: 3, class: "w-full rounded-2xl border border-[#efdbe4] bg-[#fffafb] px-4 py-3 text-sm text-[#5f3647] outline-none transition focus:border-[#ed0e64]" %>
+                  </div>
+                  <%= form.button type: :submit, class: "inline-flex items-center justify-center gap-2 rounded-full border border-[#e7b2bb] bg-[#fff1f3] px-5 py-3 text-sm font-semibold text-[#b43e53] transition hover:bg-[#ffe5e9]" do %>
+                    <i class="fa-solid fa-ban"></i>
+                    Refuser
+                  <% end %>
+                <% end %>
+              </article>
+            <% end %>
+          </div>
+        </section>
+      <% end %>
+    </div>
+  <% else %>
+    <section class="rounded-[2rem] border border-[#ead2dc] bg-[#fff8fb]/95 p-10 text-center shadow-[0_20px_42px_rgba(91,38,51,0.07)]">
+      <p class="text-xl font-semibold text-[#4c1f2a]">Aucune candidature en attente</p>
+      <p class="mt-2 text-[#7b4b5a]">Les nouvelles prises de position des freelances apparaîtront ici.</p>
+    </section>
+  <% end %>
+</div>

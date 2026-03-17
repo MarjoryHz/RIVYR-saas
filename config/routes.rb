@@ -8,6 +8,14 @@ Rails.application.routes.draw do
   resources :client_contacts
   resources :freelancer_profiles
   get "/dashboard", to: "missions#dashboard", as: :dashboard
+  namespace :admin do
+    resources :mission_applications, only: [ :index ] do
+      member do
+        patch :accept
+        patch :reject
+      end
+    end
+  end
   scope "/dashboard", as: :dashboard do
     get "feed", to: "pages#feed", as: :feed
     get "community", to: "pages#community", as: :community
@@ -17,7 +25,6 @@ Rails.application.routes.draw do
     post "community/replies", to: "pages#create_community_reply", as: :community_replies
     post "community/reactions", to: "pages#create_community_reaction", as: :community_reactions
     get "missions", to: "missions#index", as: :missions
-    get "missions-tests", to: "missions#show_test", as: :test_mission
     get "missions/my", to: "missions#my_missions", as: :my_missions
     get "missions/pending", to: "missions#pending_missions", as: :pending_missions
     get "missions/library", to: "missions#library", as: :library_missions
@@ -34,6 +41,7 @@ Rails.application.routes.draw do
     get :my_missions, on: :collection
     get :pending_missions, on: :collection
     patch :toggle_freelance_urgent, on: :member
+    patch :close_by_freelance, on: :member
     post :apply, on: :member
     delete :withdraw, on: :member
     collection do
@@ -48,7 +56,12 @@ Rails.application.routes.draw do
       patch :toggle_favorite
     end
   end
-  resources :placements
+  resources :placements do
+    member do
+      patch :validate_compliance
+      patch :refuse_compliance
+    end
+  end
   resources :invoices do
     post :create_note, on: :member
   end

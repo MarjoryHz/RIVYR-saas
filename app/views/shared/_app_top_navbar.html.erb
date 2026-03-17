@@ -4,6 +4,17 @@
     <%= link_to "Contacts", client_contacts_path, class: "btn btn-ghost btn-sm" %>
     <%= link_to "Freelancers", freelancer_profiles_path, class: "btn btn-ghost btn-sm" %>
     <%= link_to "Missions", missions_path, class: "btn btn-ghost btn-sm" %>
+    <% if current_user&.role_admin? %>
+      <%= link_to admin_mission_applications_path, class: "inline-flex items-center gap-2 rounded-full border border-[#f0bfd0] bg-[#fff3f7] px-4 py-2 text-sm font-semibold text-[#7f2f4d] shadow-sm transition hover:bg-white" do %>
+        <i class="fa-solid fa-list-check text-[#ed0e64]"></i>
+        <span>Validations</span>
+        <% if admin_pending_application_count.positive? %>
+          <span class="inline-flex min-h-[1.45rem] min-w-[1.45rem] items-center justify-center rounded-full bg-[#ed0e64] px-1.5 text-[11px] font-bold text-white">
+            <%= admin_pending_application_count %>
+          </span>
+        <% end %>
+      <% end %>
+    <% end %>
     <%= link_to "Candidats", candidates_path, class: "btn btn-ghost btn-sm" %>
     <%= link_to "Placements", placements_path, class: "btn btn-ghost btn-sm" %>
     <%= link_to "Factures", invoices_path, class: "btn btn-ghost btn-sm" %>
@@ -11,7 +22,11 @@
     <%= link_to "Paiements", payments_path, class: "btn btn-ghost btn-sm" %>
   </div>
 
-  <div class="navbar-end ml-auto">
-    <%= image_tag "icon_pers_white.svg", alt: "Profil", class: "h-10 w-10 object-contain [filter:brightness(0)_invert(1)]" %>
+  <div class="navbar-end ml-auto gap-3">
+    <span class="text-sm font-semibold text-base-content/70"><%= current_user&.email %></span>
+    <%= link_to destroy_user_session_path, data: { turbo_method: :delete }, class: "inline-flex items-center gap-2 rounded-full border border-[#f0bfd0] bg-white px-4 py-2 text-sm font-semibold text-[#7f2f4d] shadow-sm transition hover:bg-[#fff3f7]" do %>
+      <i class="fa-solid fa-right-from-bracket text-[#ed0e64]"></i>
+      <span>Déconnexion</span>
+    <% end %>
   </div>
 </nav>

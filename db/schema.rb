@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_17_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_17_181500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -102,15 +102,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_150000) do
     t.datetime "client_rejected_at"
     t.datetime "client_validated_at"
     t.datetime "created_at", null: false
+    t.datetime "freelancer_notified_at"
     t.bigint "freelancer_profile_id", null: false
     t.bigint "mission_id", null: false
     t.text "note"
+    t.text "review_reason"
+    t.bigint "reviewed_by_id"
     t.string "status", default: "applied", null: false
     t.datetime "submitted_to_client_at"
     t.datetime "updated_at", null: false
     t.index ["freelancer_profile_id"], name: "index_freelance_mission_applications_on_freelancer_profile_id"
     t.index ["mission_id", "freelancer_profile_id"], name: "index_freelance_mission_applications_uniqueness", unique: true
     t.index ["mission_id"], name: "index_freelance_mission_applications_on_mission_id"
+    t.index ["reviewed_by_id"], name: "index_freelance_mission_applications_on_reviewed_by_id"
     t.index ["status"], name: "index_freelance_mission_applications_on_status"
   end
 
@@ -175,6 +179,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_150000) do
     t.text "brief_summary"
     t.bigint "client_contact_id", null: false
     t.date "closed_at"
+    t.datetime "closed_by_freelancer_at"
+    t.datetime "closure_admin_read_at"
+    t.text "closure_note"
+    t.string "closure_reason"
     t.text "compensation_summary"
     t.boolean "contract_signed"
     t.datetime "created_at", null: false
@@ -231,17 +239,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_150000) do
   end
 
   create_table "placements", force: :cascade do |t|
+    t.text "admin_review_note"
+    t.datetime "admin_reviewed_at"
+    t.bigint "admin_reviewed_by_id"
     t.integer "annual_salary_cents"
+    t.boolean "candidate_accepted"
     t.bigint "candidate_id", null: false
+    t.boolean "client_offer_compliant"
     t.datetime "created_at", null: false
+    t.bigint "freelancer_profile_id"
     t.date "hired_at"
     t.bigint "mission_id", null: false
     t.text "notes"
+    t.string "package_summary"
     t.integer "placement_fee_cents"
     t.string "status"
     t.datetime "updated_at", null: false
+    t.string "workflow_status", default: "in_progress", null: false
+    t.index ["admin_reviewed_by_id"], name: "index_placements_on_admin_reviewed_by_id"
     t.index ["candidate_id"], name: "index_placements_on_candidate_id"
+    t.index ["freelancer_profile_id"], name: "index_placements_on_freelancer_profile_id"
     t.index ["mission_id"], name: "index_placements_on_mission_id"
+    t.index ["workflow_status"], name: "index_placements_on_workflow_status"
   end
 
   create_table "regions", force: :cascade do |t|
@@ -311,6 +330,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_150000) do
   add_foreign_key "favorite_missions", "users"
   add_foreign_key "freelance_mission_applications", "freelancer_profiles"
   add_foreign_key "freelance_mission_applications", "missions"
+  add_foreign_key "freelance_mission_applications", "users", column: "reviewed_by_id"
   add_foreign_key "freelance_mission_preferences", "freelancer_profiles"
   add_foreign_key "freelance_mission_preferences", "missions"
   add_foreign_key "freelancer_profiles", "regions"
@@ -328,7 +348,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_150000) do
   add_foreign_key "payout_requests", "invoices"
   add_foreign_key "payout_requests", "users"
   add_foreign_key "placements", "candidates"
+  add_foreign_key "placements", "freelancer_profiles"
   add_foreign_key "placements", "missions"
+  add_foreign_key "placements", "users", column: "admin_reviewed_by_id"
   add_foreign_key "todo_categories", "users"
   add_foreign_key "todo_tasks", "todo_categories"
   add_foreign_key "todo_tasks", "users"

@@ -19,9 +19,14 @@
       <button type="button" class="h-10 w-10 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-primary shadow-sm transition hover:bg-base-100 sm:inline-flex" onclick="document.getElementById('<%= search_modal_id %>').showModal()">
         <i class="fa-solid fa-magnifying-glass text-base text-[#ed0e64]"></i>
       </button>
-      <button type="button" class="h-10 w-10 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-primary shadow-sm sm:inline-flex">
+      <%= link_to dashboard_pending_missions_path, class: "relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-primary shadow-sm transition hover:bg-base-100 sm:inline-flex" do %>
         <i class="fa-regular fa-bell text-base text-[#ed0e64]"></i>
-      </button>
+        <% if freelance_attention_count.positive? %>
+          <span class="absolute -right-1 -top-1 inline-flex min-h-[1.45rem] min-w-[1.45rem] items-center justify-center rounded-full bg-[#ed0e64] px-1.5 text-[11px] font-bold text-white shadow-[0_10px_18px_rgba(237,14,100,0.25)]">
+            <%= freelance_attention_count %>
+          </span>
+        <% end %>
+      <% end %>
       <button type="button" class="h-10 w-10 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-primary shadow-sm sm:inline-flex">
         <i class="fa-solid fa-robot text-base text-[#ed0e64]"></i>
       </button>
@@ -79,11 +84,11 @@
           </div>
         <% end %>
 
-        <%= link_to dashboard_invoices_path, class: "flex items-center gap-3 rounded-2xl border border-[#f2d5df] bg-[#fff7f9] px-4 py-3 text-base-content transition hover:bg-white", data: { search_item: "factures invoices finance paiement" } do %>
-          <i class="fa-solid fa-file-invoice text-[#ed0e64]"></i>
+        <%= link_to dashboard_freelance_finance_path, class: "flex items-center gap-3 rounded-2xl border border-[#f2d5df] bg-[#fff7f9] px-4 py-3 text-base-content transition hover:bg-white", data: { search_item: "finance signature placement paiement" } do %>
+          <i class="fa-solid fa-wallet text-[#ed0e64]"></i>
           <div>
-            <p class="font-semibold">Factures</p>
-            <p class="text-sm text-base-content/60">Suivi de la facturation</p>
+            <p class="font-semibold">Finance</p>
+            <p class="text-sm text-base-content/60">Signatures, placements et paiements</p>
           </div>
         <% end %>
 
@@ -95,11 +100,11 @@
           </div>
         <% end %>
 
-        <%= link_to placements_path(scope: "closed_missions"), class: "flex items-center gap-3 rounded-2xl border border-[#f2d5df] bg-[#fff7f9] px-4 py-3 text-base-content transition hover:bg-white", data: { search_item: "terminees placements closed missions archive" } do %>
+        <%= link_to placements_path(tab: "validated"), class: "flex items-center gap-3 rounded-2xl border border-[#f2d5df] bg-[#fff7f9] px-4 py-3 text-base-content transition hover:bg-white", data: { search_item: "placements valides finance archive" } do %>
           <i class="fa-solid fa-circle-check text-[#ed0e64]"></i>
           <div>
-            <p class="font-semibold">Terminées</p>
-            <p class="text-sm text-base-content/60">Placements et missions clôturées</p>
+            <p class="font-semibold">Placements validés</p>
+            <p class="text-sm text-base-content/60">Dossiers validés par Rivyr</p>
           </div>
         <% end %>
       </div>
