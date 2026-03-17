@@ -19,6 +19,10 @@ class MissionPolicy < ApplicationPolicy
     freelance?
   end
 
+  def close_by_freelance?
+    freelance? && mission_owned_by_freelance?
+  end
+
   def show?
     admin? || mission_owned_by_freelance? || mission_owned_by_client? || mission_applied_by_freelance? || candidate? || freelance_can_view_open_library_mission?
   end

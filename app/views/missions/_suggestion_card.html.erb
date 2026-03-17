@@ -21,6 +21,7 @@
       </span>
 
       <span class="relative z-10 inline-flex items-center gap-1.5">
+        <%= render "missions/origin_badge", mission: mission %>
         <% if mission_score_for(mission) > 80 %>
           <span class="inline-flex items-center rounded-full bg-[#7f2f2a] px-2 py-0.5 text-[10px] font-medium text-white">Prioritaire 24h</span>
         <% end %>

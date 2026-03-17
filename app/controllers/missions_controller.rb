@@ -3,8 +3,8 @@ require_dependency Rails.root.join("app/services/freelance_dashboard_builder").t
 class MissionsController < ApplicationController
   helper_method :mission_company_segment, :mission_company_masked, :mission_available_since_label, :mission_score_for, :mission_score_tone_class, :mission_score_breakdown_for, :mission_level_for, :mission_pitch_points, :mission_origin_badge, :favorite_mission?, :mission_approx_fee_label, :mission_client_insight, :mission_client_label, :mission_positionings_label, :mission_fee_label, :mission_fee_breakdown_for, :format_amount, :mission_priority_badge, :mission_already_applied?
 
-  before_action :set_mission, only: [ :show, :edit, :update, :destroy, :toggle_favorite ]
-  before_action :set_form_collections, only: [ :new, :create, :edit, :update ]
+  before_action :set_mission, only: [ :show, :edit, :update, :destroy, :toggle_favorite, :close_by_freelance ]
+  before_action :set_form_collections, only: [ :new, :create, :edit, :update, :my_missions ]
   before_action :set_mission, only: [ :toggle_freelance_urgent, :apply, :withdraw ]
 
   def index
@@ -34,7 +34,7 @@ class MissionsController < ApplicationController
   def dashboard
     authorize Mission, :index?
     return redirect_to missions_path, alert: "Le dashboard freelance est reserve aux freelances." unless current_user.role_freelance?
-    return redirect_to dashboard_invoices_path if %w[finance pilotage].include?(params[:tab].to_s)
+    return redirect_to dashboard_freelance_finance_path if %w[finance pilotage].include?(params[:tab].to_s)
 
     load_freelance_missions_dashboard
   end
@@ -96,23 +96,14 @@ class MissionsController < ApplicationController
   def show
     @mission ||= Mission.includes(:client_contact, :region, :specialty, freelancer_profile: :user).find(params[:id])
     authorize @mission
-  end
-
-  def show_test
-    @mission = Mission.includes(:client_contact, :region, :specialty, freelancer_profile: :user)
-      .find_by(title: "Directeur de Business Unit Industrie")
-    @mission ||= Mission.includes(:client_contact, :region, :specialty, freelancer_profile: :user).order(created_at: :desc).first
-    raise ActiveRecord::RecordNotFound, "No missions available for show_test" unless @mission
-
-    authorize @mission, :show?
-
-    render :show_test
+    @close_candidate_options = Candidate.order(updated_at: :desc, created_at: :desc).limit(40)
   end
 
   def my_missions
     authorize Mission
 
     freelancer_profile = current_user.freelancer_profile
+    @tab = params[:tab].to_s == "closed" ? "closed" : "current"
     @company_filter = params[:company].to_s.strip
     @region_filter = params[:region].to_s.strip
     @urgent_filter = params[:urgent].to_s.strip
@@ -125,6 +116,7 @@ class MissionsController < ApplicationController
       .order(created_at: :desc)
 
     current_missions_scope = scope.where(status: %w[open in_progress])
+    closed_missions_scope = scope.where(status: "closed")
     preference_map = if freelancer_profile.present?
       freelancer_profile.freelance_mission_preferences.where(mission_id: current_missions_scope.select(:id)).index_by(&:mission_id)
     else
@@ -137,16 +129,19 @@ class MissionsController < ApplicationController
       [ urgent_rank, started_on ]
     end
     load_freelance_navigation_counts(scope)
-    @closed_missions = scope.where(status: "closed").limit(6)
+    @closed_missions = closed_missions_scope.limit(6)
     @closed_placements_count = Placement.joins(:mission)
-      .merge(scope.where(status: "closed"))
+      .merge(closed_missions_scope)
       .count
-    @current_missions_count = current_missions.count
+    @current_missions_count = current_missions_scope.count
     @accepted_offers_count = current_missions_scope.where(status: "in_progress").count
     all_mission_rows = current_missions.map { |mission| build_my_mission_row(mission, preference_map[mission.id]) }
-    @company_options = all_mission_rows.map { |row| row[:company_name] }.compact.uniq.sort
-    @region_options = all_mission_rows.map { |row| row[:region_name] }.compact.uniq.sort
+    closed_rows = closed_missions_scope.map { |mission| build_closed_mission_row(mission) }
+    filter_source_rows = @tab == "closed" ? closed_rows : all_mission_rows
+    @company_options = filter_source_rows.map { |row| row[:company_name] }.compact.uniq.sort
+    @region_options = filter_source_rows.map { |row| row[:region_name] }.compact.uniq.sort
     @mission_rows = filter_my_mission_rows(all_mission_rows)
+    @closed_mission_rows = filter_closed_mission_rows(closed_rows)
     @current_missions = @mission_rows.map { |row| row[:mission] }
     @total_potential_cents = @mission_rows.sum { |row| row[:potential_cents] }
     @average_open_days = if @mission_rows.any?
@@ -155,6 +150,13 @@ class MissionsController < ApplicationController
       0
     end
     @total_sent_candidates = @mission_rows.sum { |row| row[:sent_candidates_count] }
+    @closed_total_potential_cents = @closed_mission_rows.sum { |row| row[:potential_cents] }
+    @closed_average_open_days = if @closed_mission_rows.any?
+      (@closed_mission_rows.sum { |row| row[:open_days] } / @closed_mission_rows.size.to_f).round
+    else
+      0
+    end
+    @closed_total_sent_candidates = @closed_mission_rows.sum { |row| row[:sent_candidates_count] }
   end
 
   def pending_missions
@@ -203,8 +205,13 @@ class MissionsController < ApplicationController
       freelancer_profile: freelancer_profile,
       mission: @mission
     )
-    application.status ||= "applied"
+    application.status = "applied"
     application.applied_at ||= Time.current
+    application.client_validated_at = nil
+    application.client_rejected_at = nil
+    application.reviewed_by = nil if FreelanceMissionApplication.supports_review_tracking?
+    application.review_reason = nil if FreelanceMissionApplication.supports_review_reason?
+    application.freelancer_notified_at = nil if FreelanceMissionApplication.supports_freelancer_notification_tracking?
     application.save!
 
     redirect_to pending_missions_missions_path, notice: "Mission ajoutée à vos validations en attente."
@@ -246,6 +253,40 @@ class MissionsController < ApplicationController
     redirect_to my_missions_missions_path, notice: "Priorité mise à jour."
   end
 
+  def close_by_freelance
+    @mission ||= Mission.includes(:client_contact, :region, :specialty, freelancer_profile: :user).find(params[:id])
+    authorize @mission, :close_by_freelance?
+
+    closure_reason = params[:closure_reason].to_s.strip
+    closure_note = params[:closure_note].to_s.strip
+    candidate_id = params[:candidate_id].to_s.strip
+
+    if closure_reason.casecmp("Mission gagnee").zero?
+      candidate = Candidate.find_by(id: candidate_id)
+      return redirect_to mission_path(@mission), alert: "Sélectionne un candidat pour valider la mission gagnée." if candidate.blank?
+
+      placement = @mission.placement || @mission.build_placement
+      placement.candidate = candidate
+      placement.freelancer_profile = current_user.freelancer_profile if placement.respond_to?(:freelancer_profile=)
+      placement.workflow_status = "in_progress" if placement.respond_to?(:workflow_status=)
+      placement.status = placement.status.presence || "validated"
+      placement.hired_at ||= Date.current
+      placement.save!
+      candidate.update!(status: "placed")
+    end
+
+    @mission.update!(
+      status: "closed",
+      closed_at: Date.current,
+      closure_reason: closure_reason,
+      closure_note: closure_reason.casecmp("Mission gagnee").zero? ? nil : closure_note.presence,
+      closed_by_freelancer_at: Time.current,
+      closure_admin_read_at: nil
+    )
+
+    redirect_to my_missions_missions_path, notice: "La mission a été clôturée."
+  end
+
   def new
     @mission = Mission.new
     authorize @mission
@@ -254,6 +295,11 @@ class MissionsController < ApplicationController
   def create
     @mission = Mission.new(mission_params)
     authorize @mission
+    apply_freelance_mission_defaults(@mission)
+    if current_user.role_freelance?
+      validation_error = apply_freelance_mission_payload(@mission)
+      return redirect_to my_missions_missions_path, alert: validation_error if validation_error.present?
+    end
 
     if @mission.save
       redirect_to @mission, notice: "Mission créée avec succès."
@@ -297,9 +343,25 @@ class MissionsController < ApplicationController
     @client_contacts = if current_user.role_client?
       ClientContact.includes(:client).where(id: current_user.client_contact&.id)
     elsif current_user.role_freelance?
-      ClientContact.includes(:client).order(:last_name, :first_name)
+      owned_contact_ids = ClientContact.where(user_id: current_user.id).pluck(:id)
+      legacy_contact_ids = ClientContact.joins(:missions)
+        .where(missions: { freelancer_profile_id: current_user.freelancer_profile&.id, origin_type: "freelancer" })
+        .pluck(:id)
+      contact_ids = (owned_contact_ids + legacy_contact_ids).uniq
+
+      ClientContact
+        .includes(:client)
+        .where(id: contact_ids)
+        .order(:last_name, :first_name)
     else
       policy_scope(ClientContact).includes(:client).order(:last_name, :first_name)
+    end
+
+    @owned_client_contacts = @client_contacts if current_user.role_freelance?
+    @owned_clients = if current_user.role_freelance?
+      Client.where(id: @owned_client_contacts.select(:client_id)).order(:legal_name)
+    else
+      Client.none
     end
 
     @freelancer_profiles = if current_user.role_freelance?
@@ -339,12 +401,102 @@ class MissionsController < ApplicationController
     attributes
   end
 
+  def apply_freelance_mission_defaults(mission)
+    return unless current_user.role_freelance?
+
+    mission.freelancer_profile_id ||= current_user.freelancer_profile&.id
+    mission.status = "open" if mission.status.blank?
+    mission.opened_at ||= Date.current
+    mission.origin_type = "freelancer" if mission.origin_type.blank?
+    mission.reference = next_freelance_mission_reference if mission.reference.blank?
+  end
+
+  def apply_freelance_mission_payload(mission)
+    payload = freelance_mission_payload_params
+    required_keys = %i[
+      freelance_client_id
+      client_contact_id
+      title
+      mission_type
+      region_id
+      specialty_id
+      priority_level
+      salary_min_eur
+      salary_max_eur
+      profile_search
+      en_bref
+      role_summary
+      role_context
+      first_year_challenges
+      recruitment_process
+    ]
+    missing_required = required_keys.any? { |key| payload[key].blank? }
+    return "Tous les champs de création de mission sont obligatoires." if missing_required || payload[:advantages].blank?
+
+    company_id = payload[:freelance_client_id].to_i
+    client_contact = @owned_client_contacts.find_by(id: payload[:client_contact_id])
+    return "Le contact client sélectionné est invalide." if client_contact.blank? || client_contact.client_id != company_id
+
+    salary_min = normalize_euro_amount(payload[:salary_min_eur])
+    salary_max = normalize_euro_amount(payload[:salary_max_eur])
+    return "La fourchette de rémunération est invalide." if salary_min <= 0 || salary_max <= 0 || salary_max < salary_min
+
+    advantages = Array(payload[:advantages]).reject(&:blank?)
+    mission.client_contact = client_contact
+    mission.compensation_summary = "Entre #{helpers.number_with_delimiter(salary_min, delimiter: ' ')}€ et #{helpers.number_with_delimiter(salary_max, delimiter: ' ')}€"
+    mission.brief_summary = [
+      "en_bref=#{payload[:en_bref]}",
+      "role=#{payload[:role_summary]}",
+      "context=#{payload[:role_context]}",
+      "enjeux=#{normalize_multiline_list(payload[:first_year_challenges]).join(';')}",
+      "deroulee=#{normalize_multiline_list(payload[:recruitment_process]).join(';')}"
+    ].join("||")
+    mission.search_constraints = [
+      "profil=#{payload[:profile_search]}",
+      "advantages=#{advantages.join(';')}",
+      "details=#{normalize_multiline_list(payload[:role_summary]).join(';')}",
+      "must_have=#{normalize_multiline_list(payload[:profile_search]).join(';')}"
+    ].join("||")
+
+    nil
+  end
+
+  def freelance_mission_payload_params
+    params.fetch(:mission, {}).permit(
+      :freelance_client_id,
+      :client_contact_id,
+      :title,
+      :mission_type,
+      :region_id,
+      :specialty_id,
+      :priority_level,
+      :salary_min_eur,
+      :salary_max_eur,
+      :profile_search,
+      :en_bref,
+      :role_summary,
+      :role_context,
+      :first_year_challenges,
+      :recruitment_process,
+      advantages: []
+    )
+  end
+
+  def normalize_multiline_list(value)
+    value.to_s.split(/\r?\n/).map { |item| item.to_s.strip }.reject(&:blank?)
+  end
+
+  def normalize_euro_amount(value)
+    value.to_s.gsub(/[^\d]/, "").to_i
+  end
+
   def load_freelance_missions_dashboard
     ::FreelanceDashboardBuilder.new(context: self, current_user: current_user).build.each do |key, value|
       instance_variable_set("@#{key}", value)
     end
 
     load_dashboard_summary_from_my_missions_data
+    load_dashboard_admin_updates
   end
 
   def load_dashboard_summary_from_my_missions_data
@@ -423,6 +575,15 @@ class MissionsController < ApplicationController
     }
   end
 
+  def build_closed_mission_row(mission)
+    row = build_my_mission_row(mission)
+    row.merge(
+      closed_label: mission_terminated_label(mission),
+      closed_badge_class: mission_terminated_badge_class(mission),
+      archived_at: mission.closed_at || mission.updated_at&.to_date || Date.current
+    )
+  end
+
   def filter_my_mission_rows(rows)
     rows.select do |row|
       matches_company = @company_filter.blank? || row[:company_name] == @company_filter
@@ -443,6 +604,23 @@ class MissionsController < ApplicationController
         end
 
       matches_company && matches_region && matches_urgent && matches_amount
+    end
+  end
+
+  def filter_closed_mission_rows(rows)
+    rows.select do |row|
+      matches_company = @company_filter.blank? || row[:company_name] == @company_filter
+      matches_region = @region_filter.blank? || row[:region_name] == @region_filter
+      matches_amount =
+        case @amount_filter
+        when "under_5000" then row[:potential_cents] < 500_000
+        when "5000_10000" then row[:potential_cents] >= 500_000 && row[:potential_cents] <= 1_000_000
+        when "10000_20000" then row[:potential_cents] > 1_000_000 && row[:potential_cents] <= 2_000_000
+        when "over_20000" then row[:potential_cents] > 2_000_000
+        else true
+        end
+
+      matches_company && matches_region && matches_amount
     end
   end
 
@@ -477,7 +655,7 @@ class MissionsController < ApplicationController
       company_name: mission.client_contact.client.brand_name.presence || mission.client_contact.client.legal_name,
       company_logo: mission.client_contact.client.logo,
       region_name: mission.region&.name,
-      status_label: application.status_client_review? ? "Chez le client" : "En attente d’envoi"
+      status_label: application.status_client_review? ? "Chez le client" : "En attente de validation RIVYR"
     }
   end
 
@@ -507,6 +685,31 @@ class MissionsController < ApplicationController
       matches_company && matches_region && matches_amount
     end
   end
+
+  def load_dashboard_admin_updates
+    freelancer_profile = current_user.freelancer_profile
+    @dashboard_admin_updates = []
+    return if freelancer_profile.blank?
+
+    updates = freelancer_profile.freelance_mission_applications
+      .with_unread_freelance_decision
+      .includes(:mission)
+      .order(updated_at: :desc)
+      .to_a
+
+    @dashboard_admin_updates = updates
+    return if updates.empty?
+
+    if FreelanceMissionApplication.supports_freelancer_notification_tracking?
+      FreelanceMissionApplication.where(id: updates.map(&:id)).update_all(freelancer_notified_at: Time.current)
+    end
+  end
+
+  def next_freelance_mission_reference
+    timestamp = Time.current.strftime("%Y%m%d%H%M%S")
+    "MIS-FRL-#{timestamp}"
+  end
+
   def library_scope
     MissionPolicy::Scope.new(current_user, Mission).resolve_for_library
   end
@@ -604,6 +807,25 @@ class MissionsController < ApplicationController
     return "Fee estimé à confirmer" if breakdown[:fee_amount].zero?
 
     "Fee estimé #{format_amount(breakdown[:fee_amount])} €"
+  end
+
+  def mission_terminated_label(mission)
+    return "Mission placée" if mission_placed?(mission)
+    return "Mission fermée" if mission.closed_by_freelancer_at.present?
+
+    "Mission terminée"
+  end
+
+  def mission_terminated_badge_class(mission)
+    if mission_placed?(mission)
+      "border-[#d7e9dc] bg-[#edf8f0] text-[#2f6b3c]"
+    else
+      "border-[#e8d3d9] bg-[#f7f2f5] text-[#8f6c78]"
+    end
+  end
+
+  def mission_placed?(mission)
+    mission.placement.present? || mission.closure_reason.to_s.casecmp("Mission gagnee").zero?
   end
 
   def mission_fee_breakdown_for(mission)
@@ -950,27 +1172,11 @@ class MissionsController < ApplicationController
   end
 
   def mission_contract_fee_rate(mission)
-    explicit = mission.compensation_summary.to_s[/(\d{1,2})\s*%/, 1].to_f
-    explicit = mission.search_constraints.to_s[/(\d{1,2})\s*%/, 1].to_f if explicit.zero?
-    return (explicit / 100.0) if explicit.positive?
-
-    case mission.mission_type.to_s
-    when "retained" then 0.22
-    when "exclusive" then 0.20
-    when "contingency" then 0.18
-    else 0.20
-    end
+    0.20
   end
 
   def mission_freelance_share_rate
-    profile = current_user&.freelancer_profile
-    return 0.20 if profile.blank?
-
-    return 0.30 if profile.rivyr_score_current.to_i >= 90
-    return 0.25 if profile.operational_status.to_s == "active"
-    return 0.20 if profile.operational_status.to_s == "onboarded"
-
-    0.20
+    0.60
   end
 
   def truncate_sentence(text, fallback:)

@@ -19,9 +19,12 @@ class Mission < ApplicationRecord
   validates :title, presence: true
   validates :reference, presence: true
   validates :status, presence: true
+  validates :closure_reason, length: { maximum: 100 }, allow_blank: true
+  validates :closure_note, length: { maximum: 3_000 }, allow_blank: true
   validates :priority_level, length: { maximum: 50 }, allow_blank: true
 
   scope :with_status, ->(value) { value.present? ? where(status: value) : all }
+  scope :closed_by_freelance, -> { where.not(closed_by_freelancer_at: nil) }
   scope :search, lambda { |q|
     return all if q.blank?
 

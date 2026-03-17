@@ -12,10 +12,18 @@ class PlacementPolicy < ApplicationPolicy
   end
 
   def update?
-    admin?
+    admin? || own_freelance_placement?
   end
 
   def destroy?
+    admin?
+  end
+
+  def validate_compliance?
+    admin?
+  end
+
+  def refuse_compliance?
     admin?
   end
 

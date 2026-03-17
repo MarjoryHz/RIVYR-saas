@@ -21,6 +21,7 @@ class ClientContactsController < ApplicationController
   def create
     @client_contact = ClientContact.new(client_contact_params)
     authorize @client_contact
+    @client_contact.user_id = current_user.id if current_user&.role_freelance?
 
     if @client_contact.save
       redirect_to @client_contact, notice: "Contact client créé avec succès."

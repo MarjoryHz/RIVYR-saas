@@ -69,6 +69,56 @@ end %>
     </div>
 
     <div class="placement-content-scroll space-y-4">
+      <div class="card border border-base-100/70 bg-base-100/90 shadow">
+        <div class="card-body p-5">
+          <div class="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+            <div>
+              <h2 class="text-xl font-semibold text-base-content">Pilotage du placement</h2>
+              <p class="mt-1 text-sm text-base-content/60">Renseigne la rémunération, la conformité à l'offre client et l'acceptation du candidat avant validation Rivyr.</p>
+            </div>
+            <span class="inline-flex items-center rounded-full border px-4 py-2 text-sm font-semibold <%= case @placement.workflow_status
+              when 'validated' then 'border-[#d7e9dc] bg-[#edf8f0] text-[#2f6b3c]'
+              when 'refused' then 'border-[#f1c9d3] bg-[#fff1f4] text-[#b14360]'
+              else 'border-[#f3dfc8] bg-[#fff3e8] text-[#ba6d2f]'
+            end %>">
+              <%= @placement.workflow_status == "validated" ? "Validé" : (@placement.workflow_status == "refused" ? "Refusé" : "En cours") %>
+            </span>
+          </div>
+
+          <%= form_with model: @placement, class: "mt-4 grid gap-4 md:grid-cols-2" do |form| %>
+            <div>
+              <%= form.label :annual_salary_cents, "Rémunération annuelle", class: "mb-2 block text-sm font-semibold text-base-content/70" %>
+              <%= form.number_field :annual_salary_cents, min: 0, step: 100, class: "input input-bordered w-full" %>
+            </div>
+            <div>
+              <%= form.label :package_summary, "Package / éléments variables", class: "mb-2 block text-sm font-semibold text-base-content/70" %>
+              <%= form.text_field :package_summary, class: "input input-bordered w-full", placeholder: "Fixe, variable, bonus, voiture..." %>
+            </div>
+            <div>
+              <%= form.label :client_offer_compliant, "Conformité à l'offre client", class: "mb-2 block text-sm font-semibold text-base-content/70" %>
+              <%= form.select :client_offer_compliant, [["À confirmer", nil], ["Conforme", true], ["Non conforme", false]], {}, class: "select select-bordered w-full" %>
+            </div>
+            <div>
+              <%= form.label :candidate_accepted, "Acceptation du candidat", class: "mb-2 block text-sm font-semibold text-base-content/70" %>
+              <%= form.select :candidate_accepted, [["À confirmer", nil], ["Accepté", true], ["Refusé", false]], {}, class: "select select-bordered w-full" %>
+            </div>
+            <div class="md:col-span-2">
+              <%= form.label :notes, "Notes placement", class: "mb-2 block text-sm font-semibold text-base-content/70" %>
+              <%= form.text_area :notes, rows: 4, class: "textarea textarea-bordered w-full", placeholder: "Points de vigilance, retour client, remarques de conformité..." %>
+            </div>
+            <div class="md:col-span-2 flex flex-wrap gap-3">
+              <%= form.button "Enregistrer", class: "btn border-[#f1a38b] bg-[#f4a58a] text-white hover:border-[#e39479] hover:bg-[#ee977c]" %>
+            </div>
+          <% end %>
+          <% if current_user&.role_admin? && @placement.workflow_in_progress? %>
+            <div class="mt-3 flex flex-wrap gap-3">
+              <%= button_to "Valider la conformité", validate_compliance_placement_path(@placement), method: :patch, class: "btn border-[#cfe4d4] bg-[#edf8f0] text-[#2f6b3c] hover:bg-[#e4f4e8]" %>
+              <%= button_to "Refuser", refuse_compliance_placement_path(@placement), method: :patch, params: { admin_review_note: "Placement refusé par l'admin Rivyr" }, class: "btn border-[#f1c9d3] bg-[#fff1f4] text-[#b14360] hover:bg-[#ffe6ec]" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
       <div class="card border border-base-100/70 bg-base-100/86 shadow">
         <div class="card-body p-4">
           <div class="placement-timeline-scroll">

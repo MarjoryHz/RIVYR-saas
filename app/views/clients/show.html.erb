@@ -1,11 +1,13 @@
 <div class="max-w-4xl mx-auto p-6 space-y-6">
   <div class="flex items-center justify-between">
     <h1 class="text-2xl font-bold"><%= @client.legal_name %></h1>
-    <div class="flex gap-2">
-      <%= link_to "Contacts", client_contacts_path, class: "btn" %>
-      <%= link_to "Modifier", edit_client_path(@client), class: "btn btn-primary" %>
-      <%= link_to "Supprimer", client_path(@client), data: { turbo_method: :delete, turbo_confirm: "Confirmer la suppression ?" }, class: "btn btn-error" %>
-    </div>
+    <% if policy(@client).edit? %>
+      <div class="flex gap-2">
+        <%= link_to "Contacts", client_contacts_path, class: "btn" %>
+        <%= link_to "Modifier", edit_client_path(@client), class: "btn btn-primary" %>
+        <%= link_to "Supprimer", client_path(@client), data: { turbo_method: :delete, turbo_confirm: "Confirmer la suppression ?" }, class: "btn btn-error" %>
+      </div>
+    <% end %>
   </div>
 
   <div class="grid md:grid-cols-2 gap-4">
@@ -35,5 +37,5 @@
     <p><%= @client.bio.presence || "-" %></p>
   </div>
 
-  <%= link_to "Retour a la liste", clients_path, class: "btn" %>
+  <%= link_to "Retour", (current_user&.role_freelance? ? my_missions_missions_path : clients_path), class: "btn" %>
 </div>

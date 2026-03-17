@@ -3,7 +3,20 @@ class FreelanceFinancesController < ApplicationController
 
   def show
     authorize :freelance_finance, :show?
-    redirect_to dashboard_invoices_path
+    @q = params[:q].to_s.strip
+    @client_invoice_status = params[:client_invoice_status].to_s.strip
+    @payout_status = params[:payout_status].to_s.strip
+    @action_required = params[:action_required].to_s == "1"
+
+    @placements = filtered_placements
+    @gross_kpis = gross_kpis
+    @yearly_revenue_snapshot = yearly_revenue_snapshot
+    @available_wallet_cents = available_wallet_cents
+    @waiting_client_payments_cents = waiting_client_payments_cents
+    @upcoming_payments = build_upcoming_payments(@placements)
+    @active_payment_missions = build_active_payment_missions(@placements)
+    @finance_feed = build_finance_feed(@placements)
+    @filtered_payout_requests = filtered_payout_requests
   end
 
   def create_client_invoice
@@ -11,7 +24,7 @@ class FreelanceFinancesController < ApplicationController
 
     placement = @placements_scope.find(params[:placement_id])
     if placement.client_invoice.present?
-      return redirect_to dashboard_invoices_path, alert: "Une facture client existe déjà pour ce placement."
+      return redirect_to dashboard_freelance_finance_path, alert: "Une facture client existe déjà pour ce placement."
     end
 
     invoice = placement.invoices.new(
@@ -23,9 +36,9 @@ class FreelanceFinancesController < ApplicationController
     )
 
     if invoice.save
-      redirect_to dashboard_invoices_path, notice: "Facture client générée et transmise à Rivyr pour suivi."
+      redirect_to dashboard_freelance_finance_path, notice: "Facture client générée et transmise à Rivyr pour suivi."
     else
-      redirect_to dashboard_invoices_path, alert: invoice.errors.full_messages.to_sentence
+      redirect_to dashboard_freelance_finance_path, alert: invoice.errors.full_messages.to_sentence
     end
   end
 
@@ -34,16 +47,16 @@ class FreelanceFinancesController < ApplicationController
 
     placement = @placements_scope.find(params[:placement_id])
     if placement.freelancer_invoice.present?
-      return redirect_to dashboard_invoices_path, alert: "Une facture freelance existe déjà pour ce placement."
+      return redirect_to dashboard_freelance_finance_path, alert: "Une facture freelance existe déjà pour ce placement."
     end
 
     unless placement.client_invoice&.status_paid?
-      return redirect_to dashboard_invoices_path, alert: "La facture client doit être encaissée par Rivyr avant facturation freelance."
+      return redirect_to dashboard_freelance_finance_path, alert: "La facture client doit être encaissée par Rivyr avant facturation freelance."
     end
 
     commission_amount = placement.commission&.freelancer_share_cents.to_i
     if commission_amount <= 0
-      return redirect_to dashboard_invoices_path, alert: "Aucune commission freelance disponible pour ce placement."
+      return redirect_to dashboard_freelance_finance_path, alert: "Aucune commission freelance disponible pour ce placement."
     end
 
     invoice = placement.invoices.new(
@@ -55,9 +68,9 @@ class FreelanceFinancesController < ApplicationController
     )
 
     if invoice.save
-      redirect_to dashboard_invoices_path, notice: "Facture freelance créée avec succès."
+      redirect_to dashboard_freelance_finance_path, notice: "Facture freelance créée avec succès."
     else
-      redirect_to dashboard_invoices_path, alert: invoice.errors.full_messages.to_sentence
+      redirect_to dashboard_freelance_finance_path, alert: invoice.errors.full_messages.to_sentence
     end
   end
 
@@ -69,11 +82,11 @@ class FreelanceFinancesController < ApplicationController
     amount_cents = invoice.amount_cents if amount_cents <= 0
 
     if amount_cents > available_wallet_cents
-      return redirect_to dashboard_invoices_path, alert: "Montant supérieur au portefeuille disponible."
+      return redirect_to dashboard_freelance_finance_path, alert: "Montant supérieur au portefeuille disponible."
     end
 
     if current_user.payout_requests.where(invoice: invoice, status: [ "pending", "approved" ]).exists?
-      return redirect_to dashboard_invoices_path, alert: "Une demande de virement est déjà en cours pour cette facture."
+      return redirect_to dashboard_freelance_finance_path, alert: "Une demande de virement est déjà en cours pour cette facture."
     end
 
     payout_request = current_user.payout_requests.new(
@@ -86,9 +99,9 @@ class FreelanceFinancesController < ApplicationController
     )
 
     if payout_request.save
-      redirect_to dashboard_invoices_path, notice: "Demande de virement envoyée à Rivyr."
+      redirect_to dashboard_freelance_finance_path, notice: "Demande de virement envoyée à Rivyr."
     else
-      redirect_to dashboard_invoices_path, alert: payout_request.errors.full_messages.to_sentence
+      redirect_to dashboard_freelance_finance_path, alert: payout_request.errors.full_messages.to_sentence
     end
   end
 

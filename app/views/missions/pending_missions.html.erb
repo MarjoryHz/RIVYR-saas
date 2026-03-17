@@ -17,7 +17,7 @@
               En attente de validation (<%= @pending_validation_count.to_i %>)
             </span>
             <span class="text-base-content/20">|</span>
-            <%= link_to placements_path(scope: "closed_missions"), class: "px-6 py-3 text-base font-medium text-base-content/75 transition hover:text-base-content" do %>
+            <%= link_to my_missions_missions_path(tab: "closed"), class: "px-6 py-3 text-base font-medium text-base-content/75 transition hover:text-base-content" do %>
               Terminées (<%= @closed_missions_count.to_i %>)
             <% end %>
           </div>
@@ -131,6 +131,7 @@
                   </div>
 
                   <div class="flex flex-wrap items-center gap-3 xl:justify-end">
+                    <%= render "missions/origin_badge", mission: mission %>
                     <span class="inline-flex items-center rounded-full border border-[#f6d6db] bg-[#ffe8ec] px-4 py-2 text-sm font-medium text-[#8c5665]">
                       <%= row[:status_label] %>
                     </span>
