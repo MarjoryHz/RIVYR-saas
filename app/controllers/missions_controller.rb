@@ -99,7 +99,9 @@ class MissionsController < ApplicationController
   end
 
   def show_test
-    @mission = Mission.includes(:client_contact, :region, :specialty, freelancer_profile: :user).order(created_at: :desc).first
+    @mission = Mission.includes(:client_contact, :region, :specialty, freelancer_profile: :user)
+      .find_by(title: "Directeur de Business Unit Industrie")
+    @mission ||= Mission.includes(:client_contact, :region, :specialty, freelancer_profile: :user).order(created_at: :desc).first
     raise ActiveRecord::RecordNotFound, "No missions available for show_test" unless @mission
 
     authorize @mission, :show?
@@ -601,7 +603,7 @@ class MissionsController < ApplicationController
     breakdown = mission_fee_breakdown_for(mission)
     return "Fee estimé à confirmer" if breakdown[:fee_amount].zero?
 
-    "Fee estimé #{format_amount(breakdown[:fee_amount])} EUR"
+    "Fee estimé #{format_amount(breakdown[:fee_amount])} €"
   end
 
   def mission_fee_breakdown_for(mission)
@@ -962,13 +964,13 @@ class MissionsController < ApplicationController
 
   def mission_freelance_share_rate
     profile = current_user&.freelancer_profile
-    return 0.40 if profile.blank?
+    return 0.20 if profile.blank?
 
-    return 0.45 if profile.rivyr_score_current.to_i >= 90
-    return 0.40 if profile.operational_status.to_s == "active"
-    return 0.35 if profile.operational_status.to_s == "onboarded"
+    return 0.30 if profile.rivyr_score_current.to_i >= 90
+    return 0.25 if profile.operational_status.to_s == "active"
+    return 0.20 if profile.operational_status.to_s == "onboarded"
 
-    0.30
+    0.20
   end
 
   def truncate_sentence(text, fallback:)

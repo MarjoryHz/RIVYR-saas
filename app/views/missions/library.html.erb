@@ -361,7 +361,7 @@
 
             <span id="<%= fee_popover_id %>" data-floating="true" class="fee-help hidden w-72 rounded-xl border px-2.5 py-2 text-[10px] text-base-content/75 shadow-lg">
               <span class="mb-1 block text-[11px] font-semibold text-[#6f332b]">Calcul des honoraires</span>
-              <span class="flex justify-between"><span>Rémunération cible moyenne</span><span><%= format_amount(library_fee[:salary_average]) %>EUR</span></span>
+              <span class="flex justify-between"><span>Rémunération cible moyenne</span><span><%= format_amount(library_fee[:salary_average]) %>€</span></span>
               <span class="flex justify-between"><span>Honoraires contrat</span><span><%= (library_fee[:contract_rate] * 100).round %>%</span></span>
               <span class="flex justify-between"><span>Part freelance</span><span><%= (library_fee[:freelance_rate] * 100).round %>%</span></span>
               <span class="mt-1 block border-t border-[#f2ddd6] pt-1 font-semibold text-[#6f332b]"><%= mission_fee_label(mission) %></span>
