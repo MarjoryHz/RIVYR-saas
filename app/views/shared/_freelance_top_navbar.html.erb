@@ -1,6 +1,6 @@
 <nav class="fixed inset-x-0 top-0 z-100 px-4 pt-4 md:px-6 md:pt-6">
   <% search_modal_id = "freelance_quick_search_modal" %>
-  <% show_back_button = !(controller_name == "missions" && action_name == "index") %>
+  <% show_back_button = !(controller_name == "missions" && action_name == "index") && !(controller_name == "missions" && action_name == "dashboard") %>
   <div class="flex items-center justify-between">
     <div></div>
 

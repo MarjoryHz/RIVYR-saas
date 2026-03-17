@@ -36,7 +36,7 @@ class FreelanceDashboardBuilder
       dashboard_invoice_snapshot: build_dashboard_invoice_snapshot(placements, portfolio),
       dashboard_kpis: build_dashboard_kpis(current_missions_scope, pending_applications, placements, portfolio, recommended_missions),
       dashboard_priorities: build_dashboard_priorities(current_missions_scope.limit(5), pending_applications.first(3), placements.first(4), urgent_preferences),
-      dashboard_missions: current_missions_scope.limit(5).map { |mission| build_dashboard_mission_card(mission, urgent_preferences.include?(mission.id)) },
+      dashboard_missions: current_missions_scope.map { |mission| build_dashboard_mission_card(mission, urgent_preferences.include?(mission.id)) }.sort_by { |item| item[:urgent] ? 0 : 1 },
       dashboard_pending_items: build_dashboard_pending_items(pending_applications.first(5), current_missions_scope.limit(5), placements.first(4)),
       dashboard_recommended_missions: recommended_missions.map { |mission| build_dashboard_recommended_card(mission) },
       dashboard_pipeline: build_dashboard_pipeline(current_missions_scope),
@@ -457,12 +457,12 @@ class FreelanceDashboardBuilder
     current_user.todo_tasks
       .includes(:todo_category)
       .ordered
-      .limit(4)
       .map do |task|
         {
           id: task.id,
           title: task.title,
           category: task.todo_category.name,
+          status: task.status,
           done: task.status_done?,
           priority: task.priority,
           due_label: task.due_on.present? ? I18n.l(task.due_on, format: "%d %b") : nil

@@ -6,7 +6,7 @@
   entretiens_realises = @dashboard_pipeline[:interviews].to_i
   missions_reussies = @dashboard_performance[:won_missions].to_i
   agenda_items = Array(@dashboard_week_schedule).first(3)
-  todo_preview = Array(@dashboard_todo_preview).first(4)
+  todo_preview = Array(@dashboard_todo_preview)
   feed_preview = Array(@dashboard_feed_preview).presence || Array(@dashboard_rivyr_feed).first(2).map do |item|
     {
       title: item[:message],
@@ -57,37 +57,7 @@
     </div>
   </section>
 
-  <section class="grid gap-5 xl:grid-cols-[minmax(560px,1.34fr)_minmax(360px,1.02fr)_minmax(340px,0.96fr)]">
-    <%= link_to dashboard_my_missions_path, class: "#{surface_card_class} block p-5 transition hover:bg-white" do %>
-      <div class="flex items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff2f7] text-[#f08d72]">
-            <i class="fa-solid fa-users-viewfinder text-lg"></i>
-          </span>
-          <h2 class="text-2xl font-semibold text-[#5b2633]">Missions en cours</h2>
-        </div>
-        <span class="text-sm font-medium text-[#9a5a68]">Tout</span>
-      </div>
-
-      <div class="mt-5 space-y-3">
-        <% @dashboard_missions.first(3).each do |item| %>
-          <article class="rounded-[1.35rem] border border-[#efdbe4] bg-white/80 px-4 py-3">
-            <div class="flex items-start justify-between gap-3">
-              <div class="min-w-0">
-                <p class="truncate text-[1.1rem] font-semibold text-[#4c1f2a]"><%= item[:mission].title %></p>
-                <p class="mt-1 truncate text-sm text-[#8a5b6a]"><%= item[:company_name] %> · <%= item[:location] %></p>
-              </div>
-              <span class="rounded-full border px-3 py-1 text-sm font-semibold <%= item[:stage_classes] %>"><%= item[:stage] %></span>
-            </div>
-            <div class="mt-3 flex flex-wrap items-center gap-3 text-sm text-[#7a5562]">
-              <span><i class="fa-regular fa-user mr-1 text-[#ed0e64]"></i><%= item[:presented_candidates] %> candidats</span>
-              <span><i class="fa-regular fa-clock mr-1 text-[#ed0e64]"></i><%= item[:next_event] %></span>
-            </div>
-          </article>
-        <% end %>
-      </div>
-    <% end %>
-
+  <section class="grid gap-5" style="grid-template-columns: minmax(360px,1.02fr) minmax(340px,0.85fr) minmax(340px,0.96fr); grid-template-rows: 1fr auto 1fr; min-height: 900px">
     <section class="<%= surface_card_class %> p-5">
       <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
@@ -110,7 +80,7 @@
                   <%= render "missions/suggestion_card",
                     mission: mission,
                     dom_id_suffix: "dashboard",
-                    compact: true %>
+                    compact: false %>
                 </div>
               </div>
             <% end %>
@@ -119,11 +89,12 @@
           <% if @dashboard_recommended_missions.size > 1 %>
             <div class="flex w-full justify-center gap-2 py-3">
               <% @dashboard_recommended_missions.each_with_index do |_item, index| %>
-                <a
-                  href="#dashboard-suggestion-item-<%= index + 1 %>"
+                <button
+                  type="button"
+                  onclick="document.getElementById('dashboard-suggestion-item-<%= index + 1 %>').scrollIntoView({behavior:'smooth',block:'nearest',inline:'start'})"
                   class="btn btn-xs h-8 min-h-0 w-8 rounded-full border border-[#efdbe4] bg-white/85 px-0 text-[#8f4a58] shadow-sm hover:border-[#ed0e64] hover:bg-[#fff2f7] hover:text-[#ed0e64]">
                   <%= index + 1 %>
-                </a>
+                </button>
               <% end %>
             </div>
           <% end %>
@@ -135,63 +106,78 @@
       </div>
     </section>
 
-    <%= link_to dashboard_invoices_path, class: "#{surface_card_class} block p-5 transition hover:bg-white" do %>
+    <%= link_to dashboard_my_missions_path, class: "#{surface_card_class} block p-5 transition hover:bg-white", style: "grid-column: span 2" do %>
       <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
           <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff2f7] text-[#f08d72]">
-            <i class="fa-solid fa-file-invoice-dollar text-lg"></i>
+            <i class="fa-solid fa-users-viewfinder text-lg"></i>
           </span>
-          <h2 class="text-2xl font-semibold text-[#5b2633]">Facturation</h2>
+          <h2 class="text-2xl font-semibold text-[#5b2633]">Missions en cours</h2>
         </div>
-        <span class="text-sm font-medium text-[#9a5a68]">Ce mois</span>
+        <span class="text-sm font-medium text-[#9a5a68]">Tout</span>
       </div>
 
-      <div class="mt-5 flex items-end justify-between gap-4">
-        <div>
-          <p class="text-5xl font-semibold tracking-tight text-[#4c1f2a]">
-            <%= number_to_currency(@dashboard_invoice_snapshot[:current_month_total_cents] / 100.0, unit: "€", precision: 0) %>
-          </p>
-          <div class="mt-3 flex items-center gap-2 text-[#8a5b6a]">
-            <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-[#fff2f7] text-[#f08d72]">
-              <i class="fa-solid fa-money-bills text-xs"></i>
-            </span>
-            <span class="text-lg">Mois dernier</span>
-          </div>
-        </div>
-        <div class="w-44 shrink-0">
-          <svg viewBox="0 0 230 90" class="h-20 w-full overflow-visible">
-            <polyline fill="none" stroke="url(#invoiceTrendTop)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" points="<%= invoice_chart_points %>"></polyline>
-          </svg>
-        </div>
+      <div class="mt-5 space-y-3 max-h-112 overflow-y-auto pr-1">
+        <% @dashboard_missions.each do |item| %>
+          <article class="rounded-[1.35rem] border <%= item[:urgent] ? 'border-[#f2a0a0] bg-[#fff5f5]' : 'border-[#efdbe4] bg-white/80' %> px-4 py-3">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <p class="truncate text-[1.1rem] font-semibold text-[#4c1f2a]"><%= item[:mission].title %></p>
+                  <% if item[:urgent] %>
+                    <span class="shrink-0 inline-flex items-center gap-1 rounded-full bg-[#7f2f2a] px-2 py-0.5 text-[10px] font-semibold text-white">
+                      <i class="fa-solid fa-bolt text-[9px]"></i> Urgent
+                    </span>
+                  <% end %>
+                </div>
+                <p class="mt-1 truncate text-sm text-[#8a5b6a]"><%= item[:company_name] %> · <%= item[:location] %></p>
+              </div>
+              <span class="rounded-full border px-3 py-1 text-sm font-semibold <%= item[:stage_classes] %>"><%= item[:stage] %></span>
+            </div>
+            <div class="mt-3 flex flex-wrap items-center gap-3 text-sm text-[#7a5562]">
+              <span><i class="fa-regular fa-user mr-1 text-[#ed0e64]"></i><%= item[:presented_candidates] %> candidats</span>
+              <span><i class="fa-regular fa-clock mr-1 text-[#ed0e64]"></i><%= item[:next_event] %></span>
+            </div>
+          </article>
+        <% end %>
       </div>
+    <% end %>
 
-      <div class="mt-5 border-t border-[#f0dce4] pt-5 text-[#5b2633]">
-        <div class="flex items-center gap-4 text-[2rem] font-semibold">
-          <span><%= @dashboard_invoice_snapshot[:sent_count].to_i %></span>
-          <span class="text-base font-medium text-[#6b3f4f]">Factures envoyées</span>
+    <%= link_to dashboard_feed_path, class: "#{surface_card_class} block p-4 transition hover:bg-white", style: "grid-column: span 3" do %>
+      <div class="flex items-center gap-4">
+        <div class="flex shrink-0 items-center gap-2 text-[#5b2633]">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-[#fff2f7] text-[#ed7a9d]">
+            <i class="fa-solid fa-newspaper text-sm"></i>
+          </span>
+          <span class="text-base font-semibold">Fil d'actualités</span>
         </div>
-        <div class="mt-2 flex items-center gap-4 text-[2rem] font-semibold">
-          <span><%= @dashboard_invoice_snapshot[:paid_count].to_i %></span>
-          <span class="text-base font-medium text-[#6b3f4f]">Factures payées</span>
+        <div class="mx-2 h-5 w-px shrink-0 bg-[#efdbe4]"></div>
+        <div class="flex min-w-0 flex-1 gap-4 overflow-hidden">
+          <% feed_preview.each do |item| %>
+            <div class="flex min-w-0 flex-1 items-center gap-3">
+              <div class="h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-[#f7e4eb]">
+                <%= image_tag item[:avatar], alt: item[:author], class: "h-full w-full object-cover" %>
+              </div>
+              <div class="min-w-0">
+                <p class="truncate text-sm font-semibold text-[#4c1f2a]"><%= item[:title] %></p>
+                <p class="text-xs text-[#8a5b6a]"><%= item[:author] %> · <%= item[:time] %></p>
+              </div>
+            </div>
+          <% end %>
         </div>
+        <i class="fa-solid fa-chevron-right shrink-0 text-xs text-[#d9a4b7]"></i>
       </div>
     <% end %>
 
     <section class="<%= surface_card_class %> p-5">
-      <div class="flex items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff2f7] text-[#ed0e64]">
-            <i class="fa-regular fa-calendar-days text-lg"></i>
-          </span>
-          <div>
-            <p class="text-2xl font-semibold text-[#5b2633]">Agenda</p>
-            <p class="text-sm text-[#8a5b6a]">Connexion Outlook à venir</p>
-          </div>
-        </div>
-        <span class="rounded-full border border-[#f2c9d8] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#b06c83]">Outlook bientôt</span>
+      <div class="flex items-center gap-3">
+        <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff2f7] text-[#ed0e64]">
+          <i class="fa-regular fa-calendar-days text-lg"></i>
+        </span>
+        <h2 class="text-2xl font-semibold text-[#5b2633]">Agenda</h2>
       </div>
 
-      <div class="mt-5 space-y-3">
+      <div class="mt-5 space-y-3 overflow-y-auto pr-1" style="max-height: calc(100% - 4rem)">
         <% agenda_items.each do |item| %>
           <article class="rounded-[1.2rem] border border-[#efdbe4] bg-white/80 px-4 py-3">
             <div class="flex items-start justify-between gap-3">
@@ -211,7 +197,7 @@
       </div>
     </section>
 
-    <%= link_to dashboard_todo_list_path, class: "#{surface_card_class} block p-5 transition hover:bg-white" do %>
+    <section class="<%= surface_card_class %> p-5" style="grid-column: span 2">
       <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
           <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff2f7] text-[#ed7a9d]">
@@ -219,55 +205,45 @@
           </span>
           <h2 class="text-2xl font-semibold text-[#5b2633]">Ma To-Do List</h2>
         </div>
-        <i class="fa-solid fa-plus text-xl text-[#a15c70]"></i>
-      </div>
-
-      <div class="mt-5 space-y-3">
-        <% todo_preview.each do |task| %>
-          <div class="flex items-start gap-3 rounded-2xl border border-[#efdbe4] bg-white/80 px-4 py-3">
-            <span class="mt-0.5 inline-flex h-5 w-5 items-center justify-center text-[#ed0e64]">
-              <i class="fa-<%= task[:done] ? 'solid fa-circle-check' : 'regular fa-circle' %> text-lg"></i>
-            </span>
-            <div class="min-w-0 flex-1">
-              <p class="truncate text-base font-semibold text-[#4c1f2a]"><%= task[:title] %></p>
-              <p class="mt-1 text-sm text-[#8a5b6a]"><%= task[:category] %><%= " · #{task[:due_label]}" if task[:due_label].present? %></p>
-            </div>
-          </div>
-        <% end %>
-        <% if todo_preview.empty? %>
-          <p class="rounded-2xl border border-[#efdbe4] bg-white/80 px-4 py-3 text-sm text-[#8a5b6a]">Aucune tâche pour le moment.</p>
+        <%= link_to dashboard_todo_list_path, class: "inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#fff2f7] text-[#a15c70] hover:bg-[#ffe4ef] hover:text-[#ed0e64]" do %>
+          <i class="fa-solid fa-plus text-sm"></i>
         <% end %>
       </div>
-    <% end %>
 
-    <%= link_to dashboard_feed_path, class: "#{surface_card_class} block p-5 transition hover:bg-white" do %>
-      <div class="flex items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff2f7] text-[#ed7a9d]">
-            <i class="fa-solid fa-newspaper text-lg"></i>
-          </span>
-          <h2 class="text-2xl font-semibold text-[#5b2633]">Fil d’actualités</h2>
-        </div>
-        <i class="fa-solid fa-ellipsis text-[#d9a4b7]"></i>
-      </div>
-
-      <div class="mt-5 space-y-4">
-        <% feed_preview.each do |item| %>
-          <article class="flex items-start gap-3 rounded-2xl border border-[#efdbe4] bg-white/80 px-4 py-3">
-            <div class="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-[#f7e4eb]">
-              <%= image_tag item[:avatar], alt: item[:author], class: "h-full w-full object-cover" %>
-            </div>
-            <div class="min-w-0 flex-1">
-              <p class="line-clamp-2 text-[1.05rem] font-semibold leading-snug text-[#4c1f2a]"><%= item[:title] %></p>
-              <p class="mt-1 text-sm text-[#8a5b6a]"><%= item[:author] %> · <%= item[:time] %></p>
-              <div class="mt-3 flex items-center gap-4 text-sm text-[#9a6d7b]">
-                <span><i class="fa-regular fa-heart mr-1"></i><%= item[:likes] %></span>
-                <span><i class="fa-regular fa-message mr-1"></i><%= item[:comments] %></span>
+      <%= turbo_frame_tag "dashboard-todo-list" do %>
+        <div class="mt-5 space-y-3 max-h-56 overflow-y-auto pr-1">
+          <% priority_styles = { "high" => "border-[#f2a0a0] bg-[#fff5f5]", "medium" => "border-[#f2dda0] bg-[#fffdf0]", "low" => "border-[#efdbe4] bg-white/80" } %>
+          <% priority_dot = { "high" => "bg-[#e53e3e]", "medium" => "bg-[#d97706]", "low" => "bg-[#9ca3af]" } %>
+          <% todo_preview.each do |task| %>
+            <div class="flex items-start gap-3 rounded-2xl border px-4 py-3 <%= task[:done] ? 'border-[#efdbe4] bg-white/80' : priority_styles[task[:priority]] %>">
+              <%= form_with url: todo_task_path(task[:id]), method: :patch, data: { turbo_frame: "dashboard-todo-list" } do %>
+                <input type="hidden" name="todo_task[status]" value="<%= task[:done] ? 'todo' : 'done' %>">
+                <input type="hidden" name="return_to" value="<%= dashboard_path %>">
+                <button type="submit" class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center text-[#ed0e64] hover:opacity-70">
+                  <i class="fa-<%= task[:done] ? 'solid fa-circle-check' : 'regular fa-circle' %> text-lg"></i>
+                </button>
+              <% end %>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                  <% unless task[:done] %>
+                    <span class="h-2 w-2 shrink-0 rounded-full <%= priority_dot[task[:priority]] %>"></span>
+                  <% end %>
+                  <p class="truncate text-base font-semibold <%= task[:done] ? 'line-through text-[#b08a96]' : 'text-[#4c1f2a]' %>"><%= task[:title] %></p>
+                </div>
+                <p class="mt-1 text-sm text-[#8a5b6a]"><%= task[:category] %><%= " · #{task[:due_label]}" if task[:due_label].present? %></p>
               </div>
             </div>
-          </article>
-        <% end %>
+          <% end %>
+          <% if todo_preview.empty? %>
+            <p class="rounded-2xl border border-[#efdbe4] bg-white/80 px-4 py-3 text-sm text-[#8a5b6a]">Aucune tâche pour le moment.</p>
+          <% end %>
+        </div>
+      <% end %>
+
+      <div class="mt-4 flex justify-end border-t border-[#f0dce4] pt-3">
+        <%= link_to "Tout", dashboard_todo_list_path, class: "text-sm font-medium text-[#9a5a68] hover:text-[#ed0e64]" %>
       </div>
-    <% end %>
+    </section>
+
   </section>
 </div>
