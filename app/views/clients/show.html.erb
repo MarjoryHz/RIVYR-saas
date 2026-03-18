@@ -37,5 +37,5 @@
     <p><%= @client.bio.presence || "-" %></p>
   </div>
 
-  <%= link_to "Retour", (current_user&.role_freelance? ? my_missions_missions_path : clients_path), class: "btn" %>
+  <a href="#" onclick="history.back(); return false;" class="btn">Retour</a>
 </div>

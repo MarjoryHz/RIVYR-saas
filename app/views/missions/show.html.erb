@@ -639,6 +639,35 @@
       </div>
     </section>
 
+    <% if @favorite_candidates.any? %>
+      <section class="mt-6 rounded-[1.45rem] border border-[#ead2dc] bg-[#fff8fb]/95 p-6 shadow-sm">
+        <div class="mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-heart text-[#ed0e64]"></i>
+          <h2 class="text-base font-semibold text-[#4c1f2a]">Candidats mis en favoris pour cette mission</h2>
+          <span class="inline-flex items-center rounded-full border border-[#f7c4da] bg-[#fff0f6] px-2.5 py-0.5 text-xs font-semibold text-[#ed0e64]"><%= @favorite_candidates.size %></span>
+          <%= link_to favoris_mission_path(@mission), class: "ml-auto text-sm font-medium text-[#ed0e64] hover:underline" do %>
+            Voir tout <i class="fa-solid fa-arrow-right text-xs"></i>
+          <% end %>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <% @favorite_candidates.each do |candidate| %>
+            <% avatar_index = ((candidate.id || candidate.email.to_s.sum) % 10) + 1 %>
+            <%= link_to candidate_path(candidate), class: "flex items-center gap-3 rounded-2xl border border-[#ead2dc] bg-white px-4 py-3 transition hover:border-[#f7c4da] hover:bg-[#fff5f8]" do %>
+              <%= image_tag "avatars/avatar-#{format('%02d', avatar_index)}.png", alt: "#{candidate.first_name} #{candidate.last_name}", class: "h-10 w-10 flex-shrink-0 rounded-full object-cover ring-2 ring-[#f7c4da]" %>
+              <div class="min-w-0">
+                <p class="truncate text-sm font-semibold text-[#4c1f2a]"><%= candidate.first_name %> <%= candidate.last_name %></p>
+                <p class="truncate text-xs text-[#9a5a68]"><%= candidate.job_titles&.last.presence || "Candidat" %></p>
+                <% if candidate.availability.present? %>
+                  <p class="mt-0.5 text-[11px] text-[#b49aa4]"><%= Candidate::AVAILABILITY_LABELS[candidate.availability] %></p>
+                <% end %>
+              </div>
+              <i class="fa-solid fa-heart ml-auto flex-shrink-0 text-xs text-[#ed0e64]"></i>
+            <% end %>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+
   </div>
 </div>
 

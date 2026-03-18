@@ -97,6 +97,13 @@ class MissionsController < ApplicationController
     @mission ||= Mission.includes(:client_contact, :region, :specialty, freelancer_profile: :user).find(params[:id])
     authorize @mission
     @close_candidate_options = Candidate.order(updated_at: :desc, created_at: :desc).limit(40)
+    @favorite_candidates = current_user.present? ? FavoriteCandidate.where(user: current_user, mission: @mission).includes(candidate: :work_experiences).map(&:candidate) : []
+  end
+
+  def favoris
+    @mission = Mission.includes(:client_contact, :region, :specialty, freelancer_profile: :user).find(params[:id])
+    authorize @mission, :show?
+    @favorite_candidates = current_user.present? ? FavoriteCandidate.where(user: current_user, mission: @mission).includes(candidate: :work_experiences).map(&:candidate) : []
   end
 
   def my_missions
@@ -1193,5 +1200,4 @@ class MissionsController < ApplicationController
     size = mission_company_segment(mission)
     "#{size} du secteur #{sector}, environnement exigeant et evolutif."
   end
-
 end

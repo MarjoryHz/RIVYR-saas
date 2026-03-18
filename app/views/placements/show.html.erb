@@ -284,7 +284,7 @@ end %>
       </div>
 
       <div class="flex flex-wrap gap-2 pt-1">
-        <%= link_to "Retour finances", freelance_finance_path, class: "btn btn-ghost btn-sm" %>
+        <a href="#" onclick="history.back(); return false;" class="btn btn-ghost btn-sm">Retour finances</a>
         <%= link_to "Voir mission", mission_path(@mission), class: "btn btn-ghost btn-sm" %>
       </div>
     </div>
