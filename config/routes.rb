@@ -49,6 +49,7 @@ Rails.application.routes.draw do
     end
     member do
       post :toggle_favorite
+      get :favoris
     end
   end
   resources :candidates do

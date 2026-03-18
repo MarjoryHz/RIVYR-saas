@@ -1,0 +1,168 @@
+<% client = @mission.client_contact.client %>
+<% client_name = client.brand_name.presence || client.legal_name %>
+
+<div class="w-full max-w-none px-6 pt-0 pb-8 md:px-11 lg:px-10">
+
+  <%# ── Header ── %>
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <a href="#" onclick="history.back(); return false;" class="mb-2 inline-flex items-center gap-1.5 text-sm text-[#9a5a68] hover:text-[#ed0e64] transition">
+        <i class="fa-solid fa-arrow-left text-xs"></i> <%= @mission.title %>
+      </a>
+      <h1 class="text-2xl font-semibold text-[#4c1f2a] md:text-3xl">Candidats favoris</h1>
+      <p class="mt-1 text-sm text-[#9a5a68]"><%= client_name %> · <%= @favorite_candidates.size %> candidat<%= @favorite_candidates.size > 1 ? 's' : '' %></p>
+    </div>
+    <span class="inline-flex items-center gap-2 rounded-full border border-[#f7c4da] bg-[#fff0f6] px-4 py-2 text-sm font-semibold text-[#ed0e64]">
+      <i class="fa-solid fa-heart"></i> <%= @favorite_candidates.size %> sélectionné<%= @favorite_candidates.size > 1 ? 's' : '' %>
+    </span>
+  </div>
+
+  <% if @favorite_candidates.empty? %>
+    <div class="flex flex-col items-center justify-center rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 py-20 text-center">
+      <i class="fa-regular fa-heart text-4xl text-[#f7c4da]"></i>
+      <p class="mt-4 text-base font-semibold text-[#6b3f4f]">Aucun candidat en favori</p>
+      <p class="mt-1 text-sm text-[#b49aa4]">Ajoutez des candidats en favori depuis la cvthèque pour les retrouver ici.</p>
+    </div>
+  <% else %>
+    <div class="space-y-4">
+      <% @favorite_candidates.each do |candidate| %>
+        <%
+          avatar_index = ((candidate.id || candidate.email.to_s.sum) % 10) + 1
+          last_title = candidate.work_experiences.first&.title || candidate.job_titles&.last
+          whatsapp_number = candidate.phone.to_s.gsub(/\D/, '')
+          status_config = {
+            "new"          => { label: "À qualifier",    bg: "bg-slate-100",   text: "text-slate-600",   ring: "ring-slate-200"   },
+            "qualified"    => { label: "Qualifié Rivyr", bg: "bg-[#FDE7F1]",   text: "text-[#B40C4D]",   ring: "ring-[#F7C4DA]"   },
+            "presented"    => { label: "Présenté",        bg: "bg-sky-50",      text: "text-sky-700",     ring: "ring-sky-200"     },
+            "interviewing" => { label: "En entretien",    bg: "bg-emerald-50",  text: "text-emerald-700", ring: "ring-emerald-200" },
+            "placed"       => { label: "Placé",           bg: "bg-emerald-100", text: "text-emerald-800", ring: "ring-emerald-300" }
+          }
+          badge = status_config[candidate.status] || status_config["new"]
+          experiences = candidate.work_experiences
+        %>
+        <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5 shadow-sm">
+          <div class="grid gap-5 lg:grid-cols-[auto_1fr_1fr]">
+
+            <%# ── Colonne gauche : identité ── %>
+            <div class="flex items-start gap-4 lg:flex-col lg:items-center lg:text-center lg:w-44">
+              <%= image_tag "avatars/avatar-#{format('%02d', avatar_index)}.png",
+                    alt: "#{candidate.first_name} #{candidate.last_name}",
+                    class: "h-20 w-20 rounded-full object-cover ring-4 ring-white shadow-md shrink-0" %>
+              <div class="space-y-1.5">
+                <div>
+                  <h2 class="text-base font-bold text-[#3d1a24]"><%= candidate.first_name %> <%= candidate.last_name %></h2>
+                  <% if last_title.present? %>
+                    <p class="text-xs font-medium text-[#7b4b5a]"><%= last_title %></p>
+                  <% end %>
+                </div>
+                <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 <%= badge[:bg] %> <%= badge[:text] %> <%= badge[:ring] %>"><%= badge[:label] %></span>
+                <div class="flex flex-wrap gap-1.5 lg:justify-center">
+                  <% if candidate.linkedin_url.present? %>
+                    <%= link_to candidate.linkedin_url, target: "_blank", rel: "noopener",
+                          class: "inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#0A66C2] text-white hover:bg-[#004182] transition" do %>
+                      <i class="fa-brands fa-linkedin-in text-xs"></i>
+                    <% end %>
+                  <% end %>
+                  <% if whatsapp_number.present? %>
+                    <%= link_to "https://wa.me/#{whatsapp_number}", target: "_blank", rel: "noopener",
+                          class: "inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#25D366] text-white hover:bg-[#1da851] transition" do %>
+                      <i class="fa-brands fa-whatsapp text-xs"></i>
+                    <% end %>
+                  <% end %>
+                </div>
+                <div class="space-y-1 text-[12px] text-[#5c3143]">
+                  <% if candidate.email.present? %>
+                    <%= mail_to candidate.email, candidate.email, class: "block truncate hover:text-[#ed0e64] transition max-w-[9rem]" %>
+                  <% end %>
+                  <% if candidate.phone.present? %>
+                    <p><%= candidate.phone %></p>
+                  <% end %>
+                  <% if candidate.location.present? %>
+                    <p class="flex items-center gap-1 lg:justify-center"><i class="fa-solid fa-location-dot text-[#ed0e64] text-[10px]"></i><%= candidate.location %></p>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+
+            <%# ── Colonne centre : expériences ── %>
+            <div class="space-y-3">
+              <h3 class="text-sm font-semibold uppercase tracking-wide text-[#9a5a68]">Expériences</h3>
+              <% if experiences.any? %>
+                <ol class="space-y-3">
+                  <% experiences.first(3).each_with_index do |exp, i| %>
+                    <li class="flex gap-3">
+                      <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full shadow-sm text-xs <%= exp.current? ? 'bg-[#ed0e64] text-white' : 'border border-[#ead2dc] bg-white text-[#ed0e64]' %>">
+                        <i class="fa-regular fa-building text-[10px]"></i>
+                      </span>
+                      <div>
+                        <p class="text-sm font-semibold text-[#4c1f2a]"><%= exp.title %></p>
+                        <p class="text-xs text-[#7b4b5a]"><%= exp.company %></p>
+                        <p class="text-[11px] text-[#9a5a68]"><%= exp.date_range %></p>
+                        <% if exp.skills.any? %>
+                          <div class="mt-1.5 flex flex-wrap gap-1">
+                            <% exp.skills.first(3).each do |skill| %>
+                              <span class="rounded-full border border-[#ead2dc] bg-white px-2 py-0.5 text-[11px] font-medium text-[#6b3f4f]"><%= skill %></span>
+                            <% end %>
+                          </div>
+                        <% end %>
+                      </div>
+                    </li>
+                  <% end %>
+                </ol>
+                <% if experiences.size > 3 %>
+                  <p class="text-[12px] text-[#b49aa4]">+ <%= experiences.size - 3 %> expérience<%= experiences.size - 3 > 1 ? 's' : '' %></p>
+                <% end %>
+              <% else %>
+                <p class="text-sm italic text-[#c4a0b0]">Aucune expérience renseignée</p>
+              <% end %>
+            </div>
+
+            <%# ── Colonne droite : recherche + actions ── %>
+            <div class="space-y-4">
+              <div class="rounded-2xl border border-[#ead2dc] bg-white p-4 space-y-3 text-[13px] text-[#5c3143]">
+                <h3 class="text-sm font-semibold uppercase tracking-wide text-[#9a5a68]">Recherche</h3>
+                <div>
+                  <p class="mb-1 text-[11px] font-medium uppercase tracking-wide text-[#b49aa4]">Disponibilité</p>
+                  <% if candidate.availability.present? %>
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ead2dc] bg-[#fff8fb] px-2.5 py-1 text-xs font-medium text-[#4c1f2a]">
+                      <i class="fa-regular fa-calendar-check text-[#ed0e64] text-[10px]"></i>
+                      <%= Candidate::AVAILABILITY_LABELS[candidate.availability] %>
+                    </span>
+                  <% else %>
+                    <span class="text-xs italic text-[#c4a0b0]">Non renseignée</span>
+                  <% end %>
+                </div>
+                <div>
+                  <p class="mb-1 text-[11px] font-medium uppercase tracking-wide text-[#b49aa4]">Rémunération</p>
+                  <% if candidate.salary_range.present? %>
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ead2dc] bg-[#fff8fb] px-2.5 py-1 text-xs font-medium text-[#4c1f2a]">
+                      <i class="fa-solid fa-euro-sign text-[#ed0e64] text-[10px]"></i>
+                      <%= candidate.salary_range %>
+                    </span>
+                  <% else %>
+                    <span class="text-xs italic text-[#c4a0b0]">Non renseignée</span>
+                  <% end %>
+                </div>
+                <% if candidate.contract_types&.any? %>
+                  <div>
+                    <p class="mb-1 text-[11px] font-medium uppercase tracking-wide text-[#b49aa4]">Contrats</p>
+                    <div class="flex flex-wrap gap-1">
+                      <% candidate.contract_types.each do |ct| %>
+                        <span class="rounded-full border border-[#ead2dc] bg-[#fff8fb] px-2 py-0.5 text-[11px] font-medium text-[#6b3f4f]"><%= Candidate::CONTRACT_LABELS[ct] || ct %></span>
+                      <% end %>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+              <%= link_to candidate_path(candidate), class: "inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[#f1a38b] bg-[#f4a58a] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#ee977c]" do %>
+                <i class="fa-regular fa-user"></i> Voir la fiche complète
+              <% end %>
+            </div>
+
+          </div>
+        </article>
+      <% end %>
+    </div>
+  <% end %>
+
+</div>
