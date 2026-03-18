@@ -34,6 +34,31 @@
     <main class="relative z-10 <%= 'freelance-sidebar-layout' if show_freelance_sidebar %>">
       <%= yield %>
     </main>
+    <%= yield :modals %>
     <%= render "shared/flashes" %>
+
+    <%# Back to top button %>
+    <button
+      id="back-to-top"
+      onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
+      class="fixed bottom-6 right-6 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-[#ed0e64] text-white shadow-lg transition-all duration-300 hover:bg-[#c40b52] opacity-0 pointer-events-none"
+      aria-label="Retour en haut">
+      <i class="fa-solid fa-arrow-up text-sm"></i>
+    </button>
+
+    <script>
+      (function() {
+        var btn = document.getElementById('back-to-top');
+        window.addEventListener('scroll', function() {
+          if (window.scrollY > 300) {
+            btn.classList.remove('opacity-0', 'pointer-events-none');
+            btn.classList.add('opacity-100');
+          } else {
+            btn.classList.add('opacity-0', 'pointer-events-none');
+            btn.classList.remove('opacity-100');
+          }
+        }, { passive: true });
+      })();
+    </script>
   </body>
 </html>

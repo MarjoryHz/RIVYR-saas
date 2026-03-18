@@ -1,0 +1,9 @@
+<%= turbo_frame_tag "fav-#{candidate.id}-#{mission_id || 'global'}" do %>
+  <%= button_to toggle_favorite_candidate_path(candidate),
+        method: :patch,
+        params: { mission_id: mission_id },
+        form: { class: "flex" },
+        class: "flex h-8 w-8 items-center justify-center rounded-full border transition #{is_favorite ? 'border-[#f7c4da] bg-[#fff0f6] text-[#ed0e64]' : 'border-[#ead2dc] text-[#c4a0b0] hover:text-[#ed0e64]'}" do %>
+    <i class="fa-<%= is_favorite ? 'solid' : 'regular' %> fa-heart text-xs"></i>
+  <% end %>
+<% end %>

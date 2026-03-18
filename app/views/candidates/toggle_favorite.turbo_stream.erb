@@ -1,0 +1,3 @@
+<%= turbo_stream.replace "fav-#{@candidate.id}-#{@selected_mission_id || 'global'}" do %>
+  <%= render "candidates/favorite_button", candidate: @candidate, is_favorite: @is_favorite, mission_id: @selected_mission_id %>
+<% end %>
