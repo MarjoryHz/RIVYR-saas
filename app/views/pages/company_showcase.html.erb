@@ -1,21 +1,19 @@
-<div class="min-h-screen bg-[linear-gradient(180deg,#fffafc_0%,#fffdfd_100%)]">
+<div class="min-h-screen">
   <section class="relative overflow-hidden border-b border-[#f0d6e0]">
-    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(237,14,100,0.14),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(244,165,138,0.18),_transparent_30%)]"></div>
+    <div class="absolute inset-0"></div>
     <div class="relative mx-auto max-w-7xl px-6 py-10 md:px-8 lg:px-10 lg:py-14">
       <div class="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
         <div class="space-y-6">
-          <div class="flex flex-wrap items-center gap-3">
-            <span class="rounded-full border border-[#f2c9d8] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#a33d68]">Entreprise a la une</span>
-            <span class="rounded-full border border-[#f3dfb7] bg-[#fff7e8] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#9a6a00]">Design only</span>
-          </div>
-
           <div class="space-y-4">
-            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Groupe Asterion Industries</p>
-            <h1 class="max-w-4xl text-4xl font-semibold tracking-tight text-[#4c1f2a] md:text-6xl">
-              Une entreprise industrielle qui combine exigence d'execution et ambition de transformation.
-            </h1>
+            <div class="flex flex-wrap items-center gap-3">
+              <h1 class="text-3xl font-semibold tracking-tight text-[#4c1f2a] md:text-4xl"><%= @client.brand_name %></h1>
+              <span class="rounded-full border border-[#f2c9d8] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#a33d68]">À la une</span>
+            </div>
+            <p class="max-w-4xl text-2xl font-semibold tracking-tight text-[#6b3f4f] md:text-3xl">
+              <%= @company_tagline %>
+            </p>
             <p class="max-w-2xl text-base leading-8 text-[#6b3f4f] md:text-lg">
-              Une page vitrine inspiree de Welcome to the Jungle, repensee dans la DA RIVYR pour mettre en avant les clients, leur environnement, leur culture et leurs annonces ouvertes.
+              <%= @client.bio %>
             </p>
           </div>
 
@@ -27,14 +25,36 @@
               Decouvrir l'entreprise
             </button>
           </div>
+
+          <div class="flex items-center gap-3">
+            <% if @client.website_url.present? %>
+              <%= link_to @client.website_url, target: "_blank", rel: "noopener",
+                  class: "inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#8b4452] transition hover:bg-[#fdeef3] hover:text-[#ed0e64]" do %>
+                <i class="fa-solid fa-globe"></i>
+              <% end %>
+            <% else %>
+              <span class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#ead2dc] bg-white/50 text-[#c9a0b0]">
+                <i class="fa-solid fa-globe"></i>
+              </span>
+            <% end %>
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#8b4452] transition hover:bg-[#fdeef3] hover:text-[#ed0e64] cursor-pointer">
+              <i class="fa-brands fa-linkedin-in"></i>
+            </span>
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#8b4452] transition hover:bg-[#fdeef3] hover:text-[#ed0e64] cursor-pointer">
+              <i class="fa-brands fa-instagram"></i>
+            </span>
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#8b4452] transition hover:bg-[#fdeef3] hover:text-[#ed0e64] cursor-pointer">
+              <i class="fa-brands fa-facebook-f"></i>
+            </span>
+          </div>
         </div>
 
-        <div class="rounded-[2rem] border border-[#ead2dc] bg-white/80 p-5 shadow-[0_24px_60px_rgba(94,31,50,0.08)] backdrop-blur">
-          <div class="grid gap-3 sm:grid-cols-2">
+        <div class="rounded-2xl border border-[#ead2dc] bg-white/70 p-4 shadow-[0_8px_24px_rgba(94,31,50,0.06)] backdrop-blur">
+          <div class="grid gap-2 sm:grid-cols-2">
             <% @company_metrics.each do |metric| %>
-              <div class="rounded-2xl border border-[#f1dce5] bg-[#fff8fb] p-4">
-                <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]"><%= metric[:label] %></p>
-                <p class="mt-2 text-3xl font-semibold text-[#4c1f2a]"><%= metric[:value] %></p>
+              <div class="rounded-xl border border-[#f1dce5] bg-[#fff8fb] px-4 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-widest text-[#b07a90]"><%= metric[:label] %></p>
+                <p class="mt-1 text-lg font-semibold text-[#4c1f2a]"><%= metric[:value] %></p>
               </div>
             <% end %>
           </div>
@@ -43,122 +63,106 @@
     </div>
   </section>
 
-  <section class="mx-auto max-w-7xl space-y-12 px-6 py-10 md:px-8 lg:px-10">
-    <div class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-      <article class="overflow-hidden rounded-[2rem] border border-[#ead2dc] bg-white shadow-[0_18px_44px_rgba(94,31,50,0.06)]">
-        <div class="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
-          <div class="bg-[linear-gradient(135deg,#fff2f7_0%,#fffdfd_100%)] p-6 md:p-8">
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Pourquoi rejoindre</p>
-            <h2 class="mt-3 text-3xl font-semibold tracking-tight text-[#4c1f2a]">Un terrain d'impact pour les profils de direction.</h2>
-            <div class="mt-6 space-y-4">
-              <% @company_highlights.each do |item| %>
-                <div class="flex items-start gap-3 rounded-2xl border border-[#f1dce5] bg-white/80 p-4">
-                  <span class="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#ed0e64]/10 text-[#ed0e64]">
-                    <i class="fa-solid fa-check"></i>
-                  </span>
-                  <p class="text-sm leading-7 text-[#5f3647]"><%= item %></p>
-                </div>
-              <% end %>
-            </div>
-          </div>
-          <div class="bg-[radial-gradient(circle_at_top_right,_rgba(237,14,100,0.12),_transparent_26%),linear-gradient(160deg,#fff9fb_0%,#fff1f6_100%)] p-6 md:p-8">
-            <div class="flex h-full flex-col justify-between rounded-[1.6rem] border border-[#f1dce5] bg-white/75 p-5">
-              <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Ambiance</p>
-                <p class="mt-4 text-2xl font-semibold leading-tight text-[#4c1f2a]">
-                  Exigence, sobriete, vitesse de decision et responsabilite forte.
-                </p>
-              </div>
-              <p class="mt-6 text-sm leading-7 text-[#6b3f4f]">
-                Ici, les postes ne sont pas accessoires. Ils portent des enjeux visibles, transverses et tres operationnels.
-              </p>
-            </div>
-          </div>
-        </div>
-      </article>
-
-      <article class="rounded-[2rem] border border-[#ead2dc] bg-[#fff8fb]/95 p-6 shadow-[0_18px_44px_rgba(94,31,50,0.06)]">
-        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Culture & principes</p>
-        <div class="mt-5 space-y-4">
-          <% @company_values.each do |item| %>
-            <div class="rounded-2xl border border-[#f1dce5] bg-white/80 p-5">
-              <h3 class="text-lg font-semibold text-[#4c1f2a]"><%= item[:title] %></h3>
-              <p class="mt-2 text-sm leading-7 text-[#6b3f4f]"><%= item[:body] %></p>
-            </div>
-          <% end %>
-        </div>
-      </article>
+  <section class="py-8">
+    <div class="mx-auto max-w-7xl px-6 md:px-8 lg:px-10 mb-4">
+      <p class="text-2xl font-semibold tracking-tight text-[#6b3f4f] md:text-3xl">On vous en dit plus</p>
     </div>
+    <div class="overflow-x-auto px-6 pb-4 md:px-8 lg:px-10 scrollbar-thin scrollbar-thumb-[#e0b8c8] scrollbar-track-transparent">
+      <div class="flex gap-4">
 
-    <section class="space-y-5">
-      <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Annonces ouvertes</p>
-          <h2 class="mt-2 text-3xl font-semibold tracking-tight text-[#4c1f2a]">Les opportunites chez Asterion Industries</h2>
-        </div>
-        <p class="max-w-xl text-sm leading-7 text-[#6b3f4f]">
-          La page entreprise doit permettre de comprendre rapidement le niveau des postes, leur contexte et la promesse du client.
-        </p>
-      </div>
-
-      <div class="grid gap-4 xl:grid-cols-3">
-        <% @company_open_roles.each do |role| %>
-          <article class="group rounded-[1.8rem] border border-[#ead2dc] bg-white p-5 shadow-[0_14px_36px_rgba(94,31,50,0.05)] transition hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(94,31,50,0.09)]">
-            <div class="flex items-start justify-between gap-3">
-              <span class="rounded-full bg-[#fff1f6] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#a33d68]"><%= role[:tag] %></span>
-              <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#dfbcc9] bg-white text-[#8b4452] transition hover:bg-[#fdeef3]">
-                <i class="fa-regular fa-bookmark"></i>
-              </button>
-            </div>
-
-            <div class="mt-5 space-y-3">
-              <h3 class="text-2xl font-semibold leading-tight text-[#4c1f2a]"><%= role[:title] %></h3>
-              <p class="text-sm leading-7 text-[#6b3f4f]"><%= role[:pitch] %></p>
-            </div>
-
-            <div class="mt-5 grid gap-3 text-sm text-[#6b3f4f]">
-              <div class="rounded-2xl border border-[#f1dce5] bg-[#fff8fb] p-4">
-                <p><strong class="text-[#4c1f2a]">Localisation :</strong> <%= role[:location] %></p>
-                <p class="mt-1"><strong class="text-[#4c1f2a]">Contrat :</strong> <%= role[:contract] %></p>
-                <p class="mt-1"><strong class="text-[#4c1f2a]">Niveau :</strong> <%= role[:level] %></p>
-                <p class="mt-1"><strong class="text-[#4c1f2a]">Package :</strong> <%= role[:salary] %></p>
+        <%# Card 1 — Identite & chiffres cles %>
+        <article class="w-[420px] shrink-0 rounded-[2rem] border border-[#ead2dc] bg-[#fff8fb]/95 p-6 shadow-[0_18px_44px_rgba(94,31,50,0.06)]">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">En quelques chiffres</p>
+          <div class="mt-5 space-y-3">
+            <div class="flex items-center gap-4 rounded-2xl border border-[#f1dce5] bg-white/80 px-5 py-4">
+              <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#ed0e64]/10 text-[#ed0e64]">
+                <i class="fa-solid fa-location-dot text-sm"></i>
+              </span>
+              <div>
+                <p class="text-[10px] font-semibold uppercase tracking-widest text-[#b07a90]">Siege social</p>
+                <p class="mt-0.5 text-sm font-semibold text-[#4c1f2a]"><%= @client.location %></p>
               </div>
             </div>
-
-            <div class="mt-5 flex items-center justify-between">
-              <button type="button" class="rounded-full border border-[#dfbcc9] bg-white px-4 py-2 text-sm font-semibold text-[#8b4452] transition hover:bg-[#fdeef3]">
-                Voir la fiche
-              </button>
-              <button type="button" class="rounded-full bg-[#ed0e64] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#cf0c57]">
-                Se positionner
-              </button>
+            <div class="flex items-center gap-4 rounded-2xl border border-[#f1dce5] bg-white/80 px-5 py-4">
+              <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#ed0e64]/10 text-[#ed0e64]">
+                <i class="fa-solid fa-industry text-sm"></i>
+              </span>
+              <div>
+                <p class="text-[10px] font-semibold uppercase tracking-widest text-[#b07a90]">Secteur d activite</p>
+                <p class="mt-0.5 text-sm font-semibold text-[#4c1f2a]"><%= @client.sector %></p>
+              </div>
             </div>
-          </article>
-        <% end %>
-      </div>
-    </section>
-
-    <section class="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-      <article class="rounded-[2rem] border border-[#ead2dc] bg-[#fff8fb]/95 p-6 shadow-[0_18px_44px_rgba(94,31,50,0.06)]">
-        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Apercu marque employeur</p>
-        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-[#4c1f2a]">Ce qui donne envie de rejoindre.</h2>
-        <p class="mt-4 text-sm leading-7 text-[#6b3f4f]">
-          Une page entreprise RIVYR doit faire sentir la singularite du client, sans tomber dans une communication lisse. Le but est d'aider a recruter mieux, pas juste a faire joli.
-        </p>
-      </article>
-
-      <div class="grid gap-4 md:grid-cols-3">
-        <% @company_gallery.each_with_index do |label, index| %>
-          <div class="overflow-hidden rounded-[1.8rem] border border-[#ead2dc] bg-white shadow-[0_14px_36px_rgba(94,31,50,0.05)]">
-            <div class="h-52 bg-[radial-gradient(circle_at_top_right,_rgba(237,14,100,0.16),_transparent_28%),linear-gradient(135deg,#fff1f6_0%,#fffdfd_100%)] p-5">
-              <div class="flex h-full flex-col justify-between rounded-[1.3rem] border border-[#f1dce5] bg-white/70 p-4">
-                <span class="rounded-full bg-[#fff1f6] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#a33d68]">Vue <%= index + 1 %></span>
-                <p class="text-lg font-semibold text-[#4c1f2a]"><%= label %></p>
+            <div class="flex items-center gap-4 rounded-2xl border border-[#f1dce5] bg-white/80 px-5 py-4">
+              <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#ed0e64]/10 text-[#ed0e64]">
+                <i class="fa-solid fa-calendar-days text-sm"></i>
+              </span>
+              <div>
+                <p class="text-[10px] font-semibold uppercase tracking-widest text-[#b07a90]">Fondee en</p>
+                <p class="mt-0.5 text-sm font-semibold text-[#4c1f2a]"><%= @company_founded_year || "—" %></p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 rounded-2xl border border-[#f1dce5] bg-white/80 px-5 py-4">
+              <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#ed0e64]/10 text-[#ed0e64]">
+                <i class="fa-solid fa-users text-sm"></i>
+              </span>
+              <div>
+                <p class="text-[10px] font-semibold uppercase tracking-widest text-[#b07a90]">Collaborateurs</p>
+                <p class="mt-0.5 text-sm font-semibold text-[#4c1f2a]"><%= @client.company_size %></p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 rounded-2xl border border-[#f1dce5] bg-white/80 px-5 py-4">
+              <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#ed0e64]/10 text-[#ed0e64]">
+                <i class="fa-solid fa-chart-line text-sm"></i>
+              </span>
+              <div>
+                <p class="text-[10px] font-semibold uppercase tracking-widest text-[#b07a90]">Chiffre d affaires</p>
+                <p class="mt-0.5 text-sm font-semibold text-[#4c1f2a]"><%= @company_revenue || "—" %></p>
               </div>
             </div>
           </div>
-        <% end %>
+        </article>
+
+        <%# Card 2 — Pourquoi nous rejoindre %>
+        <article class="w-[420px] shrink-0 rounded-[2rem] border border-[#ead2dc] bg-[#fff8fb]/95 p-6 shadow-[0_18px_44px_rgba(94,31,50,0.06)]">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Pourquoi nous rejoindre ?</p>
+          <div class="mt-5 space-y-4">
+            <% @company_highlights.each do |h| %>
+              <div class="rounded-2xl border border-[#f1dce5] bg-white/80 p-5">
+                <h3 class="truncate text-base font-semibold text-[#4c1f2a]"><%= h.title.truncate(50) %></h3>
+                <p class="mt-2 line-clamp-3 text-sm leading-6 text-[#6b3f4f]"><%= h.body.truncate(120) %></p>
+              </div>
+            <% end %>
+          </div>
+        </article>
+
+        <%# Card 3 — Nos valeurs %>
+        <article class="w-[420px] shrink-0 rounded-[2rem] border border-[#ead2dc] bg-[#fff8fb]/95 p-6 shadow-[0_18px_44px_rgba(94,31,50,0.06)]">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Nos valeurs</p>
+          <div class="mt-5 space-y-4">
+            <% @company_values.each do |item| %>
+              <div class="rounded-2xl border border-[#f1dce5] bg-white/80 p-5">
+                <h3 class="truncate text-base font-semibold text-[#4c1f2a]"><%= item.title.truncate(50) %></h3>
+                <p class="mt-2 line-clamp-3 text-sm leading-6 text-[#6b3f4f]"><%= item.body.truncate(120) %></p>
+              </div>
+            <% end %>
+          </div>
+        </article>
+
+        <%# Card 4 — Ambiance d entreprise %>
+        <article class="w-[420px] shrink-0 rounded-[2rem] border border-[#ead2dc] bg-[#fff8fb]/95 p-6 shadow-[0_18px_44px_rgba(94,31,50,0.06)]">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Ambiance d entreprise</p>
+          <% if @company_ambiance.present? %>
+            <div class="mt-5 rounded-2xl border border-[#f1dce5] bg-white/80 p-5">
+              <p class="text-sm leading-7 text-[#6b3f4f]"><%= @company_ambiance.truncate(400) %></p>
+            </div>
+          <% else %>
+            <p class="mt-5 text-sm text-[#b07a90]">Aucune description renseignee.</p>
+          <% end %>
+        </article>
+
       </div>
-    </section>
+    </div>
   </section>
+
+
 </div>

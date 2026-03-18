@@ -382,6 +382,12 @@
               <span class="mt-4 block rounded-2xl border border-[#e3d8de] bg-[#f7f2f5] px-4 py-3 text-center text-base font-semibold text-[#8f6c78]">Mission fermée</span>
             <% end %>
             <button type="button" class="btn mt-3 w-full rounded-2xl border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] hover:bg-[#fdeef3]">Poser une question a RIVYR</button>
+            <% if mission_assigned || freelance_origin_mission %>
+              <%= link_to company_showcase_path(client_id: client.id), class: "btn mt-3 w-full rounded-2xl border-[#ead2dc] bg-white text-[#8b4452] hover:bg-[#fdeef3] flex items-center justify-center gap-2" do %>
+                <i class="fa-regular fa-building"></i>
+                Voir la page entreprise
+              <% end %>
+            <% end %>
             <% if freelance_created_mission && policy(@mission).edit? %>
               <%= link_to "Modifier", edit_mission_path(@mission), class: "btn mt-3 w-full rounded-2xl border-[#dfbcc9] bg-[#fff2f7] text-[#7a3a49] hover:bg-[#fce7ef]" %>
             <% end %>

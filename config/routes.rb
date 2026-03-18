@@ -3,7 +3,7 @@ Rails.application.routes.draw do
   root to: "pages#home"
   get "/contact", to: "pages#contact", as: :contact
   post "/contact", to: "pages#create_contact"
-  get "/showcase/company", to: "pages#company_showcase", as: :company_showcase
+  get "/showcase/company/:client_id", to: "pages#company_showcase", as: :company_showcase
   resources :clients
   resources :client_contacts
   resources :freelancer_profiles

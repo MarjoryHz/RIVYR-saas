@@ -22,8 +22,11 @@ InvoiceNote.destroy_all
 Commission.destroy_all
 Invoice.destroy_all
 Placement.destroy_all
+FavoriteCandidate.destroy_all
 Mission.destroy_all
 ClientContact.destroy_all
+ClientHighlight.destroy_all
+ClientValue.destroy_all
 Client.destroy_all
 WorkExperience.destroy_all
 Education.destroy_all
@@ -177,7 +180,22 @@ CLIENTS_DATA = [
     sector: 'Industrie',
     location: 'Hauts-de-France',
     company_size: '201-500',
-    bio: "ETI industrielle basee dans les Hauts-de-France, specialisee dans la conception et la fabrication d equipements techniques. L entreprise renforce ses equipes de management et recrute regulierement des profils de direction, production, maintenance et supply chain."
+    founded_year: 1987,
+    revenue: '85 M€',
+    ambiance: "Ici, l exigence n est pas un mot de com. Les postes sont exposes, les decisions se prennent vite et les managers sont pleinement responsables de leur perimetre. L ambiance est directe, sobre et orientee resultat. Pas de politique, pas de flou : on sait ce qu on attend de chaque profil des le premier jour.",
+    tagline: "Une ETI industrielle qui combine exigence d execution et ambition de transformation.",
+    highlights: [
+      { title: "Transformation accelee", body: "3 sites industriels restructures en 24 mois avec des gains de productivite mesurables." },
+      { title: "Investissement massif", body: "Plan d investissement engage sur la modernisation des lignes et des outils de pilotage." },
+      { title: "Management direct", body: "Culture sobre, orientee resultat, ou chaque manager est pleinement responsable de son perimetre." }
+    ],
+    values: [
+      { title: "Exigence utile", body: "Un niveau de jeu eleve, mais toujours aligne avec les realites du terrain et de l execution." },
+      { title: "Decisions rapides", body: "Des circuits courts, une gouvernance lisible et une vraie capacite a trancher vite." },
+      { title: "Impact industriel", body: "Chaque poste ouvert a une consequence concrete sur la production, la supply ou la transformation." }
+    ],
+    gallery: ["Site de production modernise", "Comite de direction operations", "Atelier supply & excellence"],
+    bio: "ETI industrielle implantee dans les Hauts-de-France, Flandres Industrie conçoit et fabrique des equipements techniques a haute valeur ajoutee pour les secteurs de l energie, de l automobile et de la construction. Avec 350 collaborateurs repartis sur 4 sites, l entreprise est engagee dans une transformation ambitieuse de ses operations. Les recrutements portent sur des profils de direction, production, maintenance et supply chain capables de tenir un niveau d exigence eleve dans un environnement en pleine modernisation."
   },
   {
     legal_name: 'Nord Logistics Group SAS',
@@ -185,7 +203,22 @@ CLIENTS_DATA = [
     sector: 'Logistique',
     location: 'Hauts-de-France',
     company_size: '500+',
-    bio: "Groupe logistique multi-sites intervenant sur des flux nationaux et europeens. Dans un contexte de structuration et d exigence operationnelle forte, l entreprise recherche des managers et experts capables de piloter la performance terrain."
+    founded_year: 1998,
+    revenue: '220 M€',
+    ambiance: "Le rythme est soutenu et les equipes sont habituees a travailler sous contrainte. La culture du debrief est reelle : on analyse, on ajuste, on repart. Les managers qui s epanouissent ici sont ceux qui aiment le terrain, la mesure et la progression collective.",
+    tagline: "Un groupe logistique multi-sites qui recrute des managers capables de piloter la performance terrain.",
+    highlights: [
+      { title: "Reseau multi-sites", body: "12 plateformes logistiques en France et en Belgique avec des flux nationaux et europeens." },
+      { title: "Amelioration continue", body: "Culture du debrief et du management terrain ancree a tous les niveaux de l organisation." },
+      { title: "Croissance solide", body: "Contrats grands comptes multi-annuels qui garantissent une activite stable et en expansion." }
+    ],
+    values: [
+      { title: "Performance terrain", body: "Les resultats se mesurent au quotidien, avec des indicateurs clairs et une culture du debrief." },
+      { title: "Fiabilite operationnelle", body: "La promesse client repose sur la regularite d execution. Ici, la rigueur n est pas optionnelle." },
+      { title: "Management de proximite", body: "Les managers de terrain sont des relais essentiels. Ils sont formes, accompagnes et valorises." }
+    ],
+    gallery: ["Plateforme logistique Nord", "Equipe transport & quai", "Salle de pilotage flux"],
+    bio: "Groupe logistique multi-sites intervenant sur des flux nationaux et europeens depuis plus de 20 ans. Dans un contexte de structuration et d exigence operationnelle forte, Nord Logistics Group recherche des managers et experts capables de piloter la performance terrain, d animer des equipes importantes et de structurer les processus sur des sites a fort volume."
   },
   {
     legal_name: 'BelgoTech Solutions SA',
@@ -193,7 +226,22 @@ CLIENTS_DATA = [
     sector: 'Tech',
     location: 'Belgique',
     company_size: '51-200',
-    bio: "Societe technologique en croissance implantee en Belgique, intervenant sur des solutions metiers a forte valeur ajoutee. Les recrutements concernent des fonctions produit, tech, data et management."
+    founded_year: 2014,
+    revenue: '18 M€',
+    ambiance: "L ambiance est celle d une boite qui construit. Les process existent mais ne figent pas. On teste, on itere, on documente. Les profils qui s integrent bien sont curieux, directs et a l aise avec l incertitude. La croissance est rapide, les responsabilites aussi.",
+    tagline: "Une scale-up technologique qui recrute des profils produit, data et management pour accelerer.",
+    highlights: [
+      { title: "Croissance rapide", body: "+40% en 2 ans avec un modele SaaS recurrent et un pipeline client solide." },
+      { title: "Squads autonomes", body: "Organisation produit en equipes independantes avec un fort niveau de responsabilite." },
+      { title: "Expansion France", body: "Ambition claire d ouverture du marche francais avec des recrutements strategiques." }
+    ],
+    values: [
+      { title: "Produit avant tout", body: "La valeur delivree a l utilisateur est le critere central de toute decision." },
+      { title: "Autonomie responsable", body: "Les equipes ont de la latitude. En contrepartie, les engagements sont tenus." },
+      { title: "Culture de la donnee", body: "Chaque hypothese est testee, chaque decision est etayee par des metriques." }
+    ],
+    gallery: ["Open space Bruxelles", "Retro produit Q1", "Demo Day interne"],
+    bio: "Societe technologique en forte croissance implantee en Belgique, intervenant sur des solutions metiers SaaS a haute valeur ajoutee pour les secteurs RH, finance et operations. BelgoTech Solutions recrute des profils produit, tech, data et management capables d evoluer dans un environnement scale-up avec un haut niveau d autonomie et une culture forte de l iteration rapide."
   },
   {
     legal_name: 'Artois Conseil & Transformation SAS',
@@ -201,7 +249,22 @@ CLIENTS_DATA = [
     sector: 'Conseil',
     location: 'Hauts-de-France',
     company_size: '11-50',
-    bio: "Cabinet de conseil specialise dans la transformation d organisations, accompagnant des PME, ETI et groupes. L enjeu de recrutement porte sur des profils seniors, autonomes et credibles face a des interlocuteurs de haut niveau."
+    founded_year: 2005,
+    revenue: '6 M€',
+    ambiance: "Ambiance stimulante, sans hierarchie pesante. Les consultants travaillent en autonomie sur des dossiers complexes et s appuient sur une equipe solide pour challenger leurs approches. La liberte est reelle, la rigueur aussi. On attend des profils qui assument leurs positions.",
+    tagline: "Un cabinet de conseil exigeant qui recrute des profils seniors credibles face aux dirigeants.",
+    highlights: [
+      { title: "Interlocuteurs dirigeants", body: "Interventions exclusivement aupres de DG, DAF et membres de comite de direction." },
+      { title: "Equipe 100% operationnelle", body: "30 consultants tous issus du terrain, avec un parcours en entreprise avant le conseil." },
+      { title: "Conseil engage", body: "Pas de livrables sans mise en oeuvre. Chaque recommandation est portee jusqu au resultat." }
+    ],
+    values: [
+      { title: "Credibilite avant l image", body: "Ici, la valeur d un consultant se mesure a sa capacite a parler vrai face a un dirigeant." },
+      { title: "Engagement de resultat", body: "Pas de recommandation sans plan d execution. Le conseil est operationnel ou il n est pas." },
+      { title: "Equipe soudee", body: "La cohesion interne est un actif strategique. L ambiance est directe, stimulante et sans politique." }
+    ],
+    gallery: ["Seminaire equipe conseil", "Atelier client dirigeant", "Restitution comite executif"],
+    bio: "Cabinet de conseil specialise dans la transformation d organisations, accompagnant des PME et ETI sur des enjeux de strategie, de reorganisation et de performance. Les recrutements portent sur des profils seniors, autonomes, credibles face a des interlocuteurs de haut niveau, avec un vrai parcours operationnel et la capacite a s engager sur des resultats mesurables."
   },
   {
     legal_name: 'Hexa Retail Performance SAS',
@@ -209,7 +272,22 @@ CLIENTS_DATA = [
     sector: 'Distribution',
     location: 'Ile-de-France',
     company_size: '201-500',
-    bio: "Acteur de la distribution en phase d optimisation de son organisation, avec des besoins reguliers sur des fonctions de direction commerciale, operations et transformation."
+    founded_year: 1993,
+    revenue: '130 M€',
+    ambiance: "L entreprise est en mouvement. Le nouveau CODIR impulse un changement de rythme et de culture. Ceux qui arrivent maintenant ont une vraie capacite d influence. L ambiance est energique, les attentes sont claires et les profils moteurs trouvent rapidement leur place.",
+    tagline: "Un acteur de la distribution qui reorganise son management pour retrouver de la performance.",
+    highlights: [
+      { title: "Refonte operationnelle", body: "80 points de vente en cours de transformation avec un nouveau modele de management." },
+      { title: "Nouveau CODIR", body: "Comite de direction renforce avec une ambition de performance commerciale claire." },
+      { title: "Profils qui comptent", body: "Les managers recrutes ont un impact direct et visible sur les resultats du reseau." }
+    ],
+    values: [
+      { title: "Commerce au centre", body: "La performance commerciale est la raison d etre de chaque poste. Elle est pilotee, analysee et recompensee." },
+      { title: "Transformation concrete", body: "Le changement est engage. Les profils qui rejoignent l entreprise en sont les acteurs directs." },
+      { title: "Equipes responsabilisees", body: "La delegation est reelle. Les managers de terrain ont une vraie latitude de decision." }
+    ],
+    gallery: ["Concept store modernise", "Reunion performance reseau", "Formation managers terrain"],
+    bio: "Acteur de la distribution implante en Ile-de-France et en region, Hexa Retail Performance est en phase d optimisation profonde de son organisation commerciale et operationnelle. L entreprise recrute des profils de direction commerciale, operations et transformation capables de porter une ambition de changement dans un contexte de forte pression sur les resultats."
   },
   {
     legal_name: 'Cap Avenir Energie SAS',
@@ -217,7 +295,22 @@ CLIENTS_DATA = [
     sector: 'Energie',
     location: 'Pays de la Loire',
     company_size: '51-200',
-    bio: "Entreprise du secteur energie engagee dans une dynamique de croissance et de structuration. Les recrutements portent sur des fonctions techniques, de pilotage de projets et de management."
+    founded_year: 2010,
+    revenue: '42 M€',
+    ambiance: "Ambiance entrepreneuriale avec une direction accessible et impliquee. Les decisions se prennent vite, les projets sont concrets et les contributeurs sont reconnus. On valorise les profils qui prennent des initiatives et qui assument la complexite sans attendre qu on leur trace le chemin.",
+    tagline: "Une entreprise energetique en croissance qui structure ses equipes pour passer a l echelle.",
+    highlights: [
+      { title: "Portefeuille en expansion", body: "Projets ENR en forte croissance avec un pipeline securise sur les 3 prochaines annees." },
+      { title: "Vision a 5 ans", body: "Direction recemment renforcee avec une feuille de route claire et des objectifs ambitieux." },
+      { title: "Culture entrepreneuriale", body: "Prise de responsabilite rapide, autonomie reelle, et impact concret sur les projets livres." }
+    ],
+    values: [
+      { title: "Impact energetique", body: "Chaque projet contribue concretement a la transition. L impact est une realite operationnelle." },
+      { title: "Agilite et vitesse", body: "Dans un marche en pleine mutation, les profils qui s adaptent vite et decidient avec partialite ont un vrai avantage." },
+      { title: "Ambition partagee", body: "Les collaborateurs construisent quelque chose. Il y a une vraie fierté collective autour des projets livres." }
+    ],
+    gallery: ["Parc solaire en construction", "Equipe projet terrain", "Reunion strategie direction"],
+    bio: "Entreprise du secteur energie engagee dans une dynamique de croissance soutenue et de structuration de ses operations. Cap Avenir Energie intervient sur des projets de production et de distribution d energie renouvelable. Les recrutements portent sur des fonctions techniques, de pilotage de projets et de management capables d evoluer dans un environnement exigeant et en pleine acceleration."
   },
   {
     legal_name: 'Littoral Agro Solutions SAS',
@@ -225,7 +318,22 @@ CLIENTS_DATA = [
     sector: 'Agroalimentaire',
     location: 'Bretagne',
     company_size: '201-500',
-    bio: "Societe agroalimentaire reconnue pour son exigence qualite et son efficacite industrielle. Elle recrute des responsables de production, qualite, maintenance et supply chain."
+    founded_year: 1979,
+    revenue: '95 M€',
+    ambiance: "L ambiance est serieuse, technique et ancrée dans le concret. Les equipes sont stables, les process matures et les standards eleves. Les profils qui s y plaisent sont ceux qui aiment la profondeur metier, le travail bien fait et un environnement ou la competence est le premier critere de reconnaissance.",
+    tagline: "Un industriel agroalimentaire reconnu qui recrute des experts production, qualite et supply.",
+    highlights: [
+      { title: "Qualite certifiee", body: "Certifications internationales sur toute la chaine de production, maintenues avec rigueur." },
+      { title: "Lignes modernisees", body: "Investissements reguliers dans les equipements et l automatisation des processus." },
+      { title: "Exigence technique", body: "Management de terrain solide dans un environnement ou la precision fait la difference." }
+    ],
+    values: [
+      { title: "Qualite non negociable", body: "Les standards sont eleves et tenus. La qualite n est pas un objectif, c est le point de depart." },
+      { title: "Efficacite industrielle", body: "La performance des lignes est une priorite quotidienne. Chaque arret non programme est analyse et traite." },
+      { title: "Ancrage territorial", body: "L entreprise est implantee en Bretagne depuis 30 ans. Elle est un employeur de reference dans la region." }
+    ],
+    gallery: ["Ligne de production automatisee", "Controle qualite laboratoire", "Equipe maintenance site"],
+    bio: "Societe agroalimentaire bretonne reconnue pour son exigence qualite et son efficacite industrielle, Littoral Agro Solutions emploie 280 collaborateurs sur 2 sites de production. L entreprise recrute des responsables de production, qualite, maintenance et supply chain capables de tenir des standards industriels eleves dans un environnement en modernisation continue."
   },
   {
     legal_name: 'Euronextia Services SAS',
@@ -233,7 +341,22 @@ CLIENTS_DATA = [
     sector: 'Services',
     location: 'Ile-de-France',
     company_size: '51-200',
-    bio: "Entreprise de services B2B en croissance, cherchant a renforcer ses equipes commerciales, RH et direction de pole avec des profils solides et structurants."
+    founded_year: 2008,
+    revenue: '28 M€',
+    ambiance: "Ambiance collaborative et orientee client. Les equipes sont soudees, les interactions frequentes et la culture du feedback bien installee. On progresse vite si on est proactif. Les profils autonomes qui cherchent a construire quelque chose de durable trouvent ici un terrain favorable.",
+    tagline: "Une entreprise de services B2B en croissance qui renforce ses equipes de direction.",
+    highlights: [
+      { title: "Retention client elevee", body: "+90% de retention sur 3 ans, signe d une qualite de service qui se mesure concretement." },
+      { title: "Nouveaux segments", body: "Expansion sur des marches B2B a fort potentiel avec des ressources dediees." },
+      { title: "Responsabilites rapides", body: "Organisation horizontale ou les profils moteurs acced ent vite a des perimetres larges." }
+    ],
+    values: [
+      { title: "Client au centre", body: "La qualite de service est un differenciateur concret. Chaque equipe est orientee satisfaction et retention." },
+      { title: "Initiative valorisee", body: "Les profils qui proposent, testent et assument leurs decisions progressent vite." },
+      { title: "Croissance collective", body: "L entreprise grandit. Les collaborateurs qui la construisent grandissent avec elle." }
+    ],
+    gallery: ["Espace de travail collaboratif", "Reunion client strategique", "Workshop equipe commerciale"],
+    bio: "Entreprise de services B2B en croissance implantee en Ile-de-France, Euronextia Services accompagne ses clients sur des enjeux de performance commerciale, de pilotage RH et de transformation organisationnelle. L entreprise renforce ses equipes avec des profils commerciaux, RH et direction de pole capables de combiner expertise metier et sens du business."
   },
   {
     legal_name: 'Wallonie Engineering SA',
@@ -241,7 +364,22 @@ CLIENTS_DATA = [
     sector: 'Ingenierie',
     location: 'Belgique',
     company_size: '51-200',
-    bio: "Bureau d ingenierie et de projets techniques intervenant sur des dossiers a forte technicite. L entreprise cible des chefs de projet, experts techniques et responsables de BU."
+    founded_year: 1991,
+    revenue: '55 M€',
+    ambiance: "Ambiance rigoureuse et exigeante, portee par une culture de l excellence technique. Les equipes sont pluridisciplinaires et habituees a travailler sur des dossiers complexes. La reconnaissance passe par la qualite du travail produit. Peu de politique, beaucoup de substance.",
+    tagline: "Un bureau d ingenierie de reference qui recrute des experts techniques et chefs de projet.",
+    highlights: [
+      { title: "Projets d envergure", body: "Mandats complexes en infrastructure, energie et industrie avec des donneurs d ordre de premier plan." },
+      { title: "Equipes expertes", body: "Profils pluridisciplinaires avec un niveau de technicite eleve et une culture de la rigueur." },
+      { title: "Partenaires de reference", body: "Collaboration reguliere avec des acteurs publics et prives sur des dossiers strategiques." }
+    ],
+    values: [
+      { title: "Excellence technique", body: "La qualite des livrables est la signature de l entreprise. Elle est exigee et reconnue." },
+      { title: "Complexite assumee", body: "Les projets sont ambitieux. Les profils qui reussissent ici ont le gout des problemes difficiles." },
+      { title: "Collaboration multidisciplinaire", body: "Les projets mobilisent des expertises variees. La capacite a travailler en transversal est cle." }
+    ],
+    gallery: ["Chantier infrastructure majeur", "Reunion bureau d etudes", "Revue technique projet"],
+    bio: "Bureau d ingenierie et de gestion de projets techniques de reference en Belgique, Wallonie Engineering intervient sur des dossiers a forte technicite dans les secteurs de l infrastructure, de l energie et de l industrie. L entreprise recrute des chefs de projet, experts techniques et responsables de BU capables de piloter des missions complexes avec rigueur et autonomie."
   },
   {
     legal_name: 'Seine Corporate Finance SAS',
@@ -249,7 +387,22 @@ CLIENTS_DATA = [
     sector: 'Finance',
     location: 'Ile-de-France',
     company_size: '11-50',
-    bio: "Structure a taille humaine specialisee en finance d entreprise et pilotage de performance. Elle recherche des profils seniors, techniquement solides et capables d incarner une posture de conseil."
+    founded_year: 2003,
+    revenue: '9 M€',
+    ambiance: "Ambiance confidentielle, professionnelle et tres axee sur la qualite des livrables. Les interactions sont directes et les attentes elevees. On travaille avec des interlocuteurs seniors, dans des contextes sensibles. Les profils qui s integrent bien sont ceux qui ont une vraie maturite relationnelle.",
+    tagline: "Une structure finance d entreprise a taille humaine qui recrute des profils seniors exigeants.",
+    highlights: [
+      { title: "Mandats exclusifs", body: "Positionnement haut de gamme sur des operations financieres complexes a fort enjeu." },
+      { title: "Equipe de reference", body: "25 professionnels issus de grands groupes et cabinets, avec des parcours solides." },
+      { title: "Chaque profil compte", body: "Structure a taille humaine ou la contribution individuelle est visible et reconnue." }
+    ],
+    values: [
+      { title: "Expertise avant tout", body: "La valeur se construit sur la profondeur technique et la capacite a produire des analyses qui changent les decisions." },
+      { title: "Confidentialite absolue", body: "Les mandats sont sensibles. La discretion est une competence autant qu une valeur." },
+      { title: "Posture senior", body: "Les interlocuteurs sont des dirigeants et des investisseurs. La credibilite se construit des le premier echange." }
+    ],
+    gallery: ["Salle de negociation", "Due diligence en cours", "Closing d operation"],
+    bio: "Structure a taille humaine specialisee en finance d entreprise, pilotage de performance et accompagnement de dirigeants sur des operations strategiques. Seine Corporate Finance recrute des profils seniors techniquement solides, capables d incarner une posture de conseil et de s engager sur des resultats concrets dans des contextes de forte pression et de confidentialite."
   }
 ].freeze
 
@@ -863,6 +1016,9 @@ CLIENTS_DATA.each_with_index do |data, index|
     website_url: "https://www.#{domain_for(data[:brand_name])}",
     location: data[:location],
     company_size: data[:company_size],
+    founded_year: data[:founded_year],
+    revenue: data[:revenue],
+    ambiance: data[:ambiance],
     bio: data[:bio],
     active: true
   })
@@ -872,7 +1028,37 @@ puts "#{Client.count} clients ready."
 clients_by_legal_name = Client.all.index_by(&:legal_name)
 
 # --------------------------------------------------
-# 8. Contacts clients
+# 8. Highlights clients (pourquoi nous rejoindre)
+# --------------------------------------------------
+
+puts "Seeding client highlights..."
+CLIENTS_DATA.each do |data|
+  client = clients_by_legal_name[data[:legal_name]]
+  next unless client && data[:highlights].present?
+
+  data[:highlights].each_with_index do |h, i|
+    ClientHighlight.create!(client: client, title: h[:title], body: h[:body], position: i + 1)
+  end
+end
+puts "#{ClientHighlight.count} client highlights ready."
+
+# --------------------------------------------------
+# 9. Valeurs clients
+# --------------------------------------------------
+
+puts "Seeding client values..."
+CLIENTS_DATA.each do |data|
+  client = clients_by_legal_name[data[:legal_name]]
+  next unless client && data[:values].present?
+
+  data[:values].each_with_index do |v, i|
+    ClientValue.create!(client: client, title: v[:title], body: v[:body], position: i + 1)
+  end
+end
+puts "#{ClientValue.count} client values ready."
+
+# --------------------------------------------------
+# 10. Contacts clients
 # --------------------------------------------------
 
 puts "Seeding client contacts..."
