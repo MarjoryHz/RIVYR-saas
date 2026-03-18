@@ -164,6 +164,7 @@ class MissionsController < ApplicationController
       0
     end
     @closed_total_sent_candidates = @closed_mission_rows.sum { |row| row[:sent_candidates_count] }
+    load_dashboard_admin_updates
   end
 
   def pending_missions
