@@ -4,11 +4,12 @@
     <div class="text-sm opacity-70">Page <%= page %> / <%= total_pages %></div>
     <div class="flex gap-2">
       <% if page > 1 %>
-        <%= link_to "Precedent", path.call(query.merge(page: page - 1)), class: "btn btn-sm" %>
+        <%= link_to "Précédent", path.call(query.merge(page: page - 1)), class: "btn btn-sm" %>
       <% end %>
       <% if page < total_pages %>
         <%= link_to "Suivant", path.call(query.merge(page: page + 1)), class: "btn btn-sm" %>
       <% end %>
     </div>
+    <div class="invisible text-sm">Page <%= page %> / <%= total_pages %></div>
   </div>
 <% end %>

@@ -1,146 +1,344 @@
-<% surface_card_class = "rounded-[1.45rem] border border-base-100/70 bg-base-100/88 shadow-lg" %>
-<% tone_classes = {
-  "emerald" => "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  "amber"   => "bg-amber-50 text-amber-700 ring-amber-200",
-  "slate"   => "bg-slate-100 text-slate-600 ring-slate-200",
-  "pink"    => "bg-[#FDE7F1] text-[#B40C4D] ring-[#F7C4DA]",
-  "sky"     => "bg-sky-50 text-sky-700 ring-sky-200"
-} %>
+<% surface_card_class = "rounded-[1.45rem] border border-[#ead2dc] bg-[#fff8fb]/95 shadow-sm" %>
 
 <div class="mx-auto max-w-7xl p-4 md:p-6">
   <section class="space-y-6">
 
+    <%# ── Header ── %>
     <header class="space-y-5">
-      <div class="space-y-2">
-        <h1 class="text-3xl font-semibold tracking-tight text-base-content md:text-4xl">CVthèque</h1>
-        <p class="text-base text-base-content/60">Une vue claire des candidats vus par le collectif, de leur niveau de qualification et des actions à engager.</p>
+      <div class="space-y-1">
+        <h1 class="text-3xl font-semibold tracking-tight text-[#3d1a24] md:text-4xl">CVthèque</h1>
+        <p class="text-base text-[#9a5a68]">Explorez, filtrez et affectez vos talents aux missions en cours.</p>
       </div>
 
+      <%# Stats %>
+      <div class="grid grid-cols-3 overflow-hidden <%= surface_card_class %>">
+        <div class="p-4 md:border-r md:border-[#ead2dc] md:pr-6">
+          <p class="text-3xl font-semibold text-[#3d1a24]"><%= @total_count %></p>
+          <p class="mt-1 text-sm text-[#9a5a68]">Candidats au total</p>
+        </div>
+        <div class="p-4 md:border-r md:border-[#ead2dc] md:px-6">
+          <p class="text-3xl font-semibold text-[#3d1a24]"><%= @qualified_count %></p>
+          <p class="mt-1 text-sm text-[#9a5a68]">Qualifiés Rivyr</p>
+        </div>
+        <div class="p-4 md:px-6">
+          <p class="text-3xl font-semibold text-[#3d1a24]"><%= @available_count %></p>
+          <p class="mt-1 text-sm text-[#9a5a68]">Disponibles maintenant</p>
+        </div>
+      </div>
     </header>
 
-    <div class="<%= surface_card_class %> overflow-hidden">
-      <div class="border-b border-base-200/70 px-6 py-4">
+    <%# ── Sélecteur de mission ── %>
+    <% if @open_missions.any? %>
+      <div class="<%= @selected_mission ? 'border-[#ed0e64] bg-[#fff0f6]' : 'border-[#ead2dc] bg-[#fff8fb]' %> rounded-[1.45rem] border px-5 py-3.5 flex items-center gap-3">
+        <i class="fa-solid fa-briefcase text-[#ed0e64] shrink-0"></i>
+        <span class="text-sm font-semibold text-[#3d1a24] shrink-0">Sélectionner une mission</span>
+
+        <select id="mission-select"
+                onchange="window.location = this.value"
+                class="flex-1 min-w-0 rounded-xl border border-[#ead2dc] bg-white px-3 py-2 text-sm text-[#3d1a24] focus:outline-none focus:border-[#ed0e64] cursor-pointer">
+          <option value="<%= request.path + "?" + request.query_parameters.except("selected_mission_id").to_query %>">
+            — Aucune mission sélectionnée —
+          </option>
+          <% @open_missions.each do |m| %>
+            <% client_name = m.client_contact&.client&.brand_name.presence || m.client_contact&.client&.legal_name.presence %>
+            <option value="<%= request.path + "?" + request.query_parameters.merge("selected_mission_id" => m.id).to_query %>"
+                    <%= @selected_mission&.id == m.id ? 'selected' : '' %>>
+              <%= [m.title, client_name, m.location.presence].compact.join(" | ") %>
+            </option>
+          <% end %>
+        </select>
+
+        <% if @selected_mission %>
+          <span class="text-[12px] text-[#ed0e64] font-medium shrink-0">
+            <i class="fa-solid fa-heart mr-1"></i><%= @favorite_candidate_ids.size %> sélectionné<%= @favorite_candidate_ids.size > 1 ? 's' : '' %>
+          </span>
+          <%= link_to request.path + "?" + request.query_parameters.except("selected_mission_id").to_query,
+                class: "text-[12px] text-[#9a5a68] hover:text-[#ed0e64] transition shrink-0" do %>
+            <i class="fa-solid fa-xmark"></i>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# ── Barre filtres + actions ── %>
+    <div class="<%= surface_card_class %> overflow-visible">
+      <div class="border-b border-[#ead2dc] px-5 py-4">
         <div class="relative">
           <div class="flex flex-wrap gap-3">
             <button
               type="button"
-              class="inline-flex items-center gap-2 rounded-2xl border border-base-200 bg-base-100/75 px-5 py-3 text-base font-medium text-base-content/70 shadow-sm transition hover:bg-base-100/95"
-              aria-controls="candidates-filtres"
-              aria-expanded="false"
-              onclick="document.getElementById('candidates-filtres').classList.toggle('hidden'); this.setAttribute('aria-expanded', String(!document.getElementById('candidates-filtres').classList.contains('hidden')));">
+              class="inline-flex items-center gap-2 rounded-2xl border border-[#ead2dc] bg-white px-5 py-2.5 text-sm font-medium text-[#7b4b5a] shadow-sm transition hover:bg-[#fff0f6]"
+              onclick="document.getElementById('candidates-filtres').classList.toggle('hidden')">
               <i class="fa-solid fa-sliders text-[#ed0e64]"></i>
               Filtres
-              <i class="fa-solid fa-angle-down text-xs text-[#ed0e64]"></i>
+              <% active_filters = [@q, @availability, @location, @contract_type, @salary_range, @language_code, @job_title].count(&:present?) + @selected_skills.size %>
+              <% if active_filters > 0 %>
+                <span class="flex h-5 w-5 items-center justify-center rounded-full bg-[#ed0e64] text-[10px] font-bold text-white"><%= active_filters %></span>
+              <% else %>
+                <i class="fa-solid fa-angle-down text-xs text-[#ed0e64]"></i>
+              <% end %>
             </button>
 
+
             <%= link_to request.path + "?only_favorites=#{@only_favorites ? '0' : '1'}",
-                  class: "inline-flex items-center gap-2 rounded-2xl border px-5 py-3 text-base font-medium shadow-sm transition #{@only_favorites ? 'border-[#f1a38b] bg-[#f4a58a] text-white' : 'border-base-200 bg-base-100/75 text-base-content/70 hover:bg-base-100/95'}" do %>
-              <i class="fa-<%= @only_favorites ? 'solid' : 'regular' %> fa-heart text-[#ed0e64]"></i>
+                  class: "inline-flex items-center gap-2 rounded-2xl border px-5 py-2.5 text-sm font-medium shadow-sm transition #{@only_favorites ? 'border-[#ed0e64] bg-[#ed0e64] text-white' : 'border-[#ead2dc] bg-white text-[#7b4b5a] hover:bg-[#fff0f6]'}" do %>
+              <i class="fa-<%= @only_favorites ? 'solid' : 'regular' %> fa-heart"></i>
               Favoris
             <% end %>
 
-            <%= link_to new_candidate_path, class: "inline-flex items-center gap-2 rounded-2xl border border-[#f1a38b] bg-[#f4a58a] px-5 py-3 text-base font-medium text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" do %>
-              <i class="fa-solid fa-plus"></i>
-              Nouveau candidat
+
+            <div class="ml-auto flex items-center gap-2">
+              <button onclick="SwipeSelector.open()"
+                      class="inline-flex items-center gap-2 rounded-2xl border border-[#ead2dc] bg-white px-5 py-2.5 text-sm font-semibold text-[#7b4b5a] shadow-sm transition hover:bg-[#fff0f6]">
+                <i class="fa-solid fa-layer-group text-[#ed0e64]"></i>
+                SwipeSelector
+              </button>
+              <%= link_to new_candidate_path, class: "inline-flex items-center gap-2 rounded-2xl border border-[#f1a38b] bg-[#f4a58a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#ee977c]" do %>
+                <i class="fa-solid fa-plus"></i>
+                Nouveau candidat
+              <% end %>
+            </div>
+          </div>
+
+          <div id="candidates-filtres" class="absolute inset-x-0 top-full z-30 mt-3 hidden rounded-[1.45rem] border border-[#ead2dc] bg-[#fff8fb] p-5 shadow-xl">
+            <% field_class = "w-full rounded-xl border border-[#ead2dc] bg-white px-3 py-2 text-sm text-[#4c1f2a] outline-none focus:border-[#ed0e64]" %>
+            <%= form_with url: request.path, method: :get, local: true do %>
+
+              <%# Ligne 1 : recherche + disponibilité + ville + contrat + rémunération %>
+              <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-5">
+                <div class="xl:col-span-1">
+                  <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Recherche</label>
+                  <%= text_field_tag :q, @q, placeholder: "Nom, email...", class: field_class %>
+                </div>
+                <div>
+                  <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Disponibilité</label>
+                  <%= select_tag :availability, options_for_select([["Toutes", ""], ["Immédiate", "immediate"], ["Préavis 1 mois", "one_month"], ["Préavis 3 mois", "three_months"], ["Préavis 6 mois", "six_months"], ["Autre", "other"]], @availability), class: field_class %>
+                </div>
+                <div>
+                  <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Ville</label>
+                  <%= select_tag :location, options_for_select([["Toutes", ""]] + @location_options.map { |l| [l, l] }, @location), class: field_class %>
+                </div>
+                <div>
+                  <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Contrat</label>
+                  <%= select_tag :contract_type, options_for_select([["Tous", ""], ["CDI", "cdi"], ["CDD", "cdd"], ["Freelance", "freelance"], ["Intérim", "interim"], ["Management de transition", "management_transition"]], @contract_type), class: field_class %>
+                </div>
+                <div>
+                  <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Rémunération</label>
+                  <%= select_tag :salary_range, options_for_select([["Toutes", ""], ["< 30k€", "< 30k€"], ["30 – 40k€", "30 – 40k€"], ["40 – 50k€", "40 – 50k€"], ["50 – 60k€", "50 – 60k€"], ["60 – 75k€", "60 – 75k€"], ["75 – 90k€", "75 – 90k€"], ["90 – 110k€", "90 – 110k€"], ["> 110k€", "> 110k€"]], @salary_range), class: field_class %>
+                </div>
+              </div>
+
+              <%# Ligne 2 : langue + niveau + intitulé de poste %>
+              <div class="mt-3 grid gap-3 md:grid-cols-3 xl:grid-cols-5">
+                <div>
+                  <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Langue</label>
+                  <%= select_tag :language_code,
+                        options_for_select([["Toutes", ""]] + Candidate::LANGUAGE_NAMES.map { |code, name| ["#{Candidate::LANGUAGE_FLAGS[code]} #{name}", code] }, @language_code),
+                        class: field_class %>
+                </div>
+                <div>
+                  <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Niveau de langue</label>
+                  <%= select_tag :language_level,
+                        options_for_select([["Tous niveaux", ""], ["Bilingue", "bilingual"], ["Professionnel", "professional"], ["Notions", "partial"]], @language_level),
+                        class: field_class %>
+                </div>
+                <div class="xl:col-span-3">
+                  <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Intitulé de poste</label>
+                  <%= select_tag :job_title,
+                        options_for_select([["Tous les postes", ""]] + @job_title_options.map { |t| [t, t] }, @job_title),
+                        class: field_class,
+                        onchange: "updateCandidateSkills(this.value)" %>
+                </div>
+              </div>
+
+              <%# Ligne 3 : compétences dynamiques %>
+              <div id="candidate-skills-filter" class="<%= @selected_skills.any? || @job_title.present? ? '' : 'hidden' %> mt-3">
+                <label class="mb-2 block text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Compétences associées</label>
+                <div id="candidate-skills-checkboxes" class="flex flex-wrap gap-2">
+                  <% skills_to_show = @job_title.present? ? (@job_title_skills_map[@job_title] || []) : @selected_skills %>
+                  <% skills_to_show.each do |skill| %>
+                    <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#ead2dc] bg-white px-3 py-1.5 text-sm text-[#6b3f4f] transition has-checked:border-[#ed0e64] has-checked:bg-[#fff0f6] has-checked:text-[#ed0e64]">
+                      <input type="checkbox" name="skills[]" value="<%= skill %>" class="hidden" <%= 'checked' if @selected_skills.include?(skill) %>>
+                      <%= skill %>
+                    </label>
+                  <% end %>
+                </div>
+              </div>
+
+              <div class="mt-4 flex items-center gap-2">
+                <%= submit_tag "Appliquer les filtres", class: "rounded-xl bg-[#ed0e64] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#c40b52]" %>
+                <%= link_to "Réinitialiser", request.path, class: "rounded-xl border border-[#ead2dc] bg-white px-4 py-2 text-sm font-medium text-[#9a5a68] hover:bg-[#fff0f6] transition hover:border-[#ed0e64] hover:text-[#ed0e64]" %>
+              </div>
             <% end %>
           </div>
 
-          <div id="candidates-filtres" class="absolute inset-x-0 top-full z-30 mt-3 hidden rounded-[1.45rem] border border-base-200 bg-base-100 p-4 shadow-xl">
-            <%= form_with url: request.path, method: :get, local: true, class: "grid gap-3 md:grid-cols-2 xl:grid-cols-4", html: { onsubmit: "document.getElementById('candidates-filtres').classList.add('hidden')" } do %>
-              <div>
-                <label class="mb-1 block text-sm font-medium text-base-content/70">Recherche</label>
-                <%= text_field_tag :q, @q, placeholder: "Nom, email, source...", class: "input input-bordered w-full" %>
-              </div>
+          <script>
+            const CANDIDATE_SKILLS_MAP = <%= @job_title_skills_map.to_json.html_safe %>;
 
-              <div>
-                <label class="mb-1 block text-sm font-medium text-base-content/70">Statut</label>
-                <%= select_tag :status,
-                      options_for_select([["Tous les statuts", ""]] + Candidate.statuses.keys.map { |v| [v.humanize, v] }, @status),
-                      class: "select select-bordered w-full" %>
-              </div>
+            function updateCandidateSkills(title) {
+              const container = document.getElementById('candidate-skills-filter');
+              const box       = document.getElementById('candidate-skills-checkboxes');
+              const skills    = CANDIDATE_SKILLS_MAP[title] || [];
 
-              <div class="flex items-end gap-2 md:col-span-2 xl:col-span-2">
-                <%= submit_tag "Appliquer", class: "btn btn-primary flex-1" %>
-                <% if @q.present? || @status.present? %>
-                  <%= link_to "Réinitialiser", request.path, class: "btn btn-ghost" %>
-                <% end %>
-              </div>
-            <% end %>
-          </div>
+              if (!title || skills.length === 0) {
+                container.classList.add('hidden');
+                box.innerHTML = '';
+                return;
+              }
+
+              box.innerHTML = skills.map(skill => `
+                <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#ead2dc] bg-white px-3 py-1.5 text-sm text-[#6b3f4f] transition has-[:checked]:border-[#ed0e64] has-[:checked]:bg-[#fff0f6] has-[:checked]:text-[#ed0e64]">
+                  <input type="checkbox" name="skills[]" value="${skill}" class="hidden">
+                  ${skill}
+                </label>
+              `).join('');
+              container.classList.remove('hidden');
+            }
+          </script>
         </div>
       </div>
 
+      <%# ── Grille de cards ── %>
       <% if @candidate_rows.any? %>
-        <div class="divide-y divide-base-200/70">
+        <div class="grid grid-rows-[auto] items-stretch gap-4 p-5 md:grid-cols-2 xl:grid-cols-3">
           <% @candidate_rows.each do |row| %>
             <% candidate = row[:candidate] %>
-            <% status_badge = row[:status_badge] %>
-            <% search_badge = row[:search_status] %>
-            <article class="px-6 py-5 transition hover:bg-base-100/60">
-              <div class="grid items-center gap-4 xl:grid-cols-[auto_minmax(0,1fr)_auto]">
+            <% is_favorite = @favorite_candidate_ids.include?(candidate.id) %>
 
+            <article class="flex h-full flex-col rounded-2xl border border-[#ead2dc] bg-white p-4 transition hover:shadow-md hover:border-[#d4a0b5]">
+
+              <%# Top : avatar + nom + actions %>
+              <div class="flex items-start gap-3">
                 <div class="relative shrink-0">
-                  <%= image_tag row[:avatar_path], alt: row[:full_name], class: "h-12 w-12 rounded-full object-cover ring-2 ring-[#F7C4DA]" %>
+                  <%= image_tag row[:avatar_path], alt: row[:full_name], class: "h-14 w-14 rounded-full object-cover ring-2 ring-[#f7c4da]" %>
                   <% if row[:certified] %>
-                    <span class="absolute -bottom-1 -right-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#ED0E64] text-[10px] text-white ring-2 ring-white" title="Profil qualifié par Rivyr">
-                      <i class="fa-solid fa-certificate"></i>
+                    <span class="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#ed0e64] text-[9px] text-white ring-2 ring-white">
+                      <i class="fa-solid fa-check"></i>
                     </span>
                   <% end %>
                 </div>
 
-                <div class="min-w-0 space-y-1.5">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <h2 class="truncate text-xl font-semibold text-base-content"><%= row[:full_name] %></h2>
-                    <% if row[:seen] %>
-                      <span class="inline-flex items-center rounded-full bg-base-200/70 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-base-content/50">déjà vu</span>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <h2 class="text-base font-semibold text-[#3d1a24] truncate"><%= row[:full_name] %></h2>
+                    <% if candidate.languages&.any? %>
+                      <% candidate.languages.first(3).each do |lang| %>
+                        <% code = lang["code"] || lang[:code] %>
+                        <% level = lang["level"] || lang[:level] %>
+                        <div class="relative group">
+                          <span class="text-sm leading-none cursor-default"><%= Candidate::LANGUAGE_FLAGS[code] %></span>
+                          <div class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-lg bg-[#3d1a24] px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                            <%= Candidate::LANGUAGE_NAMES[code] %> · <%= Candidate::LANGUAGE_LEVELS[level] %>
+                            <span class="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-[#3d1a24]"></span>
+                          </div>
+                        </div>
+                      <% end %>
                     <% end %>
-                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 <%= tone_classes.fetch(status_badge[:tone]) %>"><%= status_badge[:label] %></span>
-                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 <%= tone_classes.fetch(search_badge[:tone]) %>"><%= search_badge[:label] %></span>
                   </div>
-                  <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-base-content/55">
-                    <span><i class="fa-solid fa-envelope mr-1"></i><%= candidate.email.presence || "Email non renseigné" %></span>
-                    <span class="text-base-content/20">•</span>
-                    <span><i class="fa-solid fa-phone mr-1"></i><%= candidate.phone.presence || "Téléphone non renseigné" %></span>
-                  </div>
+                  <p class="mt-0.5 text-[13px] text-[#7b4b5a] truncate"><%= row[:last_position] %><% if row[:current_company].present? %> · <span class="text-[#9a5a68]"><%= row[:current_company] %></span><% end %></p>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2 xl:justify-end">
-                  <% is_favorite = @favorite_candidate_ids.include?(candidate.id) %>
-                  <%= link_to toggle_favorite_candidate_path(candidate, return_to: request.fullpath), method: :patch, data: { turbo_method: :patch },
-                        class: "inline-flex h-10 w-10 items-center justify-center rounded-full border transition #{is_favorite ? 'border-[#f7c4da] bg-[#fff0f6] text-[#ed0e64]' : 'border-base-200 bg-base-100/75 text-base-content/40 hover:text-[#ed0e64]'}",
-                        title: is_favorite ? "Retirer des favoris" : "Ajouter aux favoris" do %>
-                    <i class="fa-<%= is_favorite ? 'solid' : 'regular' %> fa-heart"></i>
-                  <% end %>
-                  <%= link_to (request.path.start_with?("/dashboard") ? dashboard_candidate_path(candidate) : candidate_path(candidate)),
-                        class: "inline-flex h-10 w-10 items-center justify-center rounded-full border border-base-200 bg-base-100/75 text-base-content/60 transition hover:border-base-300 hover:text-base-content",
-                        title: "Voir la fiche" do %>
-                    <i class="fa-regular fa-eye"></i>
-                  <% end %>
-                </div>
-
+                <%= render "candidates/favorite_button", candidate: candidate, is_favorite: is_favorite, mission_id: @selected_mission_id %>
               </div>
+
+              <%# Badges statut + disponibilité %>
+              <div class="mt-3 flex flex-wrap gap-1.5">
+                <% sb = row[:status_badge] %>
+                <%
+                  badge_class = case candidate.status
+                  when "qualified"    then "bg-[#FDE7F1] text-[#B40C4D] ring-[#F7C4DA]"
+                  when "presented"    then "bg-sky-50 text-sky-700 ring-sky-200"
+                  when "interviewing" then "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                  when "placed"       then "bg-emerald-100 text-emerald-800 ring-emerald-300"
+                  else                     "bg-slate-100 text-slate-600 ring-slate-200"
+                  end
+                %>
+                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 <%= badge_class %>"><%= sb[:label] %></span>
+
+                <% if candidate.availability.present? %>
+                  <%
+                    avail_class = case candidate.availability
+                    when "immediate"  then "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                    when "one_month"  then "bg-amber-50 text-amber-700 ring-amber-200"
+                    else                   "bg-slate-100 text-slate-500 ring-slate-200"
+                    end
+                  %>
+                  <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 <%= avail_class %>">
+                    <i class="fa-regular fa-calendar-check mr-1 text-[9px]"></i><%= Candidate::AVAILABILITY_LABELS[candidate.availability] %>
+                  </span>
+                <% end %>
+              </div>
+
+              <%# Infos clés %>
+              <div class="mt-3 space-y-1.5 text-[12px] text-[#7b4b5a]">
+                <% if candidate.location.present? || candidate.mobility_zone.present? %>
+                  <p class="flex items-center gap-1.5">
+                    <i class="fa-solid fa-location-dot w-3.5 text-center text-[#ed0e64]"></i>
+                    <%= candidate.location.present? ? candidate.location : "" %><% if candidate.location.present? && candidate.mobility_zone.present? %><span class="text-[#c4a0b0] mx-1">·</span><% end %><% if candidate.mobility_zone.present? %><span class="text-[#9a5a68]"><%= candidate.mobility_zone %></span><% end %>
+                  </p>
+                <% end %>
+                <% if candidate.salary_range.present? %>
+                  <p class="flex items-center gap-1.5">
+                    <i class="fa-solid fa-euro-sign w-3.5 text-center text-[#ed0e64]"></i>
+                    <%= candidate.salary_range %>
+                  </p>
+                <% end %>
+                <% if candidate.contract_types&.any? %>
+                  <p class="flex items-center gap-1.5">
+                    <i class="fa-regular fa-file-lines w-3.5 text-center text-[#ed0e64]"></i>
+                    <%= candidate.contract_types.map { |ct| Candidate::CONTRACT_LABELS[ct] }.compact.join(" · ") %>
+                  </p>
+                <% end %>
+              </div>
+
+              <%# Skills %>
+              <% if row[:top_skills].any? %>
+                <div class="mt-3 flex flex-wrap gap-1">
+                  <% row[:top_skills].each do |skill| %>
+                    <span class="rounded-full border border-[#ead2dc] bg-[#fff8fb] px-2 py-0.5 text-[11px] font-medium text-[#6b3f4f]"><%= skill %></span>
+                  <% end %>
+                </div>
+              <% end %>
+
+              <%# CTA — mt-auto pour toujours coller en bas %>
+              <div class="mt-auto pt-4 flex items-center gap-2">
+                <%= link_to (request.path.start_with?("/dashboard") ? dashboard_candidate_path(candidate) : candidate_path(candidate)),
+                      class: "flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-[#f1a38b] bg-[#f4a58a] py-2 text-sm font-semibold text-white transition hover:bg-[#ee977c]" do %>
+                  Voir le profil
+                <% end %>
+              </div>
+
             </article>
           <% end %>
         </div>
       <% else %>
-        <div class="p-8 text-center text-base-content/65">
-          <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-base-200/60 text-base-content/40">
-            <i class="fa-solid fa-folder-open text-xl"></i>
+        <div class="p-12 text-center">
+          <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#fff0f6] text-[#ed0e64]">
+            <i class="fa-solid fa-users text-xl"></i>
           </div>
-          <h2 class="mt-5 text-xl font-semibold text-base-content">Aucun candidat à afficher</h2>
-          <p class="mt-2 text-sm text-base-content/55">Ajuste tes filtres ou ajoute un nouveau profil dans la CVthèque.</p>
-          <%= link_to "Créer un candidat", new_candidate_path, class: "mt-6 inline-flex items-center gap-2 rounded-full border border-[#f1a38b] bg-[#f4a58a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" %>
+          <h2 class="mt-4 text-xl font-semibold text-[#3d1a24]">Aucun candidat à afficher</h2>
+          <p class="mt-2 text-sm text-[#9a5a68]">Ajuste tes filtres ou ajoute un nouveau profil.</p>
+          <%= link_to "Créer un candidat", new_candidate_path, class: "mt-5 inline-flex items-center gap-2 rounded-2xl border border-[#f1a38b] bg-[#f4a58a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#ee977c]" %>
         </div>
       <% end %>
 
-      <div class="border-t border-base-200/70 px-6 py-4">
+      <div class="border-t border-[#ead2dc] px-5 py-4">
         <%= render "shared/pagination",
               page: @page,
               total_pages: @total_pages,
-              extra_params: { q: @q, status: @status },
+              extra_params: { q: @q, status: @status, availability: @availability, location: @location, contract_type: @contract_type, salary_range: @salary_range },
               path: ->(params) { request.path.start_with?("/dashboard") ? dashboard_candidates_path(params) : candidates_path(params) } %>
       </div>
     </div>
 
   </section>
 </div>
+
+<% content_for :modals do %>
+  <%= render "candidates/swipe_selector",
+        candidate_rows: @candidate_rows,
+        favorite_ids: @favorite_candidate_ids,
+        open_missions: @open_missions,
+        selected_mission: @selected_mission,
+        favorites_by_mission: @favorites_by_mission %>
+<% end %>
