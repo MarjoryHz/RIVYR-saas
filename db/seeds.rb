@@ -1407,8 +1407,7 @@ signature_demo_rows.zip(SIGNATURE_DEMO_STATUSES).each_with_index do |(row, signa
       ]
     end
 
-  Mission.create!(
-    reference: mission_ref,
+  upsert_record(Mission, { reference: mission_ref }, {
     region: demo_region,
     freelancer_profile: claire_profile,
     mission_type: "retained",
@@ -1432,7 +1431,7 @@ signature_demo_rows.zip(SIGNATURE_DEMO_STATUSES).each_with_index do |(row, signa
     }),
     origin_type: "freelancer",
     specialty: demo_specialty
-  )
+  })
 end
 
 demo_rows = [

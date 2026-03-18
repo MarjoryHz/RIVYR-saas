@@ -603,17 +603,23 @@ class FreelanceFinancesController < ApplicationController
     current_conversion_rate = yearly_rows.any? ? ((yearly_rows.count { |row| row[:status_key] == "signed" }.to_f / yearly_rows.count) * 100) : 0
     previous_conversion_rate = previous_year_rows.any? ? ((previous_year_rows.count { |row| row[:status_key] == "signed" }.to_f / previous_year_rows.count) * 100) : 0
     monthly_sent_series = build_signature_monthly_sent_series(rows, current_year)
+    average_contracts_per_month = Date.current.month.positive? ? (yearly_rows.count.to_f / Date.current.month) : 0
+    average_signature_delay_days = average_signature_delay_hours / 24.0
 
     {
       conversion_rate: current_conversion_rate.round,
       conversion_trend: signature_trend_data(current_conversion_rate, previous_conversion_rate, positive_when_up: true, unit: "pts"),
+      conversion_tone: signature_conversion_tone(current_conversion_rate),
       yearly_sent_count: yearly_rows.count,
       yearly_sent_trend: signature_trend_data(yearly_rows.count, previous_year_rows.count, positive_when_up: true),
+      yearly_sent_tone: signature_yearly_sent_tone(average_contracts_per_month),
       monthly_sent_series: monthly_sent_series,
-      average_signature_delay: average_signature_delay_hours.positive? ? "#{average_signature_delay_hours.round}h" : "-",
+      average_signature_delay: average_signature_delay_hours.positive? ? "#{average_signature_delay_days.round(1)} j" : "-",
       average_signature_delay_trend: signature_trend_data(average_signature_delay_hours, previous_average_signature_delay_hours, positive_when_up: false, unit: "h"),
+      average_signature_delay_tone: signature_delay_tone(average_signature_delay_days),
       changed_count: rows.count { |row| row[:changed_recently] },
-      recent_count: rows.count { |row| row[:occurred_at].present? && row[:occurred_at] >= 24.hours.ago }
+      recent_count: rows.count { |row| row[:occurred_at].present? && row[:occurred_at] >= 24.hours.ago },
+      task_tone: signature_task_tone(rows.select { |row| row[:changed_recently] })
     }
   end
 
@@ -657,6 +663,36 @@ class FreelanceFinancesController < ApplicationController
       direction: direction,
       delta_label: formatted_delta
     }
+  end
+
+  def signature_conversion_tone(rate)
+    return :rose if rate < 45
+    return :amber if rate <= 75
+
+    :green
+  end
+
+  def signature_yearly_sent_tone(average_per_month)
+    return :rose if average_per_month < 1
+    return :amber if average_per_month <= 2
+
+    :green
+  end
+
+  def signature_delay_tone(days)
+    return :green if days.positive? && days < 3
+    return :amber if days <= 5
+
+    :rose
+  end
+
+  def signature_task_tone(changed_rows)
+    latest_event = changed_rows.filter_map { |row| row[:occurred_at] }.max
+    return :slate if latest_event.blank?
+    return :green if latest_event.to_date == Date.current
+    return :amber if latest_event.to_date == Date.yesterday
+
+    :rose
   end
 
   def signature_status_catalog
