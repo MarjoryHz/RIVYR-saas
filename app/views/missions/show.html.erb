@@ -15,8 +15,8 @@
 <% masked_sector = "********" %>
 <% freelance_owns_assigned_mission = current_user&.role_freelance? && @mission.freelancer_profile_id == current_user.freelancer_profile&.id %>
 <% freelance_created_mission = freelance_owns_assigned_mission && @mission.origin_type.to_s == "freelancer" %>
-<% placed_candidate = @mission.placement&.candidate %>
-<% mission_placed = @mission.status_closed? && (placed_candidate.present? || @mission.closure_reason.to_s.casecmp("Mission gagnee").zero?) %>
+<% mission_placed = mission_placed?(@mission) %>
+<% placed_candidate = mission_placed ? @mission.placement&.candidate : nil %>
 <% placed_candidate_avatar_index = placed_candidate.present? ? ((placed_candidate.id || placed_candidate.email.to_s.sum) % 10 + 1) : nil %>
 <% closure_reason_options = [
   "Mission gagnee",
@@ -162,45 +162,104 @@
       current_application&.status_accepted?
     )
 
-  contract_transmitted_on = (@mission.opened_at || Date.current) + 31.days
+  signature_sent_on = begin
+    Date.parse(search_meta["signature_sent_at"].to_s)
+  rescue ArgumentError, TypeError
+    nil
+  end
+  contract_transmitted_on = signature_sent_on || (@mission.opened_at || Date.current) + 31.days
+  signature_followup = search_meta["signature_followup"].presence
+  signature_note = search_meta["signature_note"].presence
   contract_signature_state =
+    search_meta["signature_status"].presence ||
     if @mission.contract_signed?
       "signed"
     elsif @mission.status_in_progress?
-      "in_review"
+      "client_changes_requested"
     else
-      "in_progress"
+      "client_signing"
     end
 
   contract_status_config = {
-    "in_progress" => {
-      label: "en cours de signature",
+    "transmitted" => {
+      label: "Transmis",
       classes: "border-[#f2c46f] bg-[#fff4d9] text-[#8a5a00]"
     },
+    "client_signing" => {
+      label: "En cours de signature client",
+      classes: "border-[#e5dbe0] bg-[#faf5f7] text-[#7a5a67]"
+    },
+    "client_changes_requested" => {
+      label: "Modification client demandée",
+      classes: "border-[#d8b3c2] bg-[#fff1f6] text-[#a33d68]"
+    },
     "signed" => {
-      label: "signe",
+      label: "Signé",
       classes: "border-[#97c6a3] bg-[#edf8f0] text-[#2f6b3c]"
     },
-    "in_review" => {
-      label: "en modification",
-      classes: "border-[#d8b3c2] bg-[#fff1f6] text-[#a33d68]"
+    "refused" => {
+      label: "Refusé",
+      classes: "border-[#f1cfda] bg-[#fff1f6] text-[#a33d68]"
+    },
+    "expired" => {
+      label: "Délais dépassé",
+      classes: "border-[#e5dbe0] bg-[#faf5f7] text-[#7a5a67]"
     }
   }
-  contract_status = contract_status_config.fetch(contract_signature_state, contract_status_config["in_progress"])
-  signature_steps = [
-    { label: "Cree", done: true },
-    { label: "Transmis le #{contract_transmitted_on.strftime("%d/%m")}", done: true },
-    { label: "En cours signature client", done: @mission.contract_signed? || @mission.status_in_progress? },
-    { label: "Signe", done: @mission.contract_signed? }
-  ]
-  signature_current_index =
-    if @mission.contract_signed?
-      3
-    elsif @mission.status_in_progress?
-      2
+  contract_status = contract_status_config.fetch(contract_signature_state, contract_status_config["client_signing"])
+  signature_steps =
+    case contract_signature_state
+    when "transmitted"
+      [
+        { label: "Cree", done: true },
+        { label: "Transmis le #{contract_transmitted_on.strftime("%d/%m")}", done: true },
+        { label: "En cours signature client", done: false },
+        { label: "Signe", done: false }
+      ]
+    when "client_signing"
+      [
+        { label: "Cree", done: true },
+        { label: "Transmis le #{contract_transmitted_on.strftime("%d/%m")}", done: true },
+        { label: "En cours signature client", done: true },
+        { label: "Signe", done: false }
+      ]
+    when "client_changes_requested"
+      [
+        { label: "Cree", done: true },
+        { label: "Transmis le #{contract_transmitted_on.strftime("%d/%m")}", done: true },
+        { label: "En cours signature client", done: true },
+        { label: "Modification client demandée", done: true }
+      ]
+    when "signed"
+      [
+        { label: "Cree", done: true },
+        { label: "Transmis le #{contract_transmitted_on.strftime("%d/%m")}", done: true },
+        { label: "En cours signature client", done: true },
+        { label: "Signe", done: true }
+      ]
+    when "refused"
+      [
+        { label: "Cree", done: true },
+        { label: "Transmis le #{contract_transmitted_on.strftime("%d/%m")}", done: true },
+        { label: "En cours signature client", done: true },
+        { label: "Refusé", done: true }
+      ]
+    when "expired"
+      [
+        { label: "Cree", done: true },
+        { label: "Transmis le #{contract_transmitted_on.strftime("%d/%m")}", done: true },
+        { label: "En cours signature client", done: false },
+        { label: "Délais dépassé", done: true }
+      ]
     else
-      1
+      [
+        { label: "Cree", done: true },
+        { label: "Transmis le #{contract_transmitted_on.strftime("%d/%m")}", done: true },
+        { label: "En cours signature client", done: false },
+        { label: "Signe", done: false }
+      ]
     end
+  signature_current_index = signature_steps.rindex { |step| step[:done] } || 0
 
   months_fr = %w[Janvier Fevrier Mars Avril Mai Juin Juillet Aout Septembre Octobre Novembre Decembre]
   format_fr_date = lambda { |date| "#{date.day} #{months_fr[date.month - 1]} #{date.year}" }
@@ -798,6 +857,18 @@
         <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Statut</p>
         <p class="mt-1"><span class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold <%= contract_status[:classes] %>"><%= contract_status[:label] %></span></p>
       </div>
+      <% if signature_followup.present? %>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Complément</p>
+          <p class="mt-1 text-sm text-[#5f3647]"><%= signature_followup %></p>
+        </div>
+      <% end %>
+      <% if signature_note.present? %>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Note</p>
+          <p class="mt-1 text-sm text-[#5f3647]"><%= signature_note %></p>
+        </div>
+      <% end %>
       <div>
         <p class="text-xs font-semibold uppercase tracking-wide text-[#9a5a68]">Etapes de signature</p>
         <ul class="mt-2 space-y-2">
