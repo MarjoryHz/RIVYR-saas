@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_17_220000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_18_090941) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -122,10 +122,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_220000) do
   create_table "favorite_candidates", force: :cascade do |t|
     t.bigint "candidate_id", null: false
     t.datetime "created_at", null: false
+    t.bigint "mission_id"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["candidate_id"], name: "index_favorite_candidates_on_candidate_id"
-    t.index ["user_id", "candidate_id"], name: "index_favorite_candidates_on_user_id_and_candidate_id", unique: true
+    t.index ["mission_id"], name: "index_favorite_candidates_on_mission_id"
+    t.index ["user_id", "candidate_id", "mission_id"], name: "index_favorite_candidates_uniqueness", unique: true
     t.index ["user_id"], name: "index_favorite_candidates_on_user_id"
   end
 
@@ -386,6 +388,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_220000) do
   add_foreign_key "contributions", "candidates"
   add_foreign_key "educations", "candidates"
   add_foreign_key "favorite_candidates", "candidates"
+  add_foreign_key "favorite_candidates", "missions", on_delete: :cascade
   add_foreign_key "favorite_candidates", "users"
   add_foreign_key "favorite_missions", "missions"
   add_foreign_key "favorite_missions", "users"

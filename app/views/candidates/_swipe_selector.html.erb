@@ -1,0 +1,764 @@
+<%
+  is_dashboard = request.path.start_with?("/dashboard")
+
+  swipe_missions_data = (open_missions || []).map do |m|
+    client_name = m.client_contact&.client&.brand_name.presence ||
+                  m.client_contact&.client&.legal_name.presence || ""
+    label = [m.title, client_name.presence, m.location.presence].compact.join(" | ")
+    { id: m.id, label: label, title: m.title, client: client_name, location: m.location }
+  end
+
+  swipe_candidates = candidate_rows.map do |row|
+    c = row[:candidate]
+    {
+      id:                c.id,
+      full_name:         row[:full_name],
+      initials:          row[:initials],
+      avatar_path:       asset_path(row[:avatar_path]),
+      certified:         row[:certified],
+      last_position:     row[:last_position],
+      current_company:   row[:current_company],
+      top_skills:        row[:top_skills],
+      status_badge:      row[:status_badge],
+      location:          c.location,
+      mobility_zone:     c.mobility_zone,
+      salary_range:      c.salary_range,
+      contract_types:    (c.contract_types || []).map { |ct| Candidate::CONTRACT_LABELS[ct] }.compact,
+      availability:      Candidate::AVAILABILITY_LABELS[c.availability],
+      availability_raw:  c.availability,
+      languages:         (c.languages || []).map { |l|
+        {
+          flag:  Candidate::LANGUAGE_FLAGS[l["code"] || l[:code]],
+          name:  Candidate::LANGUAGE_NAMES[l["code"] || l[:code]],
+          level: Candidate::LANGUAGE_LEVELS[l["level"] || l[:level]]
+        }
+      },
+      notes:             c.notes,
+      linkedin_url:      c.linkedin_url,
+      email:             c.email,
+      phone:             c.phone,
+      is_favorite:       favorite_ids.include?(c.id),
+      toggle_path:       toggle_favorite_candidate_path(c),
+      profile_path:      is_dashboard ? dashboard_candidate_path(c) : candidate_path(c),
+      work_experiences:  c.work_experiences.map { |we|
+        {
+          title:      we.title,
+          company:    we.company,
+          date_range: we.date_range,
+          skills:     (we.skills || []).first(5)
+        }
+      },
+      educations: c.educations.map { |e|
+        {
+          category:    e.category,
+          title:       e.title,
+          institution: e.institution,
+          date_range:  e.date_range
+        }
+      }
+    }
+  end
+%>
+
+<%# ── SwipeSelector Modal ── %>
+<%#
+  ARCHITECTURE NOTE:
+  - Le backdrop est absolute, le panel est relative z-10 → le panel est au-dessus
+  - Aucun pointer-events-none sur les conteneurs → tout est cliquable naturellement
+  - Le backdrop onclick="close()" ne se déclenche QUE si le clic traverse jusqu'au backdrop
+    (ce qui n'arrive pas si on clique sur le panel, grâce à la propagation normale)
+  - Les animations utilisent un flag JS `animating` au lieu de pointer-events
+%>
+<div id="swipe-modal"
+     onclick="SwipeSelector.close()"
+     style="display:none; position:fixed; inset:0; z-index:9000; padding:1rem;
+            align-items:center; justify-content:center;">
+
+  <%# Backdrop — visuel uniquement, ne capte pas les clics %>
+  <div style="position:absolute; inset:0; background:rgba(0,0,0,0.72); backdrop-filter:blur(4px); pointer-events:none;"></div>
+
+  <%# Panel — stopPropagation pour ne pas fermer au clic à l'intérieur %>
+  <div onclick="event.stopPropagation()"
+       style="position:relative; z-index:1; width:100%; max-width:920px; display:flex; flex-direction:column; gap:12px; max-height:calc(100vh - 2rem);">
+
+    <%# ── Barre haute : progression + fermer ── %>
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:0 4px;">
+      <span id="ss-progress" style="color:rgba(255,255,255,0.7); font-size:0.875rem; font-weight:500;"></span>
+      <button onclick="SwipeSelector.close()"
+              style="color:rgba(255,255,255,0.7); background:none; border:none; cursor:pointer; padding:6px; font-size:1.1rem; line-height:1;"
+              onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255,255,255,0.7)'">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <%# ── Sélecteur de mission — TOUJOURS interactif, en dehors de la card ── %>
+    <div style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.25); border-radius:12px; padding:8px 12px;">
+      <i class="fa-solid fa-briefcase" style="color:rgba(255,255,255,0.55); font-size:0.75rem; flex-shrink:0;"></i>
+      <select id="ss-mission-select"
+              onchange="SwipeSelector.setMission(this.value)"
+              style="flex:1; background:transparent; border:none; outline:none; color:white; font-size:0.875rem; cursor:pointer; min-width:0;">
+        <option value="" style="background:#3d1a24; color:white;">— Favori global (sans mission) —</option>
+        <% (open_missions || []).each do |m| %>
+          <% client_name = m.client_contact&.client&.brand_name.presence || m.client_contact&.client&.legal_name.presence %>
+          <option value="<%= m.id %>"
+                  style="background:#3d1a24; color:white;"
+                  <%= selected_mission&.id == m.id ? 'selected' : '' %>>
+            <%= [m.title, client_name.presence, m.location.presence].compact.join(" | ") %>
+          </option>
+        <% end %>
+      </select>
+    </div>
+
+    <%# ── Card zone — position relative pour les overlays LIKE/PASSER ── %>
+    <div id="ss-card-wrap" style="position:relative; flex:1; min-height:0;">
+
+      <%# LIKE overlay %>
+      <div id="ss-like"
+           style="pointer-events:none; position:absolute; top:24px; left:20px; z-index:10;
+                  border:4px solid #34d399; color:#34d399; border-radius:10px;
+                  padding:4px 14px; font-size:1.4rem; font-weight:900; letter-spacing:0.1em;
+                  transform:rotate(-20deg); opacity:0; transition:opacity 0.1s;">
+        LIKE
+      </div>
+      <%# PASSER overlay %>
+      <div id="ss-nope"
+           style="pointer-events:none; position:absolute; top:24px; right:20px; z-index:10;
+                  border:4px solid #f87171; color:#f87171; border-radius:10px;
+                  padding:4px 14px; font-size:1.4rem; font-weight:900; letter-spacing:0.1em;
+                  transform:rotate(20deg); opacity:0; transition:opacity 0.1s;">
+        PASSER
+      </div>
+
+      <%# La card elle-même %>
+      <div id="ss-card"
+           style="background:#fff8fb; border-radius:24px; border:1px solid #ead2dc;
+                  box-shadow:0 20px 60px rgba(0,0,0,0.25); cursor:grab; user-select:none;
+                  transform-origin:center bottom; overflow:hidden;">
+
+        <%# Contenu scrollable %>
+        <div id="ss-content" style="overflow-y:auto; max-height:72vh;">
+
+          <%# Header coloré %>
+          <div style="background:linear-gradient(135deg,#fce4ef,#fff0f6); padding:30px 32px 20px;">
+            <div style="display:flex; align-items:flex-start; gap:22px;">
+              <%# Avatar %>
+              <div style="position:relative; flex-shrink:0;">
+                <img id="ss-avatar" src="" alt=""
+                     style="width:116px; height:116px; border-radius:50%; object-fit:cover;
+                            border:4px solid white; box-shadow:0 4px 16px rgba(0,0,0,0.18);">
+                <span id="ss-certified"
+                      style="display:none; position:absolute; bottom:-2px; right:-2px;
+                             width:20px; height:20px; border-radius:50%; background:#ed0e64;
+                             border:2px solid white; align-items:center; justify-content:center;
+                             font-size:9px; color:white;">
+                  <i class="fa-solid fa-check"></i>
+                </span>
+              </div>
+              <%# Identité %>
+              <div style="flex:1; min-width:0; padding-top:4px;">
+                <h2 id="ss-name" style="font-size:1.65rem; font-weight:700; color:#3d1a24; margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></h2>
+                <p id="ss-position" style="margin:5px 0 0; font-size:1rem; color:#7b4b5a;"></p>
+                <div id="ss-languages" style="margin-top:8px; display:flex; flex-wrap:wrap; gap:5px;"></div>
+              </div>
+              <%# Bouton favori + message %>
+              <div style="flex-shrink:0; display:flex; align-items:center; gap:8px;">
+                <span id="ss-fav-badge" style="display:none; font-size:11px; color:#c40b52; white-space:nowrap;"></span>
+                <button id="ss-fav-btn"
+                        onclick="SwipeSelector.toggleFavorite()"
+                        style="width:36px; height:36px; border-radius:50%;
+                               border:1px solid #ead2dc; background:white; cursor:pointer;
+                               display:flex; align-items:center; justify-content:center;
+                               color:#c4a0b0; transition:color 0.15s, background 0.15s, border-color 0.15s;">
+                  <i id="ss-fav-icon" class="fa-regular fa-heart" style="font-size:0.85rem;"></i>
+                </button>
+              </div>
+            </div>
+
+            <%# Badges statut / dispo %>
+            <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:5px;">
+              <span id="ss-status-badge"
+                    style="display:inline-flex; align-items:center; border-radius:999px;
+                           padding:2px 10px; font-size:11px; font-weight:600;"></span>
+              <span id="ss-avail-badge"
+                    style="display:none; align-items:center; border-radius:999px;
+                           padding:2px 10px; font-size:11px; font-weight:600;">
+                <i class="fa-regular fa-calendar-check" style="margin-right:4px; font-size:9px;"></i>
+                <span id="ss-avail-label"></span>
+              </span>
+            </div>
+          </div>
+
+          <%# Corps de la card — 2 colonnes sur large écran %>
+          <div style="padding:22px 32px 28px; display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start;">
+
+            <%# Colonne gauche : infos clés + expériences %>
+            <div style="display:flex; flex-direction:column; gap:18px;">
+
+              <%# Infos clés %>
+              <div id="ss-infos" style="display:flex; flex-direction:column; gap:8px; font-size:13.5px; color:#7b4b5a;"></div>
+
+              <%# Expériences %>
+              <div id="ss-exp-section" style="display:none;">
+                <h3 style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:#9a5a68; margin:0 0 10px;">Expériences</h3>
+                <div id="ss-experiences" style="display:flex; flex-direction:column; gap:10px;"></div>
+              </div>
+
+            </div>
+
+            <%# Colonne droite : compétences + notes + lien %>
+            <div style="display:flex; flex-direction:column; gap:18px;">
+
+              <%# Formation & Certifications %>
+              <div id="ss-edu-section" style="display:none;">
+                <h3 style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:#9a5a68; margin:0 0 10px;">Formation & Certifications</h3>
+                <div id="ss-educations" style="display:flex; flex-direction:column; gap:8px;"></div>
+              </div>
+
+              <%# Notes %>
+              <div id="ss-notes-section" style="display:none;">
+                <h3 style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:#9a5a68; margin:0 0 10px;">Notes</h3>
+                <p id="ss-notes"
+                   style="font-size:13.5px; color:#4c1f2a; line-height:1.6; background:#fff0f6; border-radius:10px; padding:12px 14px; margin:0;"></p>
+              </div>
+
+              <%# Lien profil %>
+              <a id="ss-profile-link" href="#" target="_blank"
+                 style="display:flex; align-items:center; justify-content:center; gap:7px;
+                        border-radius:10px; border:1px solid #f1a38b; background:#f4a58a;
+                        padding:10px; font-size:0.9rem; font-weight:600; color:white;
+                        text-decoration:none; transition:background 0.15s; margin-top:auto;"
+                 onmouseover="this.style.background='#ee977c'" onmouseout="this.style.background='#f4a58a'">
+                <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:12px;"></i>
+                Voir le profil complet
+              </a>
+
+            </div>
+
+          </div>
+        </div><%# /ss-content %>
+      </div><%# /ss-card %>
+    </div><%# /ss-card-wrap %>
+
+    <%# ── Boutons d'action ── %>
+    <div style="display:flex; align-items:center; justify-content:center; gap:18px;">
+      <button onclick="SwipeSelector.go(-1)"
+              style="width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.2);
+                     border:none; color:white; cursor:pointer; font-size:0.85rem;"
+              onmouseover="this.style.background='rgba(255,255,255,0.3)'"
+              onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+
+      <button onclick="SwipeSelector.swipeOut('left')"
+              title="Passer"
+              style="width:60px; height:60px; border-radius:50%; background:white;
+                     border:none; color:#f87171; cursor:pointer; font-size:1.5rem;
+                     box-shadow:0 4px 16px rgba(0,0,0,0.18); transition:transform 0.1s;"
+              onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <button onclick="SwipeSelector.swipeOut('right')"
+              title="Ajouter aux favoris"
+              style="width:60px; height:60px; border-radius:50%; background:white;
+                     border:none; color:#ed0e64; cursor:pointer; font-size:1.5rem;
+                     box-shadow:0 4px 16px rgba(0,0,0,0.18); transition:transform 0.1s;">
+        <i class="fa-solid fa-heart"></i>
+      </button>
+
+      <button onclick="SwipeSelector.go(1)"
+              style="width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.2);
+                     border:none; color:white; cursor:pointer; font-size:0.85rem;"
+              onmouseover="this.style.background='rgba(255,255,255,0.3)'"
+              onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <%# ── Indicateurs de points ── %>
+    <div id="ss-dots" style="display:flex; justify-content:center; gap:5px;"></div>
+
+  </div><%# /panel %>
+</div><%# /swipe-modal %>
+
+<script>
+(function () {
+  'use strict';
+
+  const CANDIDATES         = <%= swipe_candidates.to_json.html_safe %>;
+  const MISSIONS           = <%= swipe_missions_data.to_json.html_safe %>;
+  const CSRF               = document.querySelector('meta[name="csrf-token"]')?.content;
+  // Map pré-chargée : { missionId|"global" → Set<candidateId> }
+  const FAV_BY_MISSION_RAW = <%= (favorites_by_mission || {}).to_json.html_safe %>;
+  const favByMission = {};
+  Object.entries(FAV_BY_MISSION_RAW).forEach(([k, ids]) => {
+    favByMission[k === 'null' || k === '' ? 'global' : parseInt(k, 10)] = new Set(ids);
+  });
+
+  let idx         = 0;          // index courant
+  let missionId   = <%= selected_mission&.id&.to_json || 'null' %>;
+  let favorites   = {};         // { candidateId → bool }
+  let animating   = false;      // bloque les swipes pendant une animation
+  let drag        = { on: false, startX: 0, startY: 0, dx: 0 };
+
+  // Init état favoris
+  CANDIDATES.forEach(c => { favorites[c.id] = c.is_favorite; });
+
+  // ── Helpers DOM ────────────────────────────────────────────
+  const $  = id => document.getElementById(id);
+  const el = (id, prop, val) => { const e = $(id); if (e) e[prop] = val; };
+
+  // ── API publique ────────────────────────────────────────────
+  window.SwipeSelector = {
+
+    open() {
+      if (!CANDIDATES.length) {
+        alert('Aucun candidat à afficher avec les filtres actuels.');
+        return;
+      }
+      idx = 0;
+      animating = false;
+      drag.on = false;
+      const modal = $('swipe-modal');
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      this._render();
+      this._bindDrag();
+    },
+
+    close() {
+      $('swipe-modal').style.display = 'none';
+      document.body.style.overflow = '';
+    },
+
+    setMission(value) {
+      missionId = value ? parseInt(value, 10) : null;
+      // Charger les favoris depuis la map pré-chargée pour cette mission
+      const key = missionId || 'global';
+      const missionFavSet = favByMission[key] || new Set();
+      CANDIDATES.forEach(c => { favorites[c.id] = missionFavSet.has(c.id); });
+      this._updateFavBtn(CANDIDATES[idx]?.id);
+    },
+
+    toggleFavorite() {
+      const c = CANDIDATES[idx];
+      if (!c) return;
+      const url = new URL(c.toggle_path, location.origin);
+      if (missionId) url.searchParams.set('mission_id', missionId);
+      fetch(url.toString(), {
+        method: 'PATCH',
+        headers: { 'X-CSRF-Token': CSRF, 'Accept': 'application/json' }
+      }).then(() => {
+        const nowFav = !favorites[c.id];
+        favorites[c.id] = nowFav;
+        // Mettre à jour le cache local
+        const key = missionId || 'global';
+        if (!favByMission[key]) favByMission[key] = new Set();
+        if (nowFav) favByMission[key].add(c.id);
+        else favByMission[key].delete(c.id);
+        this._updateFavBtn(c.id);
+      }).catch(console.error);
+    },
+
+    go(delta) {
+      if (animating) return;
+      const next = idx + delta;
+      if (next < 0 || next >= CANDIDATES.length) return;
+      animating = true;
+      const card = $('ss-card');
+      const dir  = delta > 0 ? -1 : 1;
+      card.style.transition = 'transform 0.15s ease, opacity 0.15s';
+      card.style.opacity    = '0';
+      card.style.transform  = `translateX(${dir * 35}px)`;
+      setTimeout(() => {
+        idx = next;
+        card.style.transition = 'none';
+        card.style.opacity    = '0';
+        card.style.transform  = `translateX(${-dir * 35}px)`;
+        this._render();
+        requestAnimationFrame(() => {
+          card.style.transition = 'transform 0.15s ease, opacity 0.15s';
+          card.style.opacity    = '1';
+          card.style.transform  = 'translateX(0) rotate(0deg)';
+          setTimeout(() => { animating = false; }, 160);
+        });
+      }, 160);
+    },
+
+    async swipeOut(direction) {
+      if (animating) return;
+      animating = true;
+      if (direction === 'right') {
+        const c = CANDIDATES[idx];
+        if (c && !favorites[c.id]) await this._doFavorite(c);
+      }
+      const card = $('ss-card');
+      const dx   = direction === 'right' ? 110 : -110;
+      const rot  = direction === 'right' ? 18 : -18;
+      card.style.transition = 'transform 0.28s cubic-bezier(.4,0,.2,1), opacity 0.28s';
+      card.style.transform  = `translateX(${dx}%) rotate(${rot}deg)`;
+      card.style.opacity    = '0';
+      setTimeout(() => {
+        card.style.transition = 'none';
+        card.style.transform  = 'translateX(0) rotate(0deg)';
+        card.style.opacity    = '1';
+        if (idx < CANDIDATES.length - 1) {
+          idx++;
+          this._render();
+        } else {
+          this._showEnd();
+        }
+        animating = false;
+      }, 300);
+    },
+
+    // ── Privé ──────────────────────────────────────────────────
+
+    _render() {
+      const c = CANDIDATES[idx];
+      if (!c) return;
+
+      // Scroll en haut
+      const content = $('ss-content');
+      if (content) content.scrollTop = 0;
+
+      // Progress
+      el('ss-progress', 'textContent', `${idx + 1} / ${CANDIDATES.length}`);
+
+      // Dots
+      this._renderDots();
+
+      // Reset overlays
+      el('ss-like', 'style', `pointer-events:none; position:absolute; top:24px; left:20px; z-index:10;
+        border:4px solid #34d399; color:#34d399; border-radius:10px; padding:4px 14px;
+        font-size:1.4rem; font-weight:900; letter-spacing:0.1em;
+        transform:rotate(-20deg); opacity:0; transition:opacity 0.1s;`);
+      el('ss-nope', 'style', `pointer-events:none; position:absolute; top:24px; right:20px; z-index:10;
+        border:4px solid #f87171; color:#f87171; border-radius:10px; padding:4px 14px;
+        font-size:1.4rem; font-weight:900; letter-spacing:0.1em;
+        transform:rotate(20deg); opacity:0; transition:opacity 0.1s;`);
+
+      // Avatar
+      const avatar = $('ss-avatar');
+      if (avatar) { avatar.src = c.avatar_path; avatar.alt = c.full_name; }
+
+      // Certifié
+      const cert = $('ss-certified');
+      if (cert) cert.style.display = c.certified ? 'flex' : 'none';
+
+      // Nom / poste
+      el('ss-name', 'textContent', c.full_name);
+      el('ss-position', 'textContent',
+        c.last_position + (c.current_company ? ' · ' + c.current_company : ''));
+
+      // Langues
+      el('ss-languages', 'innerHTML', (c.languages || []).map(l =>
+        `<span style="display:inline-flex;align-items:center;gap:3px;border-radius:999px;
+                      background:white;border:1px solid #ead2dc;padding:1px 8px;font-size:11px;color:#6b3f4f;">
+           ${l.flag || ''} ${l.name || ''}${l.level ? ` · ${l.level}` : ''}
+         </span>`
+      ).join(''));
+
+      // Badge statut
+      const toneMap = {
+        pink:    'background:#FDE7F1;color:#B40C4D;outline:1px solid #F7C4DA;',
+        sky:     'background:#f0f9ff;color:#0369a1;outline:1px solid #bae6fd;',
+        emerald: 'background:#ecfdf5;color:#065f46;outline:1px solid #6ee7b7;',
+        slate:   'background:#f1f5f9;color:#475569;outline:1px solid #cbd5e1;'
+      };
+      const sb    = c.status_badge || {};
+      const sbEl  = $('ss-status-badge');
+      if (sbEl) {
+        sbEl.setAttribute('style',
+          `display:inline-flex;align-items:center;border-radius:999px;padding:2px 10px;font-size:11px;font-weight:600;${toneMap[sb.tone] || toneMap.slate}`);
+        sbEl.textContent = sb.label || '';
+      }
+
+      // Badge disponibilité
+      const availEl = $('ss-avail-badge');
+      if (availEl) {
+        if (c.availability) {
+          const availTone = c.availability_raw === 'immediate'
+            ? 'background:#ecfdf5;color:#065f46;outline:1px solid #6ee7b7;'
+            : c.availability_raw === 'one_month'
+              ? 'background:#fffbeb;color:#92400e;outline:1px solid #fcd34d;'
+              : 'background:#f1f5f9;color:#475569;outline:1px solid #cbd5e1;';
+          availEl.setAttribute('style',
+            `display:inline-flex;align-items:center;border-radius:999px;padding:2px 10px;font-size:11px;font-weight:600;${availTone}`);
+          el('ss-avail-label', 'textContent', c.availability);
+        } else {
+          availEl.style.display = 'none';
+        }
+      }
+
+      // Infos clés
+      const infos = [];
+      if (c.location || c.mobility_zone) infos.push(
+        `<div style="display:flex;align-items:flex-start;gap:5px;">
+           <i class="fa-solid fa-location-dot" style="color:#ed0e64;width:14px;text-align:center;margin-top:1px;flex-shrink:0;"></i>
+           <span>${[c.location, c.mobility_zone].filter(Boolean).join(' · ')}</span>
+         </div>`);
+      if (c.salary_range) infos.push(
+        `<div style="display:flex;align-items:center;gap:5px;">
+           <i class="fa-solid fa-euro-sign" style="color:#ed0e64;width:14px;text-align:center;flex-shrink:0;"></i>
+           <span>${c.salary_range}</span>
+         </div>`);
+      if (c.contract_types?.length) infos.push(
+        `<div style="display:flex;align-items:center;gap:5px;">
+           <i class="fa-regular fa-file-lines" style="color:#ed0e64;width:14px;text-align:center;flex-shrink:0;"></i>
+           <span>${c.contract_types.join(' · ')}</span>
+         </div>`);
+      if (c.email) infos.push(
+        `<div style="display:flex;align-items:center;gap:5px;overflow:hidden;">
+           <i class="fa-regular fa-envelope" style="color:#ed0e64;width:14px;text-align:center;flex-shrink:0;"></i>
+           <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.email}</span>
+         </div>`);
+      if (c.phone) infos.push(
+        `<div style="display:flex;align-items:center;gap:5px;">
+           <i class="fa-solid fa-phone" style="color:#ed0e64;width:14px;text-align:center;flex-shrink:0;"></i>
+           <span>${c.phone}</span>
+         </div>`);
+      if (c.linkedin_url) infos.push(
+        `<div style="display:flex;align-items:center;gap:5px;">
+           <i class="fa-brands fa-linkedin" style="color:#ed0e64;width:14px;text-align:center;flex-shrink:0;"></i>
+           <a href="${c.linkedin_url}" target="_blank" style="color:#ed0e64;text-decoration:underline;">LinkedIn</a>
+         </div>`);
+      el('ss-infos', 'innerHTML', infos.join(''));
+
+      // Expériences
+      const expSection = $('ss-exp-section');
+      if (expSection) {
+        if (c.work_experiences?.length) {
+          expSection.style.display = 'block';
+          el('ss-experiences', 'innerHTML', c.work_experiences.slice(0, 4).map(we => `
+            <div style="display:flex;gap:10px;">
+              <div style="display:flex;flex-direction:column;align-items:center;padding-top:3px;">
+                <div style="width:7px;height:7px;border-radius:50%;background:#ed0e64;flex-shrink:0;"></div>
+                <div style="flex:1;width:1px;background:#ead2dc;margin-top:3px;"></div>
+              </div>
+              <div style="padding-bottom:10px;min-width:0;">
+                <p style="font-size:13px;font-weight:600;color:#3d1a24;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${we.title||''}</p>
+                ${we.company ? `<p style="font-size:12px;color:#7b4b5a;margin:1px 0 0;">${we.company}</p>` : ''}
+                ${we.date_range ? `<p style="font-size:11px;color:#9a5a68;margin:2px 0 0;">${we.date_range}</p>` : ''}
+                ${we.skills?.length ? `<div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:3px;">
+                  ${we.skills.map(s=>`<span style="border-radius:999px;border:1px solid #ead2dc;background:#fff8fb;padding:1px 8px;font-size:10px;color:#6b3f4f;">${s}</span>`).join('')}
+                </div>` : ''}
+              </div>
+            </div>`).join(''));
+        } else {
+          expSection.style.display = 'none';
+        }
+      }
+
+      // Formation & Certifications
+      const eduSection = $('ss-edu-section');
+      if (eduSection) {
+        if (c.educations?.length) {
+          eduSection.style.display = 'block';
+          const categoryIcon = { diploma: 'fa-graduation-cap', certification: 'fa-certificate', formation: 'fa-book-open' };
+          const categoryLabel = { diploma: 'Diplôme', certification: 'Certification', formation: 'Formation' };
+          const categoryColor = { diploma: '#6366f1', certification: '#ed0e64', formation: '#0ea5e9' };
+          el('ss-educations', 'innerHTML', c.educations.map(e => {
+            const icon  = categoryIcon[e.category]  || 'fa-graduation-cap';
+            const label = categoryLabel[e.category] || e.category;
+            const color = categoryColor[e.category] || '#9a5a68';
+            return `<div style="display:flex;gap:10px;align-items:flex-start;">
+              <div style="flex-shrink:0;width:28px;height:28px;border-radius:50%;
+                          background:${color}18;display:flex;align-items:center;
+                          justify-content:center;margin-top:1px;">
+                <i class="fa-solid ${icon}" style="font-size:11px;color:${color};"></i>
+              </div>
+              <div style="min-width:0;">
+                <p style="font-size:13px;font-weight:600;color:#3d1a24;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.title}</p>
+                ${e.institution ? `<p style="font-size:12px;color:#7b4b5a;margin:1px 0 0;">${e.institution}</p>` : ''}
+                <div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap;">
+                  <span style="font-size:10px;font-weight:600;background:${color}18;color:${color};
+                               border-radius:999px;padding:1px 7px;">${label}</span>
+                  ${e.date_range ? `<span style="font-size:11px;color:#9a5a68;">${e.date_range}</span>` : ''}
+                </div>
+              </div>
+            </div>`;
+          }).join(''));
+        } else {
+          eduSection.style.display = 'none';
+        }
+      }
+
+      // Notes
+      const notesSection = $('ss-notes-section');
+      if (notesSection) {
+        if (c.notes?.trim()) {
+          notesSection.style.display = 'block';
+          el('ss-notes', 'textContent',
+            c.notes.trim().slice(0, 400) + (c.notes.trim().length > 400 ? '…' : ''));
+        } else {
+          notesSection.style.display = 'none';
+        }
+      }
+
+      // Lien profil
+      const link = $('ss-profile-link');
+      if (link) link.href = c.profile_path;
+
+      // Bouton favori
+      this._updateFavBtn(c.id);
+    },
+
+    _updateFavBtn(id) {
+      const btn   = $('ss-fav-btn');
+      const icon  = $('ss-fav-icon');
+      const badge = $('ss-fav-badge');
+      if (!btn || !icon) return;
+      if (favorites[id]) {
+        btn.style.cssText = `flex-shrink:0;margin-top:4px;width:36px;height:36px;border-radius:50%;
+          border:1px solid #f7c4da;background:#fff0f6;cursor:pointer;
+          display:flex;align-items:center;justify-content:center;color:#ed0e64;
+          transition:color 0.15s,background 0.15s,border-color 0.15s;`;
+        icon.className = 'fa-solid fa-heart';
+        if (badge) {
+          badge.style.display = 'inline';
+          badge.textContent = 'Déjà en favoris';
+        }
+      } else {
+        btn.style.cssText = `flex-shrink:0;margin-top:4px;width:36px;height:36px;border-radius:50%;
+          border:1px solid #ead2dc;background:white;cursor:pointer;
+          display:flex;align-items:center;justify-content:center;color:#c4a0b0;
+          transition:color 0.15s,background 0.15s,border-color 0.15s;`;
+        icon.className = 'fa-regular fa-heart';
+        if (badge) badge.style.display = 'none';
+      }
+      icon.style.fontSize = '0.85rem';
+    },
+
+    async _doFavorite(c) {
+      const url = new URL(c.toggle_path, location.origin);
+      if (missionId) url.searchParams.set('mission_id', missionId);
+      try {
+        await fetch(url.toString(), {
+          method: 'PATCH',
+          headers: { 'X-CSRF-Token': CSRF, 'Accept': 'application/json' }
+        });
+        favorites[c.id] = true;
+        const key = missionId || 'global';
+        if (!favByMission[key]) favByMission[key] = new Set();
+        favByMission[key].add(c.id);
+      } catch(e) { console.error(e); }
+    },
+
+    _renderDots() {
+      const dotsEl = $('ss-dots');
+      if (!dotsEl) return;
+      const total = CANDIDATES.length;
+      if (total <= 1) { dotsEl.innerHTML = ''; return; }
+      if (total > 12) { dotsEl.innerHTML = ''; return; }
+      dotsEl.innerHTML = Array.from({ length: total }, (_, i) =>
+        `<div style="height:7px;border-radius:999px;background:${i === idx ? 'white' : 'rgba(255,255,255,0.3)'};
+                     width:${i === idx ? '18px' : '7px'};transition:width 0.2s,background 0.2s;"></div>`
+      ).join('');
+    },
+
+    _showEnd() {
+      const wrap = $('ss-card-wrap');
+      if (!wrap) return;
+      wrap.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                    min-height:220px;border-radius:24px;border:1px solid #ead2dc;background:#fff8fb;
+                    text-align:center;padding:32px;">
+          <div style="width:56px;height:56px;border-radius:50%;background:#fff0f6;color:#ed0e64;
+                      display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:14px;">
+            <i class="fa-solid fa-check"></i>
+          </div>
+          <p style="font-size:1.1rem;font-weight:700;color:#3d1a24;margin:0;">Tous les profils passés en revue !</p>
+          <p style="font-size:0.85rem;color:#9a5a68;margin:4px 0 16px;">
+            ${CANDIDATES.length} candidat${CANDIDATES.length > 1 ? 's' : ''} examiné${CANDIDATES.length > 1 ? 's' : ''}.
+          </p>
+          <button onclick="SwipeSelector.close()"
+                  style="border-radius:10px;background:#ed0e64;padding:8px 20px;font-size:0.85rem;
+                         font-weight:600;color:white;border:none;cursor:pointer;">
+            Fermer
+          </button>
+        </div>`;
+      el('ss-dots', 'innerHTML', '');
+      el('ss-progress', 'textContent', '');
+    },
+
+    // ── Drag / swipe tactile ────────────────────────────────────
+    _bindDrag() {
+      // Nettoyer les anciens listeners
+      if (this._dragListeners) {
+        const card = $('ss-card');
+        if (card) {
+          card.removeEventListener('mousedown',  this._dragListeners.start);
+          card.removeEventListener('touchstart', this._dragListeners.start);
+        }
+        window.removeEventListener('mousemove', this._dragListeners.move);
+        window.removeEventListener('touchmove', this._dragListeners.move);
+        window.removeEventListener('mouseup',   this._dragListeners.end);
+        window.removeEventListener('touchend',  this._dragListeners.end);
+      }
+
+      const getCard = () => $('ss-card');
+
+      this._dragListeners = {
+        start: (e) => {
+          if (animating) return;
+          if (e.target.closest('button,a,input,select,textarea')) return;
+          drag.on     = true;
+          drag.startX = e.touches ? e.touches[0].clientX : e.clientX;
+          drag.startY = e.touches ? e.touches[0].clientY : e.clientY;
+          drag.dx     = 0;
+          const c = getCard(); if (c) c.style.transition = 'none';
+        },
+        move: (e) => {
+          if (!drag.on) return;
+          const cx = e.touches ? e.touches[0].clientX : e.clientX;
+          const cy = e.touches ? e.touches[0].clientY : e.clientY;
+          drag.dx   = cx - drag.startX;
+          const dy  = cy - drag.startY;
+          if (Math.abs(dy) > Math.abs(drag.dx) + 10) { drag.on = false; return; }
+          e.preventDefault();
+          const c = getCard(); if (!c) return;
+          c.style.transform = `translateX(${drag.dx}px) rotate(${drag.dx * 0.07}deg)`;
+          const ratio = Math.min(Math.abs(drag.dx) / 90, 1);
+          const like = $('ss-like'); if (like) like.style.opacity = drag.dx > 0 ? ratio : 0;
+          const nope = $('ss-nope'); if (nope) nope.style.opacity = drag.dx < 0 ? ratio : 0;
+        },
+        end: () => {
+          if (!drag.on) return;
+          drag.on = false;
+          const like = $('ss-like'); if (like) like.style.opacity = '0';
+          const nope = $('ss-nope'); if (nope) nope.style.opacity = '0';
+          if (drag.dx > 80) {
+            SwipeSelector.swipeOut('right');
+          } else if (drag.dx < -80) {
+            SwipeSelector.swipeOut('left');
+          } else {
+            const c = getCard(); if (!c) return;
+            c.style.transition = 'transform 0.3s cubic-bezier(.4,0,.2,1)';
+            c.style.transform  = 'translateX(0) rotate(0deg)';
+          }
+        }
+      };
+
+      const card = getCard();
+      if (card) {
+        card.addEventListener('mousedown',  this._dragListeners.start);
+        card.addEventListener('touchstart', this._dragListeners.start, { passive: false });
+      }
+      window.addEventListener('mousemove', this._dragListeners.move);
+      window.addEventListener('touchmove', this._dragListeners.move, { passive: false });
+      window.addEventListener('mouseup',   this._dragListeners.end);
+      window.addEventListener('touchend',  this._dragListeners.end);
+    }
+  };
+
+  // Clavier
+  document.addEventListener('keydown', (e) => {
+    if ($('swipe-modal')?.style.display === 'none') return;
+    if (e.key === 'Escape')     SwipeSelector.close();
+    if (e.key === 'ArrowRight') SwipeSelector.swipeOut('right');
+    if (e.key === 'ArrowLeft')  SwipeSelector.swipeOut('left');
+  });
+
+})();
+</script>

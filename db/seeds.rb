@@ -303,7 +303,13 @@ MISSIONS_DATA = [
   { reference: 'MIS-2026-029', client_legal_name: 'Euronextia Services SAS', specialty: 'Ressources Humaines', title: 'DRH Groupe', priority: 'critical', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 19 },
   { reference: 'MIS-2026-030', client_legal_name: 'Cap Avenir Energie SAS', specialty: 'Supply Chain', title: 'Directeur Supply Chain Europe', priority: 'critical', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 16 },
   { reference: 'MIS-2026-031', client_legal_name: 'Wallonie Engineering SA', specialty: 'Ingenierie', title: 'Directeur Projets Strategiques', priority: 'high', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 14 },
-  { reference: 'MIS-2026-032', client_legal_name: 'Nord Logistics Group SAS', specialty: 'Commercial', title: 'Directeur Grands Comptes', priority: 'high', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 11 }
+  { reference: 'MIS-2026-032', client_legal_name: 'Nord Logistics Group SAS', specialty: 'Commercial', title: 'Directeur Grands Comptes', priority: 'high', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 11 },
+
+  # 4 missions assignees a Claire Dumont par Rivyr
+  { reference: 'MIS-2026-033', client_legal_name: 'Seine Corporate Finance SAS', specialty: 'Direction Generale', title: 'Directeur General', priority: 'critical', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'claire.dumont@rivyr.test', opened_days_ago: 35 },
+  { reference: 'MIS-2026-034', client_legal_name: 'Artois Conseil & Transformation SAS', specialty: 'Direction Generale', title: 'Directeur Associe', priority: 'high', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'claire.dumont@rivyr.test', opened_days_ago: 22 },
+  { reference: 'MIS-2026-035', client_legal_name: 'Hexa Retail Performance SAS', specialty: 'Direction Generale', title: 'CEO France', priority: 'critical', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'claire.dumont@rivyr.test', opened_days_ago: 14 },
+  { reference: 'MIS-2026-036', client_legal_name: 'Euronextia Services SAS', specialty: 'Direction Generale', title: 'Directeur de Pole Senior', priority: 'high', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'claire.dumont@rivyr.test', opened_days_ago: 7 }
 ].freeze
 
 PLACEMENTS_DATA = [
@@ -1307,8 +1313,12 @@ claire_user = User.find_by!(email: "claire.dumont@rivyr.test")
 claire_profile = FreelancerProfile.find_by!(user: claire_user)
 fallback_profile = FreelancerProfile.where.not(id: claire_profile.id).first
 
+claire_assigned_refs = %w[MIS-2026-033 MIS-2026-034 MIS-2026-035 MIS-2026-036]
+
 if fallback_profile
-  Mission.where(freelancer_profile_id: claire_profile.id).update_all(freelancer_profile_id: fallback_profile.id)
+  Mission.where(freelancer_profile_id: claire_profile.id)
+         .where.not(reference: claire_assigned_refs)
+         .update_all(freelancer_profile_id: fallback_profile.id)
 end
 
 demo_candidates = Candidate.limit(8).to_a
