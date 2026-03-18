@@ -171,72 +171,194 @@ class PagesController < ApplicationController
   end
 
   def company_showcase
+    @client = Client.find(params[:client_id])
+    open_missions = @client.missions.where(status: "open").includes(:specialty)
+    editorial = company_editorial_data[@client.legal_name] || {}
+
+    @company_tagline      = editorial[:tagline] || @client.bio.to_s.truncate(120)
+    @company_founded_year = @client.founded_year
+    @company_revenue      = @client.revenue
+    @company_ambiance     = @client.ambiance
+    @company_values   = @client.client_values
+    @company_highlights = @client.client_highlights
+    @company_gallery  = editorial[:gallery]  || []
+
     @company_metrics = [
-      { label: "Collaborateurs", value: "1 250" },
-      { label: "Sites en Europe", value: "14" },
-      { label: "Croissance 2025", value: "+18 %" },
-      { label: "Postes ouverts", value: "9" }
+      { label: "Collaborateurs", value: @client.company_size },
+      { label: "Secteur",        value: @client.sector },
+      { label: "Localisation",   value: @client.location },
+      { label: "Postes ouverts", value: open_missions.count.to_s }
     ]
 
-    @company_values = [
+    @company_open_roles = open_missions.limit(3).map do |m|
       {
-        title: "Exigence utile",
-        body: "Un niveau de jeu eleve, mais toujours aligne avec les realites du terrain et de l'execution."
-      },
-      {
-        title: "Decisions rapides",
-        body: "Des circuits courts, une gouvernance lisible et une vraie capacite a trancher vite."
-      },
-      {
-        title: "Impact industriel",
-        body: "Chaque poste ouvert a une consequence concrete sur la production, la supply ou la transformation."
+        title:    m.title,
+        location: m.location.presence || @client.location,
+        contract: "CDI",
+        level:    m.specialty&.name || @client.sector,
+        salary:   m.compensation_summary.presence || "Package selon profil",
+        tag:      m.specialty&.name || @client.sector,
+        pitch:    m.brief_summary.presence || "Rejoignez #{@client.brand_name} sur ce poste strategique."
       }
-    ]
-
-    @company_highlights = [
-      "Transformation de 3 sites industriels en 24 mois",
-      "Plan d'investissement massif sur la modernisation des operations",
-      "Culture de management direct, sobre et orientee resultat"
-    ]
-
-    @company_open_roles = [
-      {
-        title: "Directeur de site",
-        location: "Hauts-de-France",
-        contract: "CDI",
-        level: "Executive",
-        salary: "110 000€ - 140 000€",
-        tag: "Operationel",
-        pitch: "Piloter un site strategique en forte phase d'optimisation et de transformation."
-      },
-      {
-        title: "Responsable supply chain",
-        location: "Lyon",
-        contract: "CDI",
-        level: "Senior manager",
-        salary: "80 000€ - 95 000€",
-        tag: "Supply",
-        pitch: "Structurer les flux, fiabiliser la prevision et accompagner la croissance industrielle."
-      },
-      {
-        title: "Directeur excellence operationnelle",
-        location: "Paris",
-        contract: "CDI",
-        level: "Direction",
-        salary: "120 000€ - 150 000€",
-        tag: "Transformation",
-        pitch: "Porter les programmes d'amelioration continue et l'industrialisation de nouveaux standards."
-      }
-    ]
-
-    @company_gallery = [
-      "Site de production modernise",
-      "Comite de direction operations",
-      "Atelier supply & excellence"
-    ]
+    end
   end
 
   private
+
+  def company_editorial_data
+    {
+      "Flandres Industrie SAS" => {
+        tagline: "Une ETI industrielle qui combine exigence d execution et ambition de transformation.",
+
+        highlights: [
+          "Transformation de 3 sites industriels en 24 mois",
+          "Plan d investissement massif sur la modernisation des operations",
+          "Culture de management direct, sobre et orientee resultat"
+        ],
+        values: [
+          { title: "Exigence utile", body: "Un niveau de jeu eleve, mais toujours aligne avec les realites du terrain et de l execution." },
+          { title: "Decisions rapides", body: "Des circuits courts, une gouvernance lisible et une vraie capacite a trancher vite." },
+          { title: "Impact industriel", body: "Chaque poste ouvert a une consequence concrete sur la production, la supply ou la transformation." }
+        ],
+        gallery: [ "Site de production modernise", "Comite de direction operations", "Atelier supply & excellence" ]
+      },
+      "Nord Logistics Group SAS" => {
+        tagline: "Un groupe logistique multi-sites qui recrute des managers capables de piloter la performance terrain.",
+
+        highlights: [
+          "Presence sur 12 plateformes logistiques en France et en Belgique",
+          "Forte culture de l amelioration continue et du management de proximite",
+          "Croissance organique soutenue par des contrats grands comptes multi-annuels"
+        ],
+        values: [
+          { title: "Performance terrain", body: "Les resultats se mesurent au quotidien, avec des indicateurs clairs et une culture du debrief." },
+          { title: "Fiabilite operationnelle", body: "La promesse client repose sur la regularite d execution. Ici, la rigueur n est pas optionnelle." },
+          { title: "Management de proximite", body: "Les managers de terrain sont des relais essentiels. Ils sont formes, accompagnes et valorises." }
+        ],
+        gallery: [ "Plateforme logistique Nord", "Equipe transport & quai", "Salle de pilotage flux" ]
+      },
+      "BelgoTech Solutions SA" => {
+        tagline: "Une scale-up technologique qui recrute des profils produit, data et management pour accelerer.",
+
+        highlights: [
+          "Croissance de 40% en 2 ans portee par des contrats SaaS recurrents",
+          "Equipe tech et produit structuree autour de squads autonomes",
+          "Ambition d expansion sur le marche francais d ici 12 mois"
+        ],
+        values: [
+          { title: "Produit avant tout", body: "La valeur delivree a l utilisateur est le critere central de toute decision." },
+          { title: "Autonomie responsable", body: "Les equipes ont de la latitude. En contrepartie, les engagements sont tenus." },
+          { title: "Culture de la donnee", body: "Chaque hypothese est testee, chaque decision est etayee par des metriques." }
+        ],
+        gallery: [ "Open space Bruxelles", "Retro produit Q1", "Demo Day interne" ]
+      },
+      "Artois Conseil & Transformation SAS" => {
+        tagline: "Un cabinet de conseil exigeant qui recrute des profils seniors credibles face aux dirigeants.",
+
+        highlights: [
+          "Interventions exclusivement aupres de dirigeants de PME et ETI",
+          "Equipe de 30 consultants, tous ex-operationnels avec un historique en entreprise",
+          "Posture de conseil integre : pas de livrables sans mise en oeuvre"
+        ],
+        values: [
+          { title: "Credibilite avant l image", body: "Ici, la valeur d un consultant se mesure a sa capacite a parler vrai face a un dirigeant." },
+          { title: "Engagement de resultat", body: "Pas de recommandation sans plan d execution. Le conseil est operationnel ou il n est pas." },
+          { title: "Equipe soudee", body: "La cohesion interne est un actif strategique. L ambiance est directe, stimulante et sans politique." }
+        ],
+        gallery: [ "Seminaire equipe conseil", "Atelier client dirigeant", "Restitution comite executif" ]
+      },
+      "Hexa Retail Performance SAS" => {
+        tagline: "Un acteur de la distribution qui reorganise son management pour retrouver de la performance.",
+
+        highlights: [
+          "Refonte en cours du modele operationnel sur 80 points de vente",
+          "Nouveau comite de direction avec une ambition de transformation claire",
+          "Investissement dans des profils de direction capables de porter le changement"
+        ],
+        values: [
+          { title: "Commerce au centre", body: "La performance commerciale est la raison d etre de chaque poste." },
+          { title: "Transformation concrete", body: "Le changement est engage. Les profils qui rejoignent l entreprise en sont les acteurs directs." },
+          { title: "Equipes responsabilisees", body: "La delegation est reelle. Les managers de terrain ont une vraie latitude de decision." }
+        ],
+        gallery: [ "Concept store modernise", "Reunion performance reseau", "Formation managers terrain" ]
+      },
+      "Cap Avenir Energie SAS" => {
+        tagline: "Une entreprise energetique en croissance qui structure ses equipes pour passer a l echelle.",
+
+        highlights: [
+          "Portefeuille de projets en energie renouvelable en forte expansion",
+          "Equipe de direction recemment renforcee avec une vision a 5 ans",
+          "Culture entrepreneuriale avec une forte prise de responsabilite attendue"
+        ],
+        values: [
+          { title: "Impact energetique", body: "Chaque projet contribue concretement a la transition. L impact est une realite operationnelle." },
+          { title: "Agilite et vitesse", body: "Dans un marche en pleine mutation, les profils qui s adaptent vite ont un vrai avantage." },
+          { title: "Ambition partagee", body: "Les collaborateurs construisent quelque chose. Il y a une vraie fierte collective." }
+        ],
+        gallery: [ "Parc solaire en construction", "Equipe projet terrain", "Reunion strategie direction" ]
+      },
+      "Littoral Agro Solutions SAS" => {
+        tagline: "Un industriel agroalimentaire reconnu qui recrute des experts production, qualite et supply.",
+
+        highlights: [
+          "Certifications qualite internationales sur l ensemble de la chaine de production",
+          "Investissements reguliers dans la modernisation des lignes industrielles",
+          "Culture de l exigence technique avec un management de terrain fort"
+        ],
+        values: [
+          { title: "Qualite non negociable", body: "Les standards sont eleves et tenus. La qualite n est pas un objectif, c est le point de depart." },
+          { title: "Efficacite industrielle", body: "La performance des lignes est une priorite quotidienne." },
+          { title: "Ancrage territorial", body: "L entreprise est implantee en Bretagne depuis 30 ans. Elle est un employeur de reference." }
+        ],
+        gallery: [ "Ligne de production automatisee", "Controle qualite laboratoire", "Equipe maintenance site" ]
+      },
+      "Euronextia Services SAS" => {
+        tagline: "Une entreprise de services B2B en croissance qui renforce ses equipes de direction.",
+
+        highlights: [
+          "Taux de retention client superieur a 90% sur 3 ans consecutifs",
+          "Expansion en cours sur de nouveaux segments B2B a fort potentiel",
+          "Management horizontal avec des responsabilites larges accordees rapidement"
+        ],
+        values: [
+          { title: "Client au centre", body: "La qualite de service est un differenciateur concret." },
+          { title: "Initiative valorisee", body: "Les profils qui proposent, testent et assument leurs decisions progressent vite." },
+          { title: "Croissance collective", body: "L entreprise grandit. Les collaborateurs qui la construisent grandissent avec elle." }
+        ],
+        gallery: [ "Espace de travail collaboratif", "Reunion client strategique", "Workshop equipe commerciale" ]
+      },
+      "Wallonie Engineering SA" => {
+        tagline: "Un bureau d ingenierie de reference qui recrute des experts techniques et chefs de projet.",
+
+        highlights: [
+          "Projets de grande envergure dans les secteurs infrastructure, energie et industrie",
+          "Equipes pluridisciplinaires avec un haut niveau de technicite",
+          "Collaboration reguliere avec des donneurs d ordre publics et prives de premier plan"
+        ],
+        values: [
+          { title: "Excellence technique", body: "La qualite des livrables est la signature de l entreprise. Elle est exigee et reconnue." },
+          { title: "Complexite assumee", body: "Les projets sont ambitieux. Les profils qui reussissent ici ont le gout des problemes difficiles." },
+          { title: "Collaboration multidisciplinaire", body: "La capacite a travailler en transversal est cle." }
+        ],
+        gallery: [ "Chantier infrastructure majeur", "Reunion bureau d etudes", "Revue technique projet" ]
+      },
+      "Seine Corporate Finance SAS" => {
+        tagline: "Une structure finance d entreprise a taille humaine qui recrute des profils seniors exigeants.",
+
+        highlights: [
+          "Positionnement exclusif sur des mandats complexes a fort enjeu financier",
+          "Equipe de 25 professionnels issus de grands groupes et cabinets de reference",
+          "Culture de l excellence ou chaque profil compte et chaque mandat est strategique"
+        ],
+        values: [
+          { title: "Expertise avant tout", body: "La valeur se construit sur la profondeur technique et la capacite a produire des analyses qui changent les decisions." },
+          { title: "Confidentialite absolue", body: "Les mandats sont sensibles. La discretion est une competence autant qu une valeur." },
+          { title: "Posture senior", body: "Les interlocuteurs sont des dirigeants et des investisseurs. La credibilite se construit des le premier echange." }
+        ],
+        gallery: [ "Salle de negociation", "Due diligence en cours", "Closing d operation" ]
+      }
+    }
+  end
 
   def load_community_view_data
     community_hub.build_view_data(

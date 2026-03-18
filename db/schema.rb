@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_18_090941) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_18_150525) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -63,16 +63,39 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_18_090941) do
     t.index ["user_id"], name: "index_client_contacts_on_user_id", unique: true, where: "(user_id IS NOT NULL)"
   end
 
+  create_table "client_highlights", force: :cascade do |t|
+    t.text "body"
+    t.bigint "client_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "position"
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.index ["client_id"], name: "index_client_highlights_on_client_id"
+  end
+
+  create_table "client_values", force: :cascade do |t|
+    t.text "body"
+    t.bigint "client_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "position"
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.index ["client_id"], name: "index_client_values_on_client_id"
+  end
+
   create_table "clients", force: :cascade do |t|
     t.boolean "active"
+    t.text "ambiance"
     t.text "bio"
     t.string "brand_name"
     t.string "company_size"
     t.datetime "created_at", null: false
+    t.integer "founded_year"
     t.string "legal_name"
     t.text "location"
     t.string "logo"
     t.string "ownership_type"
+    t.string "revenue"
     t.string "sector"
     t.datetime "updated_at", null: false
     t.string "website_url"
@@ -383,6 +406,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_18_090941) do
   add_foreign_key "candidates", "users"
   add_foreign_key "client_contacts", "clients"
   add_foreign_key "client_contacts", "users"
+  add_foreign_key "client_highlights", "clients"
+  add_foreign_key "client_values", "clients"
   add_foreign_key "commissions", "placements"
   add_foreign_key "contributions", "candidates"
   add_foreign_key "educations", "candidates"
