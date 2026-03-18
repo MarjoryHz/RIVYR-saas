@@ -177,7 +177,7 @@
                     <div class="flex min-h-[3.25rem] items-center gap-4 text-base text-base-content/75">
                       <% if row[:company_logo].present? %>
                         <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-base-200 bg-base-100">
-                          <%= image_tag row[:company_logo], alt: row[:company_name], class: "h-full w-full object-cover" %>
+                          <%= image_tag client_logo_src(row[:company_logo]), alt: row[:company_name], class: "h-full w-full object-cover" %>
                         </div>
                       <% else %>
                         <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/18 text-[#ed0e64]">

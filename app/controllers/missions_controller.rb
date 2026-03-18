@@ -1,7 +1,7 @@
 require_dependency Rails.root.join("app/services/freelance_dashboard_builder").to_s
 
 class MissionsController < ApplicationController
-  helper_method :mission_company_segment, :mission_company_masked, :mission_available_since_label, :mission_score_for, :mission_score_tone_class, :mission_score_breakdown_for, :mission_level_for, :mission_pitch_points, :mission_origin_badge, :favorite_mission?, :mission_approx_fee_label, :mission_client_insight, :mission_client_label, :mission_positionings_label, :mission_fee_label, :mission_fee_breakdown_for, :format_amount, :mission_priority_badge, :mission_already_applied?
+  helper_method :mission_company_segment, :mission_company_masked, :mission_available_since_label, :mission_score_for, :mission_score_tone_class, :mission_score_breakdown_for, :mission_level_for, :mission_pitch_points, :mission_origin_badge, :favorite_mission?, :mission_approx_fee_label, :mission_client_insight, :mission_client_label, :mission_positionings_label, :mission_fee_label, :mission_fee_breakdown_for, :format_amount, :mission_priority_badge, :mission_already_applied?, :mission_terminated_label, :mission_terminated_badge_class, :mission_placed?
 
   before_action :set_mission, only: [ :show, :edit, :update, :destroy, :toggle_favorite, :close_by_freelance ]
   before_action :set_form_collections, only: [ :new, :create, :edit, :update, :my_missions ]
@@ -267,8 +267,9 @@ class MissionsController < ApplicationController
     closure_reason = params[:closure_reason].to_s.strip
     closure_note = params[:closure_note].to_s.strip
     candidate_id = params[:candidate_id].to_s.strip
+    won_mission = closure_reason.casecmp("Mission gagnee").zero?
 
-    if closure_reason.casecmp("Mission gagnee").zero?
+    if won_mission
       candidate = Candidate.find_by(id: candidate_id)
       return redirect_to mission_path(@mission), alert: "Sélectionne un candidat pour valider la mission gagnée." if candidate.blank?
 
@@ -280,13 +281,20 @@ class MissionsController < ApplicationController
       placement.hired_at ||= Date.current
       placement.save!
       candidate.update!(status: "placed")
+    elsif @mission.placement.present?
+      candidate = @mission.placement.candidate
+      @mission.placement.destroy!
+
+      if candidate.present? && candidate.status_placed? && candidate.placements.reload.none?
+        candidate.update!(status: "qualified")
+      end
     end
 
     @mission.update!(
       status: "closed",
       closed_at: Date.current,
       closure_reason: closure_reason,
-      closure_note: closure_reason.casecmp("Mission gagnee").zero? ? nil : closure_note.presence,
+      closure_note: won_mission ? nil : closure_note.presence,
       closed_by_freelancer_at: Time.current,
       closure_admin_read_at: nil
     )
@@ -832,7 +840,7 @@ class MissionsController < ApplicationController
   end
 
   def mission_placed?(mission)
-    mission.placement.present? || mission.closure_reason.to_s.casecmp("Mission gagnee").zero?
+    mission.status_closed? && mission.closure_reason.to_s.casecmp("Mission gagnee").zero?
   end
 
   def mission_fee_breakdown_for(mission)

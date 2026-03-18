@@ -2,6 +2,7 @@
 # rails db:seed
 
 require 'faker'
+require 'cgi'
 
 Faker::Config.locale = 'fr'
 
@@ -892,6 +893,75 @@ def mission_constraints_for(data, client, index)
   ].join("||")
 end
 
+def append_meta(raw_value, extra_pairs)
+  base_pairs = raw_value.to_s.split("||").reject(&:blank?)
+  extra_serialized = extra_pairs.map { |key, value| "#{key}=#{value}" }
+  (base_pairs + extra_serialized).join("||")
+end
+
+def company_logo_data_uri(name, seed)
+  initials = name.to_s.split.map { |part| part.first }.join.first(2).upcase.presence || "RV"
+  palette = [
+    [ "#fff1f6", "#ed0e64", "#f8cadb" ],
+    [ "#fff4e8", "#c96b28", "#f4c7a2" ],
+    [ "#edf8f0", "#2f6b3c", "#cce7d3" ],
+    [ "#f2f5ff", "#4361c2", "#d7def8" ]
+  ]
+  background, foreground, ring = palette[seed % palette.size]
+  svg = <<~SVG
+    <svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+      <rect x="4" y="4" width="88" height="88" rx="26" fill="#{background}"/>
+      <rect x="4" y="4" width="88" height="88" rx="26" fill="none" stroke="#{ring}" stroke-width="2"/>
+      <text x="48" y="56" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="700" fill="#{foreground}">#{initials}</text>
+    </svg>
+  SVG
+
+  "data:image/svg+xml,#{CGI.escape(svg.gsub("\n", ""))}"
+end
+
+def client_logo_asset_filename(client_data)
+  assets_dir = Rails.root.join("app/assets/images/clients")
+  brand_slug = client_data[:brand_name].to_s.parameterize
+  legal_slug = client_data[:legal_name].to_s.parameterize
+
+  candidates = Dir.children(assets_dir).sort.select do |filename|
+    next false unless File.file?(assets_dir.join(filename))
+
+    normalized_name = File.basename(filename, File.extname(filename)).parameterize
+    [brand_slug, legal_slug].include?(normalized_name)
+  end
+
+  candidates.first.presence || "ChatGPT Image 18 mars 2026, 14_16_50.png"
+rescue Errno::ENOENT
+  nil
+end
+
+def client_logo_value(client_data, seed)
+  asset_filename = client_logo_asset_filename(client_data)
+  if asset_filename.present?
+    encoded_filename = CGI.escape(asset_filename).gsub("+", "%20")
+    "/assets/clients/#{encoded_filename}"
+  else
+    company_logo_data_uri(client_data[:brand_name], seed)
+  end
+end
+
+def serialize_signature_timeline(events)
+  events.map do |event|
+    kind = event[:kind].presence || "note"
+    "#{event.fetch(:at).iso8601}::#{kind}::#{event.fetch(:label).to_s.tr(':', ' ')}"
+  end.join(";;")
+end
+
+SIGNATURE_DEMO_STATUSES = [
+  { key: "transmitted", label: "Transmis", action_required: true, contract_signed: false, mission_status: "open", followup: "Relance auto dans 24h", note: "Contrat envoyé au client ce matin, première relance programmée automatiquement." },
+  { key: "client_signing", label: "En cours de signature client", action_required: false, contract_signed: false, mission_status: "open", followup: "Relance auto dans 48h", note: "Le client a ouvert le dossier et la signature est en cours côté direction générale." },
+  { key: "client_changes_requested", label: "Modification client demandée", action_required: true, contract_signed: false, mission_status: "open", followup: "Relance désactivée", note: "Le client demande un ajustement de clause sur la période d exclusivité avant signature." },
+  { key: "signed", label: "Signé", action_required: false, contract_signed: true, mission_status: "in_progress", followup: "Relance désactivée", note: "Le contrat est signé par toutes les parties et prêt pour la suite du process." },
+  { key: "refused", label: "Refusé", action_required: true, contract_signed: false, mission_status: "open", followup: "Relance désactivée", note: "Le client a refusé les conditions actuelles et souhaite suspendre la contractualisation." },
+  { key: "expired", label: "Délais dépassé", action_required: true, contract_signed: false, mission_status: "open", followup: "Relance auto dans 24h", note: "Le lien de signature a expiré sans retour, une nouvelle séquence est à préparer." }
+].freeze
+
 def freelancer_performance_snapshot(seed:, score:)
   months = %w[Jan Feb Mar Apr May Jun Jul]
   base = [[(score.to_i / 20.0).round(1), 2.6].max, 4.9].min
@@ -1012,6 +1082,7 @@ CLIENTS_DATA.each_with_index do |data, index|
   upsert_record(Client, { legal_name: data[:legal_name] }, {
     ownership_type: ownership_type_for(index),
     brand_name: data[:brand_name],
+    logo: client_logo_value(data, index),
     sector: data[:sector],
     website_url: "https://www.#{domain_for(data[:brand_name])}",
     location: data[:location],
@@ -1440,6 +1511,114 @@ demo_candidates = Candidate.limit(8).to_a
 demo_contacts = ClientContact.limit(8).to_a
 demo_region = Region.find_by(name: "Hauts-de-France") || Region.first
 demo_specialty = Specialty.find_by(name: "Direction Generale") || Specialty.first
+
+signature_demo_rows = [
+  { title: "Directeur Général de Filiale", sent_days_ago: 1 },
+  { title: "Directeur des Opérations Groupe", sent_days_ago: 2 },
+  { title: "Directeur de la Transformation", sent_days_ago: 3 },
+  { title: "Directeur de Business Unit Industrie", sent_days_ago: 4 },
+  { title: "DRH Groupe", sent_days_ago: 5 },
+  { title: "Directeur Commercial France", sent_days_ago: 6 }
+]
+
+signature_demo_rows.zip(SIGNATURE_DEMO_STATUSES).each_with_index do |(row, signature_status), index|
+  contact = demo_contacts[index]
+  mission_ref = "MIS-CL-SIG-#{format('%02d', index + 1)}"
+  mission_seed_data = { reference: mission_ref, title: row[:title] }
+  mission_brief = mission_brief_for(mission_seed_data, contact.client, index)
+  mission_constraints = mission_constraints_for(mission_seed_data, contact.client, index)
+  signature_sent_on = Date.current - row[:sent_days_ago]
+  sent_at = Time.zone.local(signature_sent_on.year, signature_sent_on.month, signature_sent_on.day, 9, 30)
+  last_event_at =
+    case index
+    when 0 then 3.hours.ago
+    when 1 then 8.hours.ago
+    when 2 then 12.hours.ago
+    when 3 then 18.hours.ago
+    when 4 then 2.days.ago.change(hour: 11, min: 20)
+    else 3.days.ago.change(hour: 16, min: 45)
+    end
+  last_event_type = [0, 2, 3, 4].include?(index) ? "status_change" : "followup"
+  timeline_events =
+    case signature_status[:key]
+    when "transmitted"
+      [
+        { at: sent_at, kind: "status_change", label: "Contrat envoye au client" },
+        { at: sent_at + 20.minutes, kind: "email_opened", label: "Email de signature ouvert" },
+        { at: sent_at + 35.minutes, kind: "link_clicked", label: "Lien de consultation clique" },
+        { at: last_event_at, kind: "status_change", label: "Statut passe a Transmis" }
+      ]
+    when "client_signing"
+      [
+        { at: sent_at, kind: "status_change", label: "Contrat envoye au client" },
+        { at: sent_at + 40.minutes, kind: "email_opened", label: "Email de signature ouvert" },
+        { at: sent_at + 55.minutes, kind: "link_clicked", label: "Lien de signature clique" },
+        { at: sent_at + 65.minutes, kind: "signature_redirect", label: "Redirection vers l espace de signature" },
+        { at: sent_at + 5.hours, kind: "status_change", label: "Dossier ouvert par le client" },
+        { at: last_event_at, kind: "followup", label: "Relance automatique envoyee" }
+      ]
+    when "client_changes_requested"
+      [
+        { at: sent_at, kind: "status_change", label: "Contrat envoye au client" },
+        { at: sent_at + 25.minutes, kind: "email_opened", label: "Email de signature ouvert" },
+        { at: sent_at + 50.minutes, kind: "link_clicked", label: "Lien de signature clique" },
+        { at: sent_at + 60.minutes, kind: "signature_redirect", label: "Redirection vers l espace de signature" },
+        { at: sent_at + 7.hours, kind: "status_change", label: "Premiere lecture cote client" },
+        { at: last_event_at, kind: "status_change", label: "Modification demandee par le client" }
+      ]
+    when "signed"
+      [
+        { at: sent_at, kind: "status_change", label: "Contrat envoye au client" },
+        { at: sent_at + 18.minutes, kind: "email_opened", label: "Email de signature ouvert" },
+        { at: sent_at + 36.minutes, kind: "link_clicked", label: "Lien de signature clique" },
+        { at: sent_at + 48.minutes, kind: "signature_redirect", label: "Redirection vers l espace de signature" },
+        { at: sent_at + 9.hours, kind: "status_change", label: "Validation finale cote client" },
+        { at: last_event_at, kind: "signed", label: "Contrat signe par toutes les parties" }
+      ]
+    when "refused"
+      [
+        { at: sent_at, kind: "status_change", label: "Contrat envoye au client" },
+        { at: sent_at + 30.minutes, kind: "email_opened", label: "Email de signature ouvert" },
+        { at: sent_at + 52.minutes, kind: "link_clicked", label: "Lien de signature clique" },
+        { at: last_event_at, kind: "status_change", label: "Refus notifie par le client" }
+      ]
+    else
+      [
+        { at: sent_at, kind: "status_change", label: "Contrat envoye au client" },
+        { at: sent_at + 22.minutes, kind: "email_opened", label: "Email de signature ouvert" },
+        { at: sent_at + 47.minutes, kind: "link_clicked", label: "Lien de signature clique" },
+        { at: sent_at + 58.minutes, kind: "signature_redirect", label: "Redirection vers l espace de signature" },
+        { at: sent_at + 26.hours, kind: "followup", label: "Premiere relance automatique envoyee" },
+        { at: last_event_at, kind: "status_change", label: "Relance finale sans retour" }
+      ]
+    end
+
+  upsert_record(Mission, { reference: mission_ref }, {
+    region: demo_region,
+    freelancer_profile: claire_profile,
+    mission_type: "retained",
+    title: row[:title],
+    status: signature_status[:mission_status],
+    client_contact: contact,
+    location: contact.client.location,
+    contract_signed: signature_status[:contract_signed],
+    opened_at: signature_sent_on - 5,
+    priority_level: index.even? ? "high" : "critical",
+    brief_summary: mission_brief,
+    compensation_summary: COMPENSATION_SUMMARIES[(index + 2) % COMPENSATION_SUMMARIES.size],
+    search_constraints: append_meta(mission_constraints, {
+      "signature_status" => signature_status[:key],
+      "signature_followup" => signature_status[:followup],
+      "signature_note" => signature_status[:note],
+      "signature_sent_at" => signature_sent_on.iso8601,
+      "signature_last_event_type" => last_event_type,
+      "signature_last_event_at" => last_event_at.iso8601,
+      "signature_timeline" => serialize_signature_timeline(timeline_events)
+    }),
+    origin_type: "freelancer",
+    specialty: demo_specialty
+  })
+end
 
 demo_rows = [
   # 2 missions en attente de paiement par le client
