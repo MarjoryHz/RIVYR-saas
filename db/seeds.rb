@@ -1063,7 +1063,14 @@ end
 puts "#{Specialty.count} specialties ready."
 
 regions_by_name = Region.all.index_by(&:name)
+regions_by_name.merge!(
+  regions_by_name.transform_keys { |name| I18n.transliterate(name.to_s) }
+)
 specialties_by_name = Specialty.all.index_by(&:name)
+specialties_by_name.merge!(
+  specialties_by_name.transform_keys { |name| I18n.transliterate(name.to_s) }
+)
+specialties_by_name["Direction Generale"] ||= specialties_by_name["Direction Générale"]
 
 # --------------------------------------------------
 # 6. Utilisateurs et profils freelances
@@ -1873,7 +1880,7 @@ end
 demo_candidates = Candidate.limit(8).to_a
 demo_contacts = ClientContact.limit(8).to_a
 demo_region = Region.find_by(name: "Hauts-de-France") || Region.first
-demo_specialty = Specialty.find_by(name: "Direction Generale") || Specialty.first
+demo_specialty = Specialty.find_by(name: "Direction Générale") || Specialty.find_by(name: "Direction Generale") || Specialty.first
 
 signature_demo_rows = [
   { title: "Directeur Général de Filiale", sent_days_ago: 1 },
