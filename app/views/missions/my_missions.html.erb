@@ -1,4 +1,9 @@
-<% surface_card_class = "rounded-[1.45rem] border border-base-100/70 bg-base-100/88 shadow-lg" %>
+<%
+  surface_card_class = "rounded-[1.45rem] border border-base-100/70 bg-base-100/88 shadow-lg"
+  current_tab_class = @tab == "current" ? "bg-[#f4a58a] font-semibold text-white" : "font-medium text-base-content/75 transition hover:text-base-content"
+  drafts_tab_class = @tab == "drafts" ? "bg-[#f4a58a] font-semibold text-white" : "font-medium text-base-content/75 transition hover:text-base-content"
+  closed_tab_class = @tab == "closed" ? "bg-[#f4a58a] font-semibold text-white" : "font-medium text-base-content/75 transition hover:text-base-content"
+%>
 
 <div class="mx-auto max-w-7xl p-4 md:p-6">
   <section class="space-y-6">
@@ -10,30 +15,48 @@
           </div>
 
           <div class="inline-flex flex-wrap items-center rounded-full border border-base-200/80 bg-base-100/72 p-1 text-[#7f5260] shadow-sm">
-            <%= link_to my_missions_missions_path, class: "inline-flex items-center rounded-full px-7 py-3 text-base #{ @tab == 'current' ? 'bg-[#f4a58a] font-semibold text-white' : 'font-medium text-base-content/75 transition hover:text-base-content' }" do %>
+            <%= link_to my_missions_missions_path, class: "inline-flex items-center rounded-full px-7 py-3 text-base #{current_tab_class}" do %>
               En cours (<%= @current_missions_count %>)
+            <% end %>
+            <%= link_to my_missions_missions_path(tab: "drafts"), class: "inline-flex items-center rounded-full px-6 py-3 text-base #{drafts_tab_class}" do %>
+              Brouillons (<%= @draft_missions_count.to_i %>)
             <% end %>
             <%= link_to pending_missions_missions_path, class: "px-6 py-3 text-base font-medium text-base-content/75 transition hover:text-base-content" do %>
               En attente de validation (<%= @pending_validation_count.to_i %>)
             <% end %>
             <span class="text-base-content/20">|</span>
-            <%= link_to my_missions_missions_path(tab: "closed"), class: "inline-flex items-center rounded-full px-6 py-3 text-base #{ @tab == 'closed' ? 'bg-[#f4a58a] font-semibold text-white' : 'font-medium text-base-content/75 transition hover:text-base-content' }" do %>
+            <%= link_to my_missions_missions_path(tab: "closed"), class: "inline-flex items-center rounded-full px-6 py-3 text-base #{closed_tab_class}" do %>
               Terminées (<%= @closed_missions_count.to_i %>)
             <% end %>
           </div>
 
           <div class="grid min-w-0 overflow-hidden md:grid-cols-3 <%= surface_card_class %>">
             <div class="p-4 md:border-r md:border-base-200/80 md:pr-6">
-              <p class="text-3xl font-semibold text-base-content"><%= number_to_currency((@tab == "closed" ? @closed_total_potential_cents : @total_potential_cents) / 100.0, unit: "€", precision: 0) %></p>
-              <p class="mt-1 text-base text-base-content/60"><%= @tab == "closed" ? "Potentiel archivé" : "Potentiel total" %></p>
+              <% if @tab == "drafts" %>
+                <p class="text-3xl font-semibold text-base-content"><%= @draft_missions_count.to_i %></p>
+                <p class="mt-1 text-base text-base-content/60">Brouillons enregistrés</p>
+              <% else %>
+                <p class="text-3xl font-semibold text-base-content"><%= number_to_currency((@tab == "closed" ? @closed_total_potential_cents : @total_potential_cents) / 100.0, unit: "€", precision: 0) %></p>
+                <p class="mt-1 text-base text-base-content/60"><%= @tab == "closed" ? "Potentiel archivé" : "Potentiel total" %></p>
+              <% end %>
             </div>
             <div class="p-4 md:border-r md:border-base-200/80 md:px-6">
-              <p class="text-3xl font-semibold text-base-content"><%= @tab == "closed" ? @closed_average_open_days : @average_open_days %> jours</p>
-              <p class="mt-1 text-base text-base-content/60"><%= @tab == "closed" ? "Durée moyenne avant clôture" : "Ouverture moyenne" %></p>
+              <% if @tab == "drafts" %>
+                <p class="text-3xl font-semibold text-base-content"><%= @draft_last_updated_label.present? ? l(@draft_last_updated_label, format: "%d/%m") : "-" %></p>
+                <p class="mt-1 text-base text-base-content/60">Dernière sauvegarde</p>
+              <% else %>
+                <p class="text-3xl font-semibold text-base-content"><%= @tab == "closed" ? @closed_average_open_days : @average_open_days %> jours</p>
+                <p class="mt-1 text-base text-base-content/60"><%= @tab == "closed" ? "Durée moyenne avant clôture" : "Ouverture moyenne" %></p>
+              <% end %>
             </div>
             <div class="p-4 md:px-6">
-              <p class="text-3xl font-semibold text-base-content"><%= @tab == "closed" ? @closed_total_sent_candidates : @total_sent_candidates %></p>
-              <p class="mt-1 text-base text-base-content/60">Candidats chez le client</p>
+              <% if @tab == "drafts" %>
+                <p class="text-3xl font-semibold text-base-content"><%= @draft_mission_rows.count { |row| row[:company_name] != "Entreprise à définir" } %></p>
+                <p class="mt-1 text-base text-base-content/60">Entreprises renseignées</p>
+              <% else %>
+                <p class="text-3xl font-semibold text-base-content"><%= @tab == "closed" ? @closed_total_sent_candidates : @total_sent_candidates %></p>
+                <p class="mt-1 text-base text-base-content/60">Candidats chez le client</p>
+              <% end %>
             </div>
           </div>
         </div>
@@ -56,16 +79,18 @@
                 <i class="fa-solid fa-angle-down text-xs text-[#ed0e64]"></i>
               </button>
 
-              <button type="button" class="inline-flex items-center gap-2 rounded-full border border-[#f1a38b] bg-[#f4a58a] px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" onclick="document.getElementById('create_freelance_mission_modal').showModal()">
+              <%= link_to new_mission_path, target: "_blank", rel: "noopener", class: "inline-flex items-center gap-2 rounded-full border border-[#f1a38b] bg-[#f4a58a] px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" do %>
                 <i class="fa-solid fa-plus text-[#ed0e64]"></i>
                 Créer une mission
-              </button>
+              <% end %>
             </div>
 
             <div id="missions-filtres" class="absolute inset-x-0 top-full z-30 mt-3 hidden rounded-[1.45rem] border border-base-200 bg-base-100 p-4 shadow-xl">
               <%= form_with url: my_missions_missions_path, method: :get, class: "grid gap-3 md:grid-cols-2 xl:grid-cols-5", html: { onsubmit: "document.getElementById('missions-filtres').classList.add('hidden')" } do %>
                 <% if @tab == "closed" %>
                   <%= hidden_field_tag :tab, "closed" %>
+                <% elsif @tab == "drafts" %>
+                  <%= hidden_field_tag :tab, "drafts" %>
                 <% end %>
                 <div>
                   <label for="amount-filter" class="mb-1 block text-sm font-medium text-base-content/70">Montant</label>
@@ -110,14 +135,18 @@
 
                 <div class="flex items-end gap-2">
                   <%= submit_tag "Appliquer", class: "btn btn-primary flex-1" %>
-                  <%= link_to "Réinitialiser", my_missions_missions_path(tab: (@tab == "closed" ? "closed" : nil)), class: "btn btn-ghost" %>
+                  <%= link_to "Réinitialiser", my_missions_missions_path(tab: (@tab.in?(%w[closed drafts]) ? @tab : nil)), class: "btn btn-ghost" %>
                 </div>
               <% end %>
             </div>
           </div>
         </div>
 
-        <% rows = @tab == "closed" ? @closed_mission_rows : @mission_rows %>
+        <% rows = case @tab
+                 when "drafts" then @draft_mission_rows
+                 when "closed" then @closed_mission_rows
+                 else @mission_rows
+                 end %>
         <% if rows.any? %>
           <div class="divide-y divide-base-200/70">
             <% rows.each do |row| %>
@@ -126,14 +155,23 @@
                 <div class="space-y-4">
                   <div class="grid items-center gap-4 xl:grid-cols-[minmax(0,1fr)_auto]">
                     <div class="min-w-0 flex items-center gap-3">
-                      <h2 class="min-w-0 truncate whitespace-nowrap text-xl font-semibold leading-tight text-base-content md:text-2xl"><%= mission.title %></h2>
+                      <h2 class="min-w-0 truncate whitespace-nowrap text-xl font-semibold leading-tight text-base-content md:text-2xl"><%= @tab == "drafts" ? row[:title] : mission.title %></h2>
                       <% if mission.region.present? %>
                         <span class="shrink-0 text-base-content/30">|</span>
                         <span class="shrink-0 whitespace-nowrap text-sm font-medium text-base-content/55 md:text-base"><%= mission.region.name %></span>
                       <% end %>
                     </div>
 
-                    <% if @tab == "closed" %>
+                    <% if @tab == "drafts" %>
+                      <div class="flex flex-wrap items-center justify-self-end gap-3">
+                        <span class="inline-flex items-center rounded-full border border-[#e8c6d3] bg-[#fff3f8] px-4 py-2 text-sm font-semibold text-[#a33d68]">
+                          Brouillon
+                        </span>
+                        <span class="text-sm font-medium text-base-content/55">
+                          Sauvegardé le <%= l(row[:updated_at], format: :default) rescue row[:updated_at].strftime("%d/%m/%Y") %>
+                        </span>
+                      </div>
+                    <% elsif @tab == "closed" %>
                       <div class="flex flex-wrap items-center justify-self-end gap-3">
                         <%= render "missions/origin_badge", mission: mission %>
                         <span class="inline-flex items-center rounded-full border px-4 py-2 text-sm font-semibold <%= row[:closed_badge_class] %>">
@@ -175,7 +213,7 @@
 
                   <div class="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_auto] xl:items-center">
                     <div class="flex min-h-[3.25rem] items-center gap-4 text-base text-base-content/75">
-                      <% if row[:company_logo].present? %>
+                      <% if @tab != "drafts" && row[:company_logo].present? %>
                         <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-base-200 bg-base-100">
                           <%= image_tag client_logo_src(row[:company_logo]), alt: row[:company_name], class: "h-full w-full object-cover" %>
                         </div>
@@ -192,9 +230,15 @@
                     </div>
 
                     <div class="flex flex-wrap items-center gap-3 xl:justify-end">
-                      <p class="min-w-[8rem] text-xl font-semibold md:text-2xl xl:text-right"><%= number_to_currency(row[:potential_cents] / 100.0, unit: "€", precision: 0) %></p>
+                      <% if @tab == "drafts" %>
+                        <%= link_to edit_mission_path(mission), target: "_blank", rel: "noopener", class: "inline-flex min-w-[14rem] items-center justify-center rounded-full border border-[#f1a38b] bg-[#f4a58a] px-6 py-2.5 text-base font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" do %>
+                          Reprendre le brouillon
+                        <% end %>
+                      <% else %>
+                        <p class="min-w-[8rem] text-xl font-semibold md:text-2xl xl:text-right"><%= number_to_currency(row[:potential_cents] / 100.0, unit: "€", precision: 0) %></p>
+                      <% end %>
 
-                      <% unless @tab == "closed" %>
+                      <% if @tab == "current" %>
                         <button type="button" class="inline-flex min-w-[12rem] items-center justify-center gap-2 rounded-full border border-[#f6d6db] bg-[#ffe8ec] px-4 py-2.5 text-sm font-medium text-[#8c5665]">
                           <i class="fa-regular fa-comment-dots text-[#ed0e64]"></i>
                           Envoyer un candidat
@@ -205,8 +249,10 @@
                         </button>
                       <% end %>
 
-                      <%= link_to mission_path(mission), class: "inline-flex min-w-[11rem] items-center justify-center rounded-full border border-[#f1a38b] bg-[#f4a58a] px-6 py-2.5 text-base font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" do %>
-                        Voir la mission
+                      <% unless @tab == "drafts" %>
+                        <%= link_to mission_path(mission), class: "inline-flex min-w-[11rem] items-center justify-center rounded-full border border-[#f1a38b] bg-[#f4a58a] px-6 py-2.5 text-base font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" do %>
+                          Voir la mission
+                        <% end %>
                       <% end %>
                     </div>
                   </div>
@@ -216,228 +262,10 @@
           </div>
         <% else %>
           <div class="p-8 text-center text-base-content/65">
-            <%= @tab == "closed" ? "Aucune mission terminée pour le moment." : "Aucune mission en cours pour le moment." %>
+            <%= @tab == "closed" ? "Aucune mission terminée pour le moment." : (@tab == "drafts" ? "Aucun brouillon pour le moment." : "Aucune mission en cours pour le moment.") %>
           </div>
         <% end %>
       </div>
     </div>
   </section>
 </div>
-
-<%= render "missions/admin_updates_modal", admin_updates: @dashboard_admin_updates %>
-
-<dialog id="create_freelance_mission_modal" class="modal">
-  <div class="modal-box max-w-4xl rounded-[2rem] border border-[#ead2dc] bg-[#fff8fb]/95 p-0 shadow-[0_24px_50px_rgba(91,38,51,0.14)]">
-    <div class="border-b border-[#efdbe4] px-6 py-5">
-      <div class="flex items-start justify-between gap-4">
-        <div>
-          <p class="text-sm font-semibold uppercase tracking-[0.28em] text-[#a15c70]">Apport freelance</p>
-          <h3 class="mt-2 text-2xl font-semibold text-[#4c1f2a]">Créer une mission</h3>
-          <p class="mt-2 text-sm text-[#7b4b5a]">Cette mission sera rattachée à ton profil freelance.</p>
-        </div>
-        <form method="dialog">
-          <button class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#8c5665] transition hover:bg-[#fff2f7] hover:text-[#ed0e64]">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </form>
-      </div>
-    </div>
-
-    <%= form_with model: Mission.new, url: missions_path, class: "space-y-5 px-6 py-6", html: { id: "create-freelance-mission-form" } do |f| %>
-      <%= f.hidden_field :status, value: "open" %>
-      <%= f.hidden_field :origin_type, value: "freelancer" %>
-      <%= hidden_field_tag "mission[freelance_client_id]", nil, id: "freelance-mission-client-id" %>
-      <%= hidden_field_tag "mission[client_contact_id]", nil, id: "freelance-mission-contact-id" %>
-
-      <div class="grid gap-5 md:grid-cols-2">
-        <div>
-          <%= f.label :title, "Titre de la mission", class: "mb-2 block text-sm font-semibold text-[#6b3f4f]" %>
-          <%= f.text_field :title, required: true, class: "w-full rounded-2xl border border-[#efdbe4] bg-white px-4 py-3 text-sm text-[#5f3647] outline-none transition focus:border-[#ed0e64]", placeholder: "Ex: Directeur commercial France" %>
-        </div>
-        <div>
-          <%= f.label :mission_type, "Type de mission", class: "mb-2 block text-sm font-semibold text-[#6b3f4f]" %>
-          <%= f.select :mission_type, options_for_select([["Management de transition", "exclusive"], ["CDI", "retained"], ["Contingency", "contingency"]]), { prompt: "Choisir un type" }, { required: true, class: "w-full rounded-2xl border border-[#efdbe4] bg-white px-4 py-3 text-sm text-[#5f3647] outline-none transition focus:border-[#ed0e64]" } %>
-        </div>
-      </div>
-
-      <div class="grid gap-5 md:grid-cols-3">
-        <div>
-          <%= f.label :region_id, "Région", class: "mb-2 block text-sm font-semibold text-[#6b3f4f]" %>
-          <%= f.collection_select :region_id, @regions, :id, :name, { prompt: "Choisir une région" }, { required: true, class: "w-full rounded-2xl border border-[#efdbe4] bg-white px-4 py-3 text-sm text-[#5f3647] outline-none transition focus:border-[#ed0e64]" } %>
-        </div>
-        <div>
-          <%= f.label :specialty_id, "Spécialité", class: "mb-2 block text-sm font-semibold text-[#6b3f4f]" %>
-          <%= f.collection_select :specialty_id, @specialties, :id, :name, { prompt: "Choisir une spécialité" }, { required: true, class: "w-full rounded-2xl border border-[#efdbe4] bg-white px-4 py-3 text-sm text-[#5f3647] outline-none transition focus:border-[#ed0e64]" } %>
-        </div>
-        <div>
-          <%= f.label :priority_level, "Priorité", class: "mb-2 block text-sm font-semibold text-[#6b3f4f]" %>
-          <%= f.select :priority_level, options_for_select([["Critique", "critical"], ["Haute", "high"], ["Moyenne", "medium"], ["Basse", "low"]]), { prompt: "Choisir une priorité" }, { required: true, class: "w-full rounded-2xl border border-[#efdbe4] bg-white px-4 py-3 text-sm text-[#5f3647] outline-none transition focus:border-[#ed0e64]" } %>
-        </div>
-      </div>
-
-      <div class="grid gap-5 md:grid-cols-2">
-        <div>
-          <label for="freelance-mission-company-search" class="mb-2 block text-sm font-semibold text-[#6b3f4f]">Entreprise</label>
-          <input id="freelance-mission-company-search" type="text" autocomplete="off" required class="w-full rounded-2xl border border-[#efdbe4] bg-white px-4 py-3 text-sm text-[#5f3647] outline-none transition focus:border-[#ed0e64]" placeholder="Commence à écrire le nom d'une entreprise..." oninput="filterFreelanceMissionCompanies(this.value)">
-          <div id="freelance-mission-company-results" class="mt-3 max-h-52 space-y-2 overflow-y-auto">
-            <% @owned_clients.each do |client| %>
-              <button type="button" class="freelance-mission-company-result flex w-full items-center justify-between rounded-2xl border border-[#ead2dc] bg-white px-4 py-3 text-left text-sm text-[#5f3647] transition hover:border-[#dfbcc9] hover:bg-[#fff5f8]" data-client-id="<%= client.id %>" data-client-name="<%= client.brand_name.presence || client.legal_name %>" data-search-text="<%= [client.brand_name, client.legal_name, client.sector].compact.join(' ') %>" onclick="selectFreelanceMissionCompany(this)">
-                <span class="font-semibold text-[#4c1f2a]"><%= client.brand_name.presence || client.legal_name %></span>
-                <span class="text-xs text-[#9a5a68]"><%= client.sector.presence || "Entreprise" %></span>
-              </button>
-            <% end %>
-          </div>
-        </div>
-        <div>
-          <label for="freelance-mission-contact-search" class="mb-2 block text-sm font-semibold text-[#6b3f4f]">Contact client</label>
-          <input id="freelance-mission-contact-search" type="text" autocomplete="off" required disabled class="w-full rounded-2xl border border-[#efdbe4] bg-white px-4 py-3 text-sm text-[#5f3647] outline-none transition focus:border-[#ed0e64] disabled:cursor-not-allowed disabled:bg-[#f7f2f5]" placeholder="Sélectionne d'abord une entreprise" oninput="filterFreelanceMissionContacts(this.value)">
-          <div id="freelance-mission-contact-results" class="mt-3 max-h-52 space-y-2 overflow-y-auto">
-            <% @owned_client_contacts.each do |contact| %>
-              <button type="button" class="freelance-mission-contact-result hidden w-full rounded-2xl border border-[#ead2dc] bg-white px-4 py-3 text-left text-sm text-[#5f3647] transition hover:border-[#dfbcc9] hover:bg-[#fff5f8]" data-contact-id="<%= contact.id %>" data-client-id="<%= contact.client_id %>" data-contact-name="<%= [contact.first_name, contact.last_name].compact.join(' ') %>" onclick="selectFreelanceMissionContact(this)">
-                <span class="block font-semibold text-[#4c1f2a]"><%= [contact.first_name, contact.last_name].compact.join(" ") %></span>
-                <span class="block text-xs text-[#9a5a68]"><%= contact.job_title.presence || contact.email.presence || "Contact client" %></span>
-              </button>
-            <% end %>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid gap-5 md:grid-cols-2">
-        <div>
-          <label for="mission-salary-min" class="mb-2 block text-sm font-semibold text-[#6b3f4f]">Package cible minimum</label>
-          <input id="mission-salary-min" name="mission[salary_min_eur]" type="number" min="1" required class="w-full rounded-2xl border border-[#efdbe4] bg-white px-4 py-3 text-sm text-[#5f3647] outline-none transition focus:border-[#ed0e64]" placeholder="Ex: 30000">
-        </div>
-        <div>
-          <label for="mission-salary-max" class="mb-2 block text-sm font-semibold text-[#6b3f4f]">Package cible maximum</label>
-          <input id="mission-salary-max" name="mission[salary_max_eur]" type="number" min="1" required class="w-full rounded-2xl border border-[#efdbe4] bg-white px-4 py-3 text-sm text-[#5f3647] outline-none transition focus:border-[#ed0e64]" placeholder="Ex: 40000">
-        </div>
-      </div>
-
-      <div>
-        <label for="mission-profile-search" class="mb-2 block text-sm font-semibold text-[#6b3f4f]">Profil recherché</label>
-        <textarea id="mission-profile-search" name="mission[profile_search]" rows="4" required class="w-full rounded-2xl border border-[#efdbe4] bg-white px-4 py-3 text-sm text-[#5f3647] outline-none transition focus:border-[#ed0e64]" placeholder="Décris précisément le profil recherché, les expériences attendues et les critères indispensables..."></textarea>
-      </div>
-
-      <div>
-        <p class="mb-2 block text-sm font-semibold text-[#6b3f4f]">Avantages</p>
-        <div class="grid gap-3 rounded-2xl border border-[#efdbe4] bg-white px-4 py-4 md:grid-cols-3">
-          <% ["13eme mois", "Tickets restaurants", "Voiture de fonction", "Télétravail", "Mutuelle premium", "Bonus variable"].each do |advantage| %>
-            <label class="flex items-center gap-3 text-sm text-[#5f3647]">
-              <input type="checkbox" name="mission[advantages][]" value="<%= advantage %>" class="checkbox checkbox-sm border-[#dfbcc9] [--chkbg:#ed0e64] [--chkfg:white]">
-              <span><%= advantage %></span>
-            </label>
-          <% end %>
-        </div>
-        <p class="mt-2 text-xs text-[#9a5a68]">Sélectionne au moins un avantage.</p>
-      </div>
-
-      <div class="grid gap-5 md:grid-cols-2">
-        <div>
-          <label for="mission-en-bref" class="mb-2 block text-sm font-semibold text-[#6b3f4f]">EN BREF</label>
-          <textarea id="mission-en-bref" name="mission[en_bref]" rows="4" required class="w-full rounded-2xl border border-[#efdbe4] bg-white px-4 py-3 text-sm text-[#5f3647] outline-none transition focus:border-[#ed0e64]" placeholder="Résumé court et impactant de l'opportunité..."></textarea>
-        </div>
-        <div>
-          <label for="mission-le-role" class="mb-2 block text-sm font-semibold text-[#6b3f4f]">LE ROLE</label>
-          <textarea id="mission-le-role" name="mission[role_summary]" rows="4" required class="w-full rounded-2xl border border-[#efdbe4] bg-white px-4 py-3 text-sm text-[#5f3647] outline-none transition focus:border-[#ed0e64]" placeholder="Décris le rôle, le périmètre, les responsabilités et la mission..."></textarea>
-        </div>
-      </div>
-
-      <div class="grid gap-5 md:grid-cols-2">
-        <div>
-          <label for="mission-le-contexte" class="mb-2 block text-sm font-semibold text-[#6b3f4f]">LE CONTEXTE</label>
-          <textarea id="mission-le-contexte" name="mission[role_context]" rows="5" required class="w-full rounded-2xl border border-[#efdbe4] bg-white px-4 py-3 text-sm text-[#5f3647] outline-none transition focus:border-[#ed0e64]" placeholder="Contexte de l'entreprise, de l'équipe et du recrutement..."></textarea>
-        </div>
-        <div>
-          <label for="mission-enjeux" class="mb-2 block text-sm font-semibold text-[#6b3f4f]">Enjeux des 12 premiers mois</label>
-          <textarea id="mission-enjeux" name="mission[first_year_challenges]" rows="5" required class="w-full rounded-2xl border border-[#efdbe4] bg-white px-4 py-3 text-sm text-[#5f3647] outline-none transition focus:border-[#ed0e64]" placeholder="Un enjeu par ligne pour alimenter la page mission..."></textarea>
-        </div>
-      </div>
-
-      <div>
-        <label for="mission-deroulee" class="mb-2 block text-sm font-semibold text-[#6b3f4f]">Deroulee du recrutement</label>
-        <textarea id="mission-deroulee" name="mission[recruitment_process]" rows="5" required class="w-full rounded-2xl border border-[#efdbe4] bg-white px-4 py-3 text-sm text-[#5f3647] outline-none transition focus:border-[#ed0e64]" placeholder="Décris les étapes du recrutement, une étape par ligne..."></textarea>
-      </div>
-
-      <div class="flex items-center justify-end gap-3 pt-2">
-        <button type="button" class="btn border-[#dfbcc9] bg-white text-[#8b4452] hover:bg-[#fff5f8]" onclick="document.getElementById('create_freelance_mission_modal').close()">Annuler</button>
-        <%= f.button type: :submit, class: "btn border-[#f1a38b] bg-[#f4a58a] text-white hover:border-[#e39479] hover:bg-[#ee977c]" do %>
-          Créer la mission
-        <% end %>
-      </div>
-    <% end %>
-  </div>
-  <form method="dialog" class="modal-backdrop"><button>close</button></form>
-</dialog>
-
-<script>
-  function normalizeFreelanceSearchText(value) {
-    return (value || '')
-      .toString()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .trim();
-  }
-
-  function filterFreelanceMissionCompanies(query) {
-    const results = document.getElementById('freelance-mission-company-results');
-    const normalizedQuery = normalizeFreelanceSearchText(query);
-    if (results) results.classList.remove('hidden');
-    document.querySelectorAll('.freelance-mission-company-result').forEach((item) => {
-      const haystack = normalizeFreelanceSearchText(item.dataset.searchText || item.dataset.clientName || '');
-      item.classList.toggle('hidden', normalizedQuery.length > 0 && !haystack.includes(normalizedQuery));
-    });
-  }
-
-  function selectFreelanceMissionCompany(button) {
-    const clientIdField = document.getElementById('freelance-mission-client-id');
-    const companySearch = document.getElementById('freelance-mission-company-search');
-    const contactSearch = document.getElementById('freelance-mission-contact-search');
-    const contactIdField = document.getElementById('freelance-mission-contact-id');
-    const companyResults = document.getElementById('freelance-mission-company-results');
-    if (!clientIdField || !companySearch || !contactSearch || !contactIdField) return;
-
-    clientIdField.value = button.dataset.clientId;
-    companySearch.value = button.dataset.clientName;
-    contactSearch.value = '';
-    contactIdField.value = '';
-    contactSearch.disabled = false;
-    contactSearch.placeholder = 'Commence à écrire le nom du contact...';
-    if (companyResults) companyResults.classList.add('hidden');
-    filterFreelanceMissionContacts('');
-  }
-
-  function filterFreelanceMissionContacts(query) {
-    const clientIdField = document.getElementById('freelance-mission-client-id');
-    const results = document.getElementById('freelance-mission-contact-results');
-    const normalizedQuery = normalizeFreelanceSearchText(query);
-    if (results) results.classList.remove('hidden');
-    document.querySelectorAll('.freelance-mission-contact-result').forEach((item) => {
-      const sameClient = clientIdField && item.dataset.clientId === clientIdField.value;
-      const name = normalizeFreelanceSearchText(item.dataset.contactName || '');
-      const matches = normalizedQuery.length === 0 || name.includes(normalizedQuery);
-      item.classList.toggle('hidden', !(sameClient && matches));
-    });
-  }
-
-  function selectFreelanceMissionContact(button) {
-    const contactIdField = document.getElementById('freelance-mission-contact-id');
-    const contactSearch = document.getElementById('freelance-mission-contact-search');
-    const contactResults = document.getElementById('freelance-mission-contact-results');
-    if (!contactIdField || !contactSearch) return;
-
-    contactIdField.value = button.dataset.contactId;
-    contactSearch.value = button.dataset.contactName;
-    if (contactResults) contactResults.classList.add('hidden');
-  }
-
-  document.addEventListener('submit', function (event) {
-    if (event.target && event.target.id === 'create-freelance-mission-form') {
-      const checkedAdvantages = event.target.querySelectorAll('input[name="mission[advantages][]"]:checked');
-      if (checkedAdvantages.length === 0) {
-        event.preventDefault();
-        window.alert('Sélectionne au moins un avantage.');
-      }
-    }
-  });
-</script>

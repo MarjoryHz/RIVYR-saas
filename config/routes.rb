@@ -36,6 +36,7 @@ Rails.application.routes.draw do
     get "finances", to: "freelance_finances#show", as: :freelance_finance
     get "invoices", to: "invoices#index", as: :invoices
     get "todo", to: "todo_lists#show", as: :todo_list
+    patch "admin_updates/acknowledge", to: "freelance_admin_updates#acknowledge", as: :acknowledge_freelance_admin_updates
   end
   resources :missions do
     get :my_missions, on: :collection

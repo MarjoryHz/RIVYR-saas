@@ -1,51 +1,56 @@
-<% if Array(admin_updates).any? %>
-  <dialog id="dashboard_admin_updates_modal" class="modal">
-    <div class="modal-box max-w-2xl rounded-[2rem] border border-[#ead2dc] bg-[#fff8fb] shadow-[0_24px_50px_rgba(91,38,51,0.14)]">
-      <div class="flex items-start justify-between gap-4">
-        <div>
-          <p class="text-sm font-semibold uppercase tracking-[0.28em] text-[#a15c70]">Mise à jour RIVYR</p>
-          <h3 class="mt-2 text-2xl font-semibold text-[#4c1f2a]">Une décision vient d’être prise</h3>
-          <p class="mt-2 text-sm text-[#7b4b5a]">Retrouve ici les dernières réponses de l’équipe RIVYR sur tes positionnements.</p>
-        </div>
-        <form method="dialog">
-          <button class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#8c5665] transition hover:bg-[#fff2f7] hover:text-[#ed0e64]">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </form>
-      </div>
+<% container_id = local_assigns.fetch(:container_id, "global_admin_updates_modal_host") %>
+<% updates = Array(admin_updates) %>
 
-      <div class="mt-6 space-y-4">
-        <% admin_updates.each do |application| %>
-          <% accepted = application.status_accepted? %>
-          <article class="rounded-[1.45rem] border px-5 py-4 <%= accepted ? 'border-[#d2dfd4] bg-[#edf7ef]' : 'border-[#f1c8d3] bg-[#fff1f4]' %>">
-            <div class="flex items-start justify-between gap-4">
-              <div>
-                <p class="text-lg font-semibold <%= accepted ? 'text-[#2f6b3c]' : 'text-[#a33d68]' %>">
-                  <%= accepted ? 'Mission acceptée' : 'Candidature refusée' %>
-                </p>
-                <p class="mt-1 text-sm font-medium text-[#4c1f2a]"><%= application.mission.title %></p>
-                <% if application.review_reason.present? %>
-                  <p class="mt-2 text-sm text-[#6b3f4f]"><%= application.review_reason %></p>
-                <% elsif accepted %>
-                  <p class="mt-2 text-sm text-[#6b3f4f]">La mission est maintenant disponible dans ta liste “Mes missions”.</p>
+<div
+  id="<%= container_id %>"
+  <% if updates.any? %>
+    data-controller="admin-updates-modal"
+    data-admin-updates-modal-application-ids-value="<%= updates.map(&:id).to_json %>"
+    data-admin-updates-modal-acknowledge-url-value="<%= dashboard_acknowledge_freelance_admin_updates_path %>"
+  <% end %>>
+  <% if updates.any? %>
+    <dialog id="dashboard_admin_updates_modal" class="modal">
+      <div class="modal-box max-w-2xl rounded-[2rem] border border-[#ead2dc] bg-[#fff8fb] shadow-[0_24px_50px_rgba(91,38,51,0.14)]">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <p class="text-sm font-semibold uppercase tracking-[0.28em] text-[#a15c70]">Mise à jour RIVYR</p>
+            <h3 class="mt-2 text-2xl font-semibold text-[#4c1f2a]">Une décision vient d’être prise</h3>
+            <p class="mt-2 text-sm text-[#7b4b5a]">Retrouve ici les dernières réponses de l’équipe RIVYR sur tes positionnements.</p>
+          </div>
+          <form method="dialog">
+            <button class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#8c5665] transition hover:bg-[#fff2f7] hover:text-[#ed0e64]">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </form>
+        </div>
+
+        <div class="mt-6 space-y-4">
+          <% updates.each do |application| %>
+            <% accepted = application.status_accepted? %>
+            <article class="rounded-[1.45rem] border px-5 py-4 <%= accepted ? 'border-[#d2dfd4] bg-[#edf7ef]' : 'border-[#f1c8d3] bg-[#fff1f4]' %>">
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <p class="text-lg font-semibold <%= accepted ? 'text-[#2f6b3c]' : 'text-[#a33d68]' %>">
+                    <%= accepted ? 'Mission acceptée' : 'Candidature refusée' %>
+                  </p>
+                  <p class="mt-1 text-sm font-medium text-[#4c1f2a]"><%= application.mission.title %></p>
+                  <% if application.review_reason.present? %>
+                    <p class="mt-2 text-sm text-[#6b3f4f]"><%= application.review_reason %></p>
+                  <% elsif accepted %>
+                    <p class="mt-2 text-sm text-[#6b3f4f]">La mission est maintenant disponible dans ta liste “Mes missions”.</p>
+                  <% end %>
+                </div>
+
+                <%= link_to accepted ? dashboard_my_missions_path : dashboard_pending_missions_path, class: "inline-flex shrink-0 items-center gap-2 rounded-full border border-[#f1a38b] bg-[#f4a58a] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" do %>
+                  <i class="fa-solid <%= accepted ? 'fa-briefcase' : 'fa-clock' %>"></i>
+                  <%= accepted ? 'Mes missions' : 'Mes validations' %>
                 <% end %>
               </div>
-
-              <%= link_to accepted ? dashboard_my_missions_path : dashboard_pending_missions_path, class: "inline-flex shrink-0 items-center gap-2 rounded-full border border-[#f1a38b] bg-[#f4a58a] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" do %>
-                <i class="fa-solid <%= accepted ? 'fa-briefcase' : 'fa-clock' %>"></i>
-                <%= accepted ? 'Mes missions' : 'Mes validations' %>
-              <% end %>
-            </div>
-          </article>
-        <% end %>
+            </article>
+          <% end %>
+        </div>
       </div>
-    </div>
-    <form method="dialog" class="modal-backdrop"><button>close</button></form>
-  </dialog>
-
-  <script>
-    requestAnimationFrame(function() {
-      document.getElementById("dashboard_admin_updates_modal")?.showModal();
-    });
-  </script>
-<% end %>
+      <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+  <% end %>
+</div>

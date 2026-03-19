@@ -34,6 +34,10 @@
     <main class="relative z-10 <%= 'freelance-sidebar-layout' if show_freelance_sidebar %>">
       <%= yield %>
     </main>
+    <% if show_freelance_sidebar %>
+      <%= turbo_stream_from "freelance_admin_updates:#{current_user.id}" %>
+      <%= render "missions/admin_updates_modal", admin_updates: @dashboard_admin_updates, container_id: "global_admin_updates_modal_host" %>
+    <% end %>
     <%= yield :modals %>
     <%= render "shared/flashes" %>
 

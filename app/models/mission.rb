@@ -1,14 +1,15 @@
 class Mission < ApplicationRecord
   enum :status, {
+    draft: "draft",
     open: "open",
     in_progress: "in_progress",
     closed: "closed"
   }, prefix: true
 
-  belongs_to :region
+  belongs_to :region, optional: true
   belongs_to :freelancer_profile
-  belongs_to :client_contact
-  belongs_to :specialty
+  belongs_to :client_contact, optional: true
+  belongs_to :specialty, optional: true
 
   has_one :placement, dependent: :destroy
   has_many :freelance_mission_preferences, dependent: :destroy
@@ -16,12 +17,13 @@ class Mission < ApplicationRecord
   has_many :favorite_missions, dependent: :destroy
   has_many :favorited_by_users, through: :favorite_missions, source: :user
 
-  validates :title, presence: true
+  validates :title, presence: true, unless: :status_draft?
   validates :reference, presence: true
   validates :status, presence: true
   validates :closure_reason, length: { maximum: 100 }, allow_blank: true
   validates :closure_note, length: { maximum: 3_000 }, allow_blank: true
   validates :priority_level, length: { maximum: 50 }, allow_blank: true
+  validates :client_contact, :region, :specialty, presence: true, unless: :status_draft?
 
   scope :with_status, ->(value) { value.present? ? where(status: value) : all }
   scope :closed_by_freelance, -> { where.not(closed_by_freelancer_at: nil) }

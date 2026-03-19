@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_18_150525) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_19_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -244,7 +244,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_18_150525) do
 
   create_table "missions", force: :cascade do |t|
     t.text "brief_summary"
-    t.bigint "client_contact_id", null: false
+    t.bigint "client_contact_id"
     t.date "closed_at"
     t.datetime "closed_by_freelancer_at"
     t.datetime "closure_admin_read_at"
@@ -262,9 +262,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_18_150525) do
     t.string "pipeline_stage", default: "sourcing_candidates", null: false
     t.string "priority_level"
     t.string "reference"
-    t.bigint "region_id", null: false
+    t.bigint "region_id"
     t.text "search_constraints"
-    t.bigint "specialty_id", null: false
+    t.bigint "specialty_id"
     t.date "started_at"
     t.string "status"
     t.string "title"

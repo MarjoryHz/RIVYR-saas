@@ -131,6 +131,32 @@ class MissionsControllerTest < ActionDispatch::IntegrationTest
     assert_includes @response.body, "Mes missions"
   end
 
+  test "freelance can save a mission draft and find it in drafts tab" do
+    sign_out :user
+    sign_in_as(users(:one))
+    client_contacts(:one).update!(user: users(:one))
+
+    assert_difference("Mission.count", 1) do
+      post missions_url, params: {
+        commit_action: "draft",
+        mission: {
+          title: "Brouillon mission",
+          freelance_client_id: clients(:one).id,
+          client_contact_id: client_contacts(:one).id
+        }
+      }
+    end
+
+    mission = Mission.order(:id).last
+    assert_equal "draft", mission.status
+    assert_redirected_to my_missions_missions_path(tab: "drafts")
+
+    get my_missions_missions_url(tab: "drafts")
+    assert_response :success
+    assert_includes @response.body, "Brouillons"
+    assert_includes @response.body, "Brouillon mission"
+  end
+
   test "closing a mission as won shows mission placee and keeps the placed candidate" do
     sign_out :user
     sign_in_as(users(:one))
