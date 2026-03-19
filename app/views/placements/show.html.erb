@@ -6,7 +6,6 @@
 <% duration_months = if started_at && closed_at
   ((closed_at.year * 12 + closed_at.month) - (started_at.year * 12 + started_at.month)) + 1
 end %>
-<% candidate_initials = [@candidate.first_name.to_s.first, @candidate.last_name.to_s.first].join.upcase %>
 <% source_icon = case @candidate.source
 when "linkedin" then "fa-brands fa-linkedin text-info"
 when "jobboard" then "fa-solid fa-briefcase text-warning"
@@ -14,32 +13,45 @@ when "network" then "fa-solid fa-user-group text-primary"
 when "referral" then "fa-solid fa-handshake text-secondary"
 else "fa-solid fa-bullseye text-accent"
 end %>
-<% action_button_base = "btn btn-sm rounded-full border shadow-sm transition" %>
-<% action_button_tone = lambda do |style|
-  case style
-  when "btn-primary"
-    "border-[#f1a38b] bg-[#f4a58a] text-white hover:border-[#e39479] hover:bg-[#ee977c]"
-  when "btn-secondary"
-    "border-[#f0a1b2] bg-[#feeff3] text-[#b44a66] hover:border-[#e58ea3] hover:bg-[#fde3ea]"
-  when "btn-accent"
-    "border-[#f5b38f] bg-[#fff0e5] text-[#c56a42] hover:border-[#eca178] hover:bg-[#ffe5d4]"
-  else
-    "border-base-200 bg-base-100/90 text-[#7a4a55] hover:border-base-300 hover:bg-base-100"
-  end
+<% client_name = client.brand_name.presence || client.legal_name %>
+<% company_initials = client_name.to_s.split.map { |part| part.first }.first(2).join.upcase %>
+<% candidate_current_role = @candidate.job_titles.first.presence || "Non renseigné" %>
+<% retained_compensation = @placement.annual_salary_cents.to_i.positive? ? number_to_currency(@placement.annual_salary_cents / 100.0, unit: "€", precision: 0) : "Non renseigné" %>
+<% placement_start_date = @placement.hired_at || @mission.started_at || @mission.opened_at %>
+<% timeline_status = (@stage_states.reverse.find { |step| step[:done] } || @current_stage || @stage_states.first) %>
+<% timeline_status_classes = case timeline_status&.dig(:key)
+when :paid, :client_payment_received, :wallet_available
+  "border-[#d7e9dc] bg-[#edf8f0] text-[#2f6b3c]"
+when :in_payment, :client_invoice_validated, :freelancer_invoice_validated
+  "border-[#d9e3f7] bg-[#eef4ff] text-[#335c99]"
+when :refused
+  "border-[#f1c9d3] bg-[#fff1f4] text-[#b14360]"
+else
+  "border-[#f3dfc8] bg-[#fff3e8] text-[#ba6d2f]"
 end %>
+<% document_badge_classes = lambda do |received|
+  received ? "border-[#d7e9dc] bg-[#edf8f0] text-[#2f6b3c]" : "border-[#f3dfc8] bg-[#fff3e8] text-[#ba6d2f]"
+end %>
+<% document_badge_label = ->(received) { received ? "Reçu" : "À charger" } %>
+<% invoice_ht_cents = mission_amount_cents.positive? ? mission_amount_cents : billed_amount_cents %>
+<% invoice_vat_cents = (invoice_ht_cents * 0.2).round %>
+<% invoice_ttc_cents = invoice_ht_cents + invoice_vat_cents %>
 
 <div class="mx-auto max-w-7xl p-4 md:p-6">
   <section class="space-y-4">
     <div class="placement-summary-sticky space-y-4">
       <header class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div class="space-y-1">
-          <p class="badge badge-ghost border-base-300/60 bg-base-100/70">Finance Mission</p>
           <h1 class="text-2xl font-semibold tracking-tight text-base-content md:text-4xl"><%= @mission.title %></h1>
-          <p class="text-xl text-base-content/85 md:text-3xl">
-            <span class="text-sm align-middle text-base-content/60 md:text-base">Wallonie Engineering</span>
-            <span class="mx-1 text-base-content/40">•</span>
-            <span class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-base-200 bg-base-100 text-sm font-semibold text-primary">S</span>
-            <span class="font-semibold"><%= client.brand_name %></span>
+          <p class="flex flex-wrap items-center gap-3 text-xl text-base-content/85 md:text-3xl">
+            <% if client.logo.present? %>
+              <span class="inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-base-200 bg-white shadow-sm">
+                <%= image_tag client_logo_src(client.logo), alt: "Logo #{client_name}", class: "h-full w-full object-contain" %>
+              </span>
+            <% else %>
+              <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-base-200 bg-base-100 text-sm font-semibold text-primary shadow-sm"><%= company_initials %></span>
+            <% end %>
+            <span class="font-semibold"><%= client_name %></span>
             <% if duration_months.present? %>
               <span class="text-base text-base-content/60 md:text-xl">| <%= duration_months %> mois</span>
             <% end %>
@@ -54,62 +66,444 @@ end %>
         </div>
       </header>
 
-      <div class="flex flex-wrap gap-2">
-        <% @stage_actions.each do |action| %>
-          <% action_style = action[:label] == "Voir détails mission" ? "btn-primary" : action[:style] %>
-          <% action_class = "#{action_button_base} #{action_button_tone.call(action_style)}" %>
-          <% if action[:kind] == :post %>
-            <%= button_to action[:label], action[:path], params: action[:params] || {}, class: action_class %>
-          <% else %>
-            <%= link_to action[:label], action[:path], class: action_class %>
-          <% end %>
-        <% end %>
-        <%= link_to "Demander un avis client", "mailto:#{@mission.client_contact.email}?subject=Retour%20mission%20RIVYR&body=Bonjour%2C%20pourriez-vous%20laisser%20un%20retour%20sur%20la%20mission%20et%20notre%20accompagnement%20%3F", class: "#{action_button_base} #{action_button_tone.call('btn-primary')}" %>
-      </div>
     </div>
 
     <div class="placement-content-scroll space-y-4">
-      <div class="card border border-base-100/70 bg-base-100/90 shadow">
+      <div class="card border border-base-100/70 bg-base-100/90 shadow" data-controller="placement-billing-editor">
         <div class="card-body p-5">
           <div class="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
             <div>
               <h2 class="text-xl font-semibold text-base-content">Pilotage du placement</h2>
-              <p class="mt-1 text-sm text-base-content/60">Renseigne la rémunération, la conformité à l'offre client et l'acceptation du candidat avant validation Rivyr.</p>
+              <p class="mt-1 text-sm text-base-content/60">Les informations utiles pour déclencher la facturation et vérifier que le dossier est complet.</p>
             </div>
-            <span class="inline-flex items-center rounded-full border px-4 py-2 text-sm font-semibold <%= case @placement.workflow_status
-              when 'validated' then 'border-[#d7e9dc] bg-[#edf8f0] text-[#2f6b3c]'
-              when 'refused' then 'border-[#f1c9d3] bg-[#fff1f4] text-[#b14360]'
-              else 'border-[#f3dfc8] bg-[#fff3e8] text-[#ba6d2f]'
-            end %>">
-              <%= @placement.workflow_status == "validated" ? "Validé" : (@placement.workflow_status == "refused" ? "Refusé" : "En cours") %>
-            </span>
+            <div class="flex flex-wrap items-center gap-2">
+              <% if timeline_status&.dig(:key) == :client_payment_received %>
+                <button type="button" class="btn rounded-full border-[#ed0e64] bg-[#ed0e64] px-4 text-sm font-semibold text-white hover:border-[#cf0c57] hover:bg-[#cf0c57]" onclick="document.getElementById('client-invoice-modal').showModal()">
+                  Création facture
+                </button>
+              <% elsif timeline_status&.dig(:key) == :documents_validated %>
+                <button type="button" class="btn rounded-full border-[#ed0e64] bg-[#ed0e64] px-4 text-sm font-semibold text-white hover:border-[#cf0c57] hover:bg-[#cf0c57]" onclick="document.getElementById('submit-client-invoice-modal').showModal()">
+                  Créer la facture client
+                </button>
+              <% end %>
+              <span class="inline-flex items-center rounded-full border px-4 py-2 text-sm font-semibold <%= timeline_status_classes %>">
+                <%= timeline_status&.dig(:label) || "Placement réalisé" %>
+              </span>
+            </div>
           </div>
 
-          <%= form_with model: @placement, class: "mt-4 grid gap-4 md:grid-cols-2" do |form| %>
-            <div>
-              <%= form.label :annual_salary_cents, "Rémunération annuelle", class: "mb-2 block text-sm font-semibold text-base-content/70" %>
-              <%= form.number_field :annual_salary_cents, min: 0, step: 100, class: "input input-bordered w-full" %>
+          <div class="mt-4 grid gap-4 xl:grid-cols-3">
+            <section class="rounded-[1.35rem] border border-[#f0dce3] bg-[#fffafc] p-4">
+              <div class="flex items-center gap-2">
+                <span class="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-[#fdeef3] text-[#b14360]">
+                  <i class="fa-solid fa-building"></i>
+                </span>
+                <h3 class="text-sm font-semibold uppercase tracking-[0.16em] text-[#8b4452]">Information client</h3>
+              </div>
+              <div class="mt-4 space-y-3 text-sm text-base-content/80">
+                <div class="rounded-2xl border border-base-200 bg-white px-3 py-2" data-editable-field>
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-base-content/45">Nom de l'entreprise</p>
+                  <div class="mt-1 flex items-start justify-between gap-3" data-field-display>
+                    <p class="font-semibold text-base-content" data-field-value><%= client_name %></p>
+                    <button type="button" class="text-[#b14360]" data-action="click->placement-billing-editor#toggleField"><i class="fa-regular fa-building"></i></button>
+                  </div>
+                  <div class="mt-2 hidden gap-2" data-field-editor>
+                    <input type="text" value="<%= client_name %>" class="input input-bordered input-sm w-full">
+                    <button type="button" class="btn btn-sm border-[#ed0e64] bg-[#ed0e64] text-white" data-action="click->placement-billing-editor#saveField"><i class="fa-solid fa-check"></i></button>
+                    <button type="button" class="btn btn-sm" data-action="click->placement-billing-editor#cancelField"><i class="fa-solid fa-xmark"></i></button>
+                  </div>
+                </div>
+                <div class="rounded-2xl border border-base-200 bg-white px-3 py-2" data-editable-field>
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-base-content/45">Siret de l'entreprise</p>
+                  <div class="mt-1 flex items-start justify-between gap-3" data-field-display>
+                    <p class="font-semibold text-base-content" data-field-value>Non renseigné</p>
+                    <button type="button" class="text-[#b14360]" data-action="click->placement-billing-editor#toggleField"><i class="fa-regular fa-id-card"></i></button>
+                  </div>
+                  <div class="mt-2 hidden gap-2" data-field-editor>
+                    <input type="text" value="Non renseigné" class="input input-bordered input-sm w-full">
+                    <button type="button" class="btn btn-sm border-[#ed0e64] bg-[#ed0e64] text-white" data-action="click->placement-billing-editor#saveField"><i class="fa-solid fa-check"></i></button>
+                    <button type="button" class="btn btn-sm" data-action="click->placement-billing-editor#cancelField"><i class="fa-solid fa-xmark"></i></button>
+                  </div>
+                </div>
+                <div class="rounded-2xl border border-base-200 bg-white px-3 py-2" data-editable-field>
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-base-content/45">Adresse postale</p>
+                  <div class="mt-1 flex items-start justify-between gap-3" data-field-display>
+                    <p class="font-semibold text-base-content" data-field-value><%= client.location.presence || "Non renseignée" %></p>
+                    <button type="button" class="text-[#b14360]" data-action="click->placement-billing-editor#toggleField"><i class="fa-solid fa-location-dot"></i></button>
+                  </div>
+                  <div class="mt-2 hidden gap-2" data-field-editor>
+                    <input type="text" value="<%= client.location.presence || "Non renseignée" %>" class="input input-bordered input-sm w-full">
+                    <button type="button" class="btn btn-sm border-[#ed0e64] bg-[#ed0e64] text-white" data-action="click->placement-billing-editor#saveField"><i class="fa-solid fa-check"></i></button>
+                    <button type="button" class="btn btn-sm" data-action="click->placement-billing-editor#cancelField"><i class="fa-solid fa-xmark"></i></button>
+                  </div>
+                </div>
+                <div class="rounded-2xl border border-base-200 bg-white px-3 py-2" data-editable-field>
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-base-content/45">Contact de facturation</p>
+                  <div class="mt-1 flex items-start justify-between gap-3" data-field-display>
+                    <div>
+                      <p class="font-semibold text-base-content" data-field-value><%= [@mission.client_contact.first_name, @mission.client_contact.last_name].compact.join(" ") %></p>
+                      <p class="mt-1 text-base-content/70"><%= @mission.client_contact.email.presence || "Email non renseigné" %></p>
+                      <p class="text-base-content/70"><%= @mission.client_contact.phone.presence || "Téléphone non renseigné" %></p>
+                    </div>
+                    <button type="button" class="text-[#b14360]" data-action="click->placement-billing-editor#toggleField"><i class="fa-regular fa-address-card"></i></button>
+                  </div>
+                  <div class="mt-2 hidden gap-2" data-field-editor>
+                    <input type="text" value="<%= [@mission.client_contact.first_name, @mission.client_contact.last_name].compact.join(" ") %>" class="input input-bordered input-sm w-full">
+                    <button type="button" class="btn btn-sm border-[#ed0e64] bg-[#ed0e64] text-white" data-action="click->placement-billing-editor#saveField"><i class="fa-solid fa-check"></i></button>
+                    <button type="button" class="btn btn-sm" data-action="click->placement-billing-editor#cancelField"><i class="fa-solid fa-xmark"></i></button>
+                  </div>
+                </div>
+                <div class="rounded-2xl border border-base-200 bg-white px-3 py-3">
+                  <div class="flex items-center justify-between gap-3">
+                    <div>
+                      <div class="flex items-center gap-2">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-base-content/45">Document à charger</p>
+                        <% client_offer_received = @mission.contract_signed? %>
+                        <span data-document-badge="client_offer" data-idle-class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold <%= document_badge_classes.call(false) %>" data-loaded-class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold <%= document_badge_classes.call(true) %>" class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold <%= document_badge_classes.call(client_offer_received) %>"><%= document_badge_label.call(client_offer_received) %></span>
+                      </div>
+                      <p class="mt-1 font-semibold text-base-content">Offre signée du client</p>
+                      <p class="mt-1 text-xs text-base-content/60" data-document-name="client_offer">Aucun document chargé</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#ed0e64] bg-[#fff1f6] text-[#ed0e64]" data-document-key="client_offer" data-document-label="Offre signée du client" data-action="click->placement-billing-editor#openDocumentModal"><i class="fa-solid fa-cloud-arrow-up"></i></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="rounded-[1.35rem] border border-[#f0dce3] bg-[#fffafc] p-4">
+              <div class="flex items-center gap-2">
+                <span class="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-[#fdeef3] text-[#b14360]">
+                  <i class="fa-solid fa-briefcase"></i>
+                </span>
+                <h3 class="text-sm font-semibold uppercase tracking-[0.16em] text-[#8b4452]">Information placement</h3>
+              </div>
+              <div class="mt-4 space-y-3 text-sm text-base-content/80">
+                <div class="rounded-2xl border border-base-200 bg-white px-3 py-2" data-editable-field>
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-base-content/45">Rémunération retenue</p>
+                  <div class="mt-1 flex items-start justify-between gap-3" data-field-display>
+                    <p class="font-semibold text-base-content" data-field-value><%= retained_compensation %></p>
+                    <button type="button" class="text-[#b14360]" data-action="click->placement-billing-editor#toggleField"><i class="fa-solid fa-euro-sign"></i></button>
+                  </div>
+                  <div class="mt-2 hidden gap-2" data-field-editor>
+                    <input type="text" value="<%= retained_compensation %>" class="input input-bordered input-sm w-full">
+                    <button type="button" class="btn btn-sm border-[#ed0e64] bg-[#ed0e64] text-white" data-action="click->placement-billing-editor#saveField"><i class="fa-solid fa-check"></i></button>
+                    <button type="button" class="btn btn-sm" data-action="click->placement-billing-editor#cancelField"><i class="fa-solid fa-xmark"></i></button>
+                  </div>
+                </div>
+                <div class="rounded-2xl border border-base-200 bg-white px-3 py-2" data-editable-field>
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-base-content/45">Nom du poste</p>
+                  <div class="mt-1 flex items-start justify-between gap-3" data-field-display>
+                    <p class="font-semibold text-base-content" data-field-value><%= @mission.title %></p>
+                    <button type="button" class="text-[#b14360]" data-action="click->placement-billing-editor#toggleField"><i class="fa-solid fa-briefcase"></i></button>
+                  </div>
+                  <div class="mt-2 hidden gap-2" data-field-editor>
+                    <input type="text" value="<%= @mission.title %>" class="input input-bordered input-sm w-full">
+                    <button type="button" class="btn btn-sm border-[#ed0e64] bg-[#ed0e64] text-white" data-action="click->placement-billing-editor#saveField"><i class="fa-solid fa-check"></i></button>
+                    <button type="button" class="btn btn-sm" data-action="click->placement-billing-editor#cancelField"><i class="fa-solid fa-xmark"></i></button>
+                  </div>
+                </div>
+                <div class="rounded-2xl border border-base-200 bg-white px-3 py-2" data-editable-field>
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-base-content/45">Date de démarrage</p>
+                  <div class="mt-1 flex items-start justify-between gap-3" data-field-display>
+                    <p class="font-semibold text-base-content" data-field-value><%= placement_start_date.present? ? l(placement_start_date) : "Non renseignée" %></p>
+                    <button type="button" class="text-[#b14360]" data-action="click->placement-billing-editor#toggleField"><i class="fa-regular fa-calendar"></i></button>
+                  </div>
+                  <div class="mt-2 hidden gap-2" data-field-editor>
+                    <input type="text" value="<%= placement_start_date.present? ? l(placement_start_date) : "Non renseignée" %>" class="input input-bordered input-sm w-full">
+                    <button type="button" class="btn btn-sm border-[#ed0e64] bg-[#ed0e64] text-white" data-action="click->placement-billing-editor#saveField"><i class="fa-solid fa-check"></i></button>
+                    <button type="button" class="btn btn-sm" data-action="click->placement-billing-editor#cancelField"><i class="fa-solid fa-xmark"></i></button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="rounded-[1.35rem] border border-[#f0dce3] bg-[#fffafc] p-4">
+              <div class="flex items-center gap-2">
+                <span class="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-[#fdeef3] text-[#b14360]">
+                  <i class="fa-solid fa-user"></i>
+                </span>
+                <h3 class="text-sm font-semibold uppercase tracking-[0.16em] text-[#8b4452]">Information candidat</h3>
+              </div>
+              <div class="mt-4 space-y-3 text-sm text-base-content/80">
+                <div class="rounded-2xl border border-base-200 bg-white px-3 py-2" data-editable-field>
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-base-content/45">Nom et prénom</p>
+                  <div class="mt-1 flex items-start justify-between gap-3" data-field-display>
+                    <p class="font-semibold text-base-content" data-field-value><%= @candidate.display_name %></p>
+                    <button type="button" class="text-[#b14360]" data-action="click->placement-billing-editor#toggleField"><i class="fa-regular fa-user"></i></button>
+                  </div>
+                  <div class="mt-2 hidden gap-2" data-field-editor>
+                    <input type="text" value="<%= @candidate.display_name %>" class="input input-bordered input-sm w-full">
+                    <button type="button" class="btn btn-sm border-[#ed0e64] bg-[#ed0e64] text-white" data-action="click->placement-billing-editor#saveField"><i class="fa-solid fa-check"></i></button>
+                    <button type="button" class="btn btn-sm" data-action="click->placement-billing-editor#cancelField"><i class="fa-solid fa-xmark"></i></button>
+                  </div>
+                </div>
+                <div class="rounded-2xl border border-base-200 bg-white px-3 py-2" data-editable-field>
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-base-content/45">Poste actuel</p>
+                  <div class="mt-1 flex items-start justify-between gap-3" data-field-display>
+                    <p class="font-semibold text-base-content" data-field-value><%= candidate_current_role %></p>
+                    <button type="button" class="text-[#b14360]" data-action="click->placement-billing-editor#toggleField"><i class="fa-solid fa-user-tie"></i></button>
+                  </div>
+                  <div class="mt-2 hidden gap-2" data-field-editor>
+                    <input type="text" value="<%= candidate_current_role %>" class="input input-bordered input-sm w-full">
+                    <button type="button" class="btn btn-sm border-[#ed0e64] bg-[#ed0e64] text-white" data-action="click->placement-billing-editor#saveField"><i class="fa-solid fa-check"></i></button>
+                    <button type="button" class="btn btn-sm" data-action="click->placement-billing-editor#cancelField"><i class="fa-solid fa-xmark"></i></button>
+                  </div>
+                </div>
+                <div class="rounded-2xl border border-base-200 bg-white px-3 py-2" data-editable-field>
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-base-content/45">Adresse mail</p>
+                  <div class="mt-1 flex items-start justify-between gap-3" data-field-display>
+                    <p class="font-semibold text-base-content" data-field-value><%= @candidate.email.presence || "Non renseignée" %></p>
+                    <button type="button" class="text-[#b14360]" data-action="click->placement-billing-editor#toggleField"><i class="fa-regular fa-envelope"></i></button>
+                  </div>
+                  <div class="mt-2 hidden gap-2" data-field-editor>
+                    <input type="text" value="<%= @candidate.email.presence || "Non renseignée" %>" class="input input-bordered input-sm w-full">
+                    <button type="button" class="btn btn-sm border-[#ed0e64] bg-[#ed0e64] text-white" data-action="click->placement-billing-editor#saveField"><i class="fa-solid fa-check"></i></button>
+                    <button type="button" class="btn btn-sm" data-action="click->placement-billing-editor#cancelField"><i class="fa-solid fa-xmark"></i></button>
+                  </div>
+                </div>
+                <div class="rounded-2xl border border-base-200 bg-white px-3 py-2" data-editable-field>
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-base-content/45">Numéro de téléphone</p>
+                  <div class="mt-1 flex items-start justify-between gap-3" data-field-display>
+                    <p class="font-semibold text-base-content" data-field-value><%= @candidate.phone.presence || "Non renseigné" %></p>
+                    <button type="button" class="text-[#b14360]" data-action="click->placement-billing-editor#toggleField"><i class="fa-solid fa-phone"></i></button>
+                  </div>
+                  <div class="mt-2 hidden gap-2" data-field-editor>
+                    <input type="text" value="<%= @candidate.phone.presence || "Non renseigné" %>" class="input input-bordered input-sm w-full">
+                    <button type="button" class="btn btn-sm border-[#ed0e64] bg-[#ed0e64] text-white" data-action="click->placement-billing-editor#saveField"><i class="fa-solid fa-check"></i></button>
+                    <button type="button" class="btn btn-sm" data-action="click->placement-billing-editor#cancelField"><i class="fa-solid fa-xmark"></i></button>
+                  </div>
+                </div>
+                <div class="rounded-2xl border border-base-200 bg-white px-3 py-3">
+                  <div class="flex items-center justify-between gap-3">
+                    <div>
+                      <div class="flex items-center gap-2">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-base-content/45">Document à charger</p>
+                        <% candidate_offer_received = @placement.candidate_accepted == true || @placement.hired_at.present? %>
+                        <span data-document-badge="candidate_offer" data-idle-class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold <%= document_badge_classes.call(false) %>" data-loaded-class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold <%= document_badge_classes.call(true) %>" class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold <%= document_badge_classes.call(candidate_offer_received) %>"><%= document_badge_label.call(candidate_offer_received) %></span>
+                      </div>
+                      <p class="mt-1 font-semibold text-base-content">Offre acceptée du candidat</p>
+                      <p class="mt-1 text-xs text-base-content/60" data-document-name="candidate_offer">Aucun document chargé</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#ed0e64] bg-[#fff1f6] text-[#ed0e64]" data-document-key="candidate_offer" data-document-label="Offre acceptée du candidat" data-action="click->placement-billing-editor#openDocumentModal"><i class="fa-solid fa-cloud-arrow-up"></i></button>
+                    </div>
+                  </div>
+                </div>
+                <div class="rounded-2xl border border-base-200 bg-white px-3 py-3">
+                  <div class="flex items-center justify-between gap-3">
+                    <div>
+                      <div class="flex items-center gap-2">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-base-content/45">Document à charger</p>
+                        <span data-document-badge="candidate_supporting_docs" data-idle-class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold border-[#f3dfc8] bg-[#fff3e8] text-[#ba6d2f]" data-loaded-class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold border-[#d7e9dc] bg-[#edf8f0] text-[#2f6b3c]" class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold border-[#f3dfc8] bg-[#fff3e8] text-[#ba6d2f]">À vérifier</span>
+                      </div>
+                      <p class="mt-1 font-semibold text-base-content">Diplôme et dernier bulletin de salaire</p>
+                      <p class="mt-1 text-xs text-base-content/60">À charger si absent de la fiche candidat.</p>
+                      <p class="mt-1 text-xs text-base-content/60" data-document-name="candidate_supporting_docs">Aucun document chargé</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#ed0e64] bg-[#fff1f6] text-[#ed0e64]" data-document-key="candidate_supporting_docs" data-document-label="Diplôme et dernier bulletin de salaire" data-action="click->placement-billing-editor#openDocumentModal"><i class="fa-solid fa-paperclip"></i></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+          <dialog id="placement-document-modal" class="modal">
+            <div class="modal-box max-w-lg rounded-[1.75rem] border border-[#f2d5df] bg-base-100 shadow-2xl">
+              <h3 class="text-xl font-semibold text-[#4c1f2a]">Charger un document</h3>
+              <p class="mt-2 text-sm text-[#7b4b5a]">Sélectionne un fichier depuis ton ordinateur ou renseigne un lien externe.</p>
+              <div class="mt-5 space-y-4">
+                <div>
+                  <p class="text-sm font-semibold text-[#5f3647]" data-placement-billing-editor-target="fieldLabel">Document</p>
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-[#5f3647]">Depuis l'ordinateur</label>
+                  <input type="file" class="file-input file-input-bordered w-full" data-placement-billing-editor-target="fileInput">
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-[#5f3647]">Ou depuis un lien</label>
+                  <input type="text" placeholder="https://..." class="input input-bordered w-full" data-placement-billing-editor-target="remoteInput">
+                </div>
+              </div>
+              <div class="modal-action">
+                <button type="button" class="btn btn-ghost" onclick="document.getElementById('placement-document-modal').close()">Annuler</button>
+                <button type="button" class="btn border-[#ed0e64] bg-[#ed0e64] text-white hover:border-[#cf0c57] hover:bg-[#cf0c57]" data-action="click->placement-billing-editor#saveDocument">Valider le document</button>
+              </div>
             </div>
-            <div>
-              <%= form.label :package_summary, "Package / éléments variables", class: "mb-2 block text-sm font-semibold text-base-content/70" %>
-              <%= form.text_field :package_summary, class: "input input-bordered w-full", placeholder: "Fixe, variable, bonus, voiture..." %>
+            <form method="dialog" class="modal-backdrop"><button>close</button></form>
+          </dialog>
+          <dialog id="client-invoice-modal" class="modal">
+            <div class="modal-box max-w-3xl rounded-[1.75rem] border border-[#f2d5df] bg-base-100 shadow-2xl">
+              <div class="flex items-start justify-between gap-4">
+                <div class="flex items-center gap-3">
+                  <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#ed0e64] text-lg font-semibold text-white">R</span>
+                  <div>
+                    <h3 class="text-2xl font-semibold text-[#4c1f2a]">Facture client</h3>
+                    <p class="mt-1 text-sm text-[#7b4b5a]">Facture fictive générée à partir du gain mission, avec TVA à 20 %.</p>
+                  </div>
+                </div>
+                <form method="dialog">
+                  <button class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-base-content/60 transition hover:bg-base-100 hover:text-base-content">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </form>
+              </div>
+              <div class="mt-6 rounded-[1.5rem] border border-[#f0dce3] bg-white p-6">
+                <div class="flex items-start justify-between gap-6">
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#9a5a68]">Émetteur</p>
+                    <p class="mt-2 text-lg font-semibold text-[#4c1f2a]">Rivyr</p>
+                    <p class="text-sm text-[#7b4b5a]">Finance & facturation</p>
+                    <p class="text-sm text-[#7b4b5a]">12 avenue de l'Exécution</p>
+                    <p class="text-sm text-[#7b4b5a]">75008 Paris</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#9a5a68]">Facture</p>
+                    <p class="mt-2 text-lg font-semibold text-[#4c1f2a]">FAC-CLI-<%= @placement.id %>-2026</p>
+                    <p class="text-sm text-[#7b4b5a]">Date: <%= l(Date.current) %></p>
+                    <p class="text-sm text-[#7b4b5a]">Échéance: <%= l(Date.current + 30.days) %></p>
+                  </div>
+                </div>
+                <div class="mt-6 grid gap-4 md:grid-cols-2">
+                  <div class="rounded-2xl border border-[#f0dce3] bg-[#fff9fb] p-4">
+                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#9a5a68]">Client</p>
+                    <p class="mt-2 font-semibold text-[#4c1f2a]"><%= client_name %></p>
+                    <p class="text-sm text-[#7b4b5a]"><%= client.location.presence || "Adresse client non renseignée" %></p>
+                    <p class="text-sm text-[#7b4b5a]">Contact: <%= [@mission.client_contact.first_name, @mission.client_contact.last_name].compact.join(" ") %></p>
+                    <p class="text-sm text-[#7b4b5a]"><%= @mission.client_contact.email.presence || "Email non renseigné" %></p>
+                  </div>
+                  <div class="rounded-2xl border border-[#f0dce3] bg-[#fff9fb] p-4">
+                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#9a5a68]">Mission</p>
+                    <p class="mt-2 font-semibold text-[#4c1f2a]"><%= @mission.title %></p>
+                    <p class="text-sm text-[#7b4b5a]">Candidat: <%= @candidate.display_name %></p>
+                    <p class="text-sm text-[#7b4b5a]">Démarrage: <%= placement_start_date.present? ? l(placement_start_date) : "Non renseigné" %></p>
+                  </div>
+                </div>
+                <div class="mt-6 overflow-hidden rounded-2xl border border-[#f0dce3]">
+                  <table class="min-w-full text-sm">
+                    <thead class="bg-[#fff7fa] text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9a5a68]">
+                      <tr>
+                        <th class="px-4 py-3">Description</th>
+                        <th class="px-4 py-3 text-right">Montant HT</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr class="border-t border-[#f3e2e8]">
+                        <td class="px-4 py-4 text-[#4c1f2a]">Honoraires de placement Rivyr - <%= @mission.title %></td>
+                        <td class="px-4 py-4 text-right font-semibold text-[#4c1f2a]"><%= number_to_currency(invoice_ht_cents / 100.0, unit: "€") %></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="mt-4 ml-auto max-w-sm space-y-2 rounded-2xl border border-[#f0dce3] bg-[#fff9fb] p-4 text-sm">
+                  <div class="flex items-center justify-between text-[#7b4b5a]"><span>Total HT</span><span><%= number_to_currency(invoice_ht_cents / 100.0, unit: "€") %></span></div>
+                  <div class="flex items-center justify-between text-[#7b4b5a]"><span>TVA 20%</span><span><%= number_to_currency(invoice_vat_cents / 100.0, unit: "€") %></span></div>
+                  <div class="flex items-center justify-between text-base font-semibold text-[#4c1f2a]"><span>Total TTC</span><span><%= number_to_currency(invoice_ttc_cents / 100.0, unit: "€") %></span></div>
+                </div>
+              </div>
+              <div class="modal-action">
+                <form method="dialog">
+                  <button class="btn btn-ghost">Fermer</button>
+                </form>
+                <button type="button" class="btn border-[#ed0e64] bg-[#ed0e64] text-white hover:border-[#cf0c57] hover:bg-[#cf0c57]" onclick="document.getElementById('client-invoice-modal').close(); document.getElementById('placement-invoice-success-modal').showModal();">
+                  Envoyer la facture
+                </button>
+              </div>
             </div>
-            <div>
-              <%= form.label :client_offer_compliant, "Conformité à l'offre client", class: "mb-2 block text-sm font-semibold text-base-content/70" %>
-              <%= form.select :client_offer_compliant, [["À confirmer", nil], ["Conforme", true], ["Non conforme", false]], {}, class: "select select-bordered w-full" %>
+            <form method="dialog" class="modal-backdrop"><button>close</button></form>
+          </dialog>
+          <dialog id="submit-client-invoice-modal" class="modal">
+            <div class="modal-box max-w-3xl rounded-[1.75rem] border border-[#f2d5df] bg-base-100 shadow-2xl">
+              <div class="flex items-start justify-between gap-4">
+                <div class="flex items-center gap-3">
+                  <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#ed0e64] text-lg font-semibold text-white">R</span>
+                  <div>
+                    <h3 class="text-2xl font-semibold text-[#4c1f2a]">Créer la facture client</h3>
+                    <p class="mt-1 text-sm text-[#7b4b5a]">Prévisualisation d'une facture Rivyr à soumettre après validation des documents.</p>
+                  </div>
+                </div>
+                <form method="dialog">
+                  <button class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-base-content/60 transition hover:bg-base-100 hover:text-base-content">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </form>
+              </div>
+              <div class="mt-6 rounded-[1.5rem] border border-[#f0dce3] bg-white p-6">
+                <div class="flex items-center justify-between gap-6 border-b border-[#f3e2e8] pb-4">
+                  <div>
+                    <p class="text-2xl font-semibold text-[#ed0e64]">Rivyr</p>
+                    <p class="text-sm text-[#7b4b5a]">Facture client - Préparation</p>
+                  </div>
+                  <div class="text-right text-sm text-[#7b4b5a]">
+                    <p>Réf: RIV-CLIENT-<%= @placement.id %></p>
+                    <p>Date: <%= l(Date.current) %></p>
+                  </div>
+                </div>
+                <div class="mt-5 grid gap-4 md:grid-cols-2">
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#9a5a68]">Facturer à</p>
+                    <p class="mt-2 font-semibold text-[#4c1f2a]"><%= client_name %></p>
+                    <p class="text-sm text-[#7b4b5a]"><%= client.location.presence || "Adresse client non renseignée" %></p>
+                    <p class="text-sm text-[#7b4b5a]"><%= @mission.client_contact.email.presence || "Email non renseigné" %></p>
+                  </div>
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#9a5a68]">Détail mission</p>
+                    <p class="mt-2 font-semibold text-[#4c1f2a]"><%= @mission.title %></p>
+                    <p class="text-sm text-[#7b4b5a]">Placement: <%= @candidate.display_name %></p>
+                    <p class="text-sm text-[#7b4b5a]">Date de démarrage: <%= placement_start_date.present? ? l(placement_start_date) : "Non renseignée" %></p>
+                  </div>
+                </div>
+                <div class="mt-6 rounded-2xl border border-[#f0dce3] bg-[#fff9fb] p-4">
+                  <div class="flex items-center justify-between text-sm text-[#7b4b5a]">
+                    <span>Montant HT</span>
+                    <span><%= number_to_currency(invoice_ht_cents / 100.0, unit: "€") %></span>
+                  </div>
+                  <div class="mt-2 flex items-center justify-between text-sm text-[#7b4b5a]">
+                    <span>TVA 20%</span>
+                    <span><%= number_to_currency(invoice_vat_cents / 100.0, unit: "€") %></span>
+                  </div>
+                  <div class="mt-3 flex items-center justify-between text-base font-semibold text-[#4c1f2a]">
+                    <span>Total TTC</span>
+                    <span><%= number_to_currency(invoice_ttc_cents / 100.0, unit: "€") %></span>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-action">
+                <form method="dialog">
+                  <button class="btn btn-ghost">Fermer</button>
+                </form>
+                <button type="button" class="btn border-[#ed0e64] bg-[#ed0e64] text-white hover:border-[#cf0c57] hover:bg-[#cf0c57]" onclick="document.getElementById('submit-client-invoice-modal').close(); document.getElementById('placement-invoice-success-modal').showModal();">
+                  Soumettre à Rivyr
+                </button>
+              </div>
             </div>
-            <div>
-              <%= form.label :candidate_accepted, "Acceptation du candidat", class: "mb-2 block text-sm font-semibold text-base-content/70" %>
-              <%= form.select :candidate_accepted, [["À confirmer", nil], ["Accepté", true], ["Refusé", false]], {}, class: "select select-bordered w-full" %>
+            <form method="dialog" class="modal-backdrop"><button>close</button></form>
+          </dialog>
+          <dialog id="placement-invoice-success-modal" class="modal">
+            <div class="modal-box max-w-md rounded-[1.75rem] border border-[#f2d5df] bg-base-100 text-center shadow-2xl">
+              <form method="dialog" class="flex justify-end">
+                <button class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-base-content/60 transition hover:bg-base-100 hover:text-base-content">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </form>
+
+              <div class="mx-auto mt-2 inline-flex h-16 w-16 items-center justify-center rounded-full bg-[#fff1f6] text-[#ed0e64] shadow-[0_12px_24px_rgba(237,14,100,0.16)]">
+                <i class="fa-solid fa-check text-2xl"></i>
+              </div>
+
+              <h3 class="mt-4 text-2xl font-semibold text-[#4c1f2a]">Demande prise en compte</h3>
+              <p class="mt-2 text-sm text-[#7b4b5a]">
+                La facture a bien été enregistrée et transmise dans le flux Rivyr.
+              </p>
+
+              <form method="dialog" class="mt-6">
+                <button class="btn border-[#ed0e64] bg-[#ed0e64] text-white hover:border-[#cf0c57] hover:bg-[#cf0c57]">Fermer</button>
+              </form>
             </div>
-            <div class="md:col-span-2">
-              <%= form.label :notes, "Notes placement", class: "mb-2 block text-sm font-semibold text-base-content/70" %>
-              <%= form.text_area :notes, rows: 4, class: "textarea textarea-bordered w-full", placeholder: "Points de vigilance, retour client, remarques de conformité..." %>
-            </div>
-            <div class="md:col-span-2 flex flex-wrap gap-3">
-              <%= form.button "Enregistrer", class: "btn border-[#f1a38b] bg-[#f4a58a] text-white hover:border-[#e39479] hover:bg-[#ee977c]" %>
-            </div>
-          <% end %>
+            <form method="dialog" class="modal-backdrop"><button>close</button></form>
+          </dialog>
           <% if current_user&.role_admin? && @placement.workflow_in_progress? %>
             <div class="mt-3 flex flex-wrap gap-3">
               <%= button_to "Valider la conformité", validate_compliance_placement_path(@placement), method: :patch, class: "btn border-[#cfe4d4] bg-[#edf8f0] text-[#2f6b3c] hover:bg-[#e4f4e8]" %>
@@ -156,13 +550,9 @@ end %>
             <div class="card-body p-4">
               <h2 class="text-xl font-semibold text-base-content">Candidat retenu</h2>
               <div class="mt-2 flex items-center gap-3">
-                <div class="avatar placeholder">
-                  <div class="h-14 w-14 rounded-full bg-primary/20 text-primary">
-                    <span class="text-lg font-semibold"><%= candidate_initials %></span>
-                  </div>
-                </div>
+                <%= image_tag avatar_asset_src(@candidate), alt: @candidate.display_name, class: "h-14 w-14 rounded-full object-cover ring-2 ring-white shadow-sm" %>
                 <div>
-                  <p class="text-lg font-semibold text-base-content"><%= [@candidate.first_name, @candidate.last_name].join(" ") %></p>
+                  <p class="text-lg font-semibold text-base-content"><%= @candidate.display_name %></p>
                   <p class="text-sm text-base-content/65">Demarrage: <%= @placement.hired_at.present? ? l(@placement.hired_at) : "-" %></p>
                 </div>
               </div>
@@ -284,8 +674,6 @@ end %>
       </div>
 
       <div class="flex flex-wrap gap-2 pt-1">
-        <a href="#" onclick="history.back(); return false;" class="btn btn-ghost btn-sm">Retour finances</a>
-        <%= link_to "Voir mission", mission_path(@mission), class: "btn btn-ghost btn-sm" %>
       </div>
     </div>
   </section>

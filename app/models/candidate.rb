@@ -68,6 +68,28 @@ class Candidate < ApplicationRecord
   validates :phone, length: { maximum: 30 }, allow_blank: true
   validates :job_titles, :skills, length: { maximum: 20 }, allow_nil: true
 
+  def display_first_name
+    first_name.to_s.gsub(/\d+\z/, "").strip
+  end
+
+  def display_last_name
+    last_name.to_s.gsub(/\d+\z/, "").strip
+  end
+
+  def display_name
+    [ display_first_name, display_last_name ].reject(&:blank?).join(" ")
+  end
+
+  def initials
+    [ display_first_name, display_last_name ].filter_map { |part| part.to_s.first }.join.upcase.first(2)
+  end
+
+  def avatar_image_path
+    return avatar_path if respond_to?(:avatar_path) && avatar_path.present?
+
+    respond_to?(:profile_gender) && profile_gender.to_s == "female" ? "avatars/femme-avatar.png" : "avatars/homme-avatar.png"
+  end
+
   scope :with_status, ->(value) { value.present? ? where(status: value) : all }
   scope :search, lambda { |q|
     return all if q.blank?

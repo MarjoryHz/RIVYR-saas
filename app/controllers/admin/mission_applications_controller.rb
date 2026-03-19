@@ -72,7 +72,7 @@ module Admin
           end
       end
 
-      applications_to_broadcast.each { |application| broadcast_freelance_decision_update(application) }
+      broadcast_freelance_decision_updates(applications_to_broadcast)
 
       redirect_to admin_mission_applications_path, notice: "Le freelance a été affecté à la mission."
     end
@@ -92,7 +92,7 @@ module Admin
           freelancer_notified_at: nil
         )
       )
-      broadcast_freelance_decision_update(@application)
+      broadcast_freelance_decision_updates([ @application ])
 
       redirect_to admin_mission_applications_path, notice: "La candidature a été refusée."
     end
@@ -200,19 +200,29 @@ module Admin
       Mission.where(id: missions.map(&:id)).update_all(closure_admin_read_at: Time.current)
     end
 
-    def broadcast_freelance_decision_update(application)
-      freelancer_user = application.freelancer_profile&.user
-      return unless freelancer_user&.role_freelance?
+    def broadcast_freelance_decision_updates(applications)
+      Array(applications)
+        .filter_map { |application| application.freelancer_profile&.user }
+        .select(&:role_freelance?)
+        .uniq
+        .each do |freelancer_user|
+          unread_updates = freelancer_user.freelancer_profile
+            &.freelance_mission_applications
+            &.with_unread_freelance_decision
+            &.includes(:mission)
+            &.order(updated_at: :desc)
+            &.to_a || []
 
-      Turbo::StreamsChannel.broadcast_replace_to(
-        "freelance_admin_updates:#{freelancer_user.id}",
-        target: "global_admin_updates_modal_host",
-        partial: "missions/admin_updates_modal",
-        locals: {
-          admin_updates: [ application ],
-          container_id: "global_admin_updates_modal_host"
-        }
-      )
+          Turbo::StreamsChannel.broadcast_replace_to(
+            "freelance_admin_updates:#{freelancer_user.id}",
+            target: "global_admin_updates_modal_host",
+            partial: "missions/admin_updates_modal",
+            locals: {
+              admin_updates: unread_updates,
+              container_id: "global_admin_updates_modal_host"
+            }
+          )
+        end
     end
   end
 end

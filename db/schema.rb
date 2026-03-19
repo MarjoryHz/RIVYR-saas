@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_19_135500) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_19_152000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -26,6 +26,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_135500) do
 
   create_table "candidates", force: :cascade do |t|
     t.string "availability"
+    t.string "avatar_path"
     t.string "contract_types", default: [], array: true
     t.datetime "created_at", null: false
     t.string "email"
@@ -38,6 +39,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_135500) do
     t.string "mobility_zone"
     t.text "notes"
     t.string "phone"
+    t.string "profile_gender"
     t.string "salary_range"
     t.string "skills", default: [], array: true
     t.string "source"
@@ -87,9 +89,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_135500) do
   create_table "client_post_reactions", force: :cascade do |t|
     t.bigint "client_post_id", null: false
     t.datetime "created_at", null: false
-    t.string "emoji"
+    t.string "emoji", default: "👍", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["client_post_id", "user_id"], name: "index_client_post_reactions_on_client_post_id_and_user_id", unique: true
     t.index ["client_post_id"], name: "index_client_post_reactions_on_client_post_id"
     t.index ["user_id"], name: "index_client_post_reactions_on_user_id"
   end
@@ -423,12 +426,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_135500) do
   end
 
   create_table "users", force: :cascade do |t|
+    t.string "avatar_path"
     t.datetime "created_at", null: false
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.string "first_name"
     t.string "last_name"
     t.string "phone"
+    t.string "profile_gender"
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"

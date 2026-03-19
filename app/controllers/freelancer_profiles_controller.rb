@@ -177,7 +177,7 @@ class FreelancerProfilesController < ApplicationController
     last_placement = placements.max_by(&:created_at)
 
     {
-      name: [ user.first_name, user.last_name ].join(" "),
+      name: user.display_name,
       initials: "#{user.first_name.to_s.first}#{user.last_name.to_s.first}".upcase,
       avatar_path: freelancer_avatar_path(profile),
       title: title,
@@ -200,9 +200,7 @@ class FreelancerProfilesController < ApplicationController
   end
 
   def freelancer_avatar_path(profile)
-    seed = profile.user_id || profile.id || profile.user&.email.to_s.sum
-    avatar_index = seed.to_i % 10 + 1
-    "avatars/avatar-#{format('%02d', avatar_index)}.png"
+    profile.user&.avatar_image_path || "avatars/homme-avatar.png"
   end
 
   def build_profile_view(profile)

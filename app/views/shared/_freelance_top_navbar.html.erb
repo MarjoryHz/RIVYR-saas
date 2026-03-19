@@ -1,7 +1,9 @@
 <nav class="fixed inset-x-0 top-0 z-100 px-4 pt-4 md:px-6 md:pt-6">
   <% search_modal_id = "freelance_quick_search_modal" %>
   <% show_back_button = !(controller_name == "missions" && action_name == "index") && !(controller_name == "missions" && action_name == "dashboard") && !(controller_name == "candidates" && action_name == "index") %>
-  <% back_url = if controller_name == "candidates" && action_name == "show"
+  <% back_url = if controller_name == "placements" && action_name == "show"
+      dashboard_freelance_finance_path(tab: "placements", wallet_tab: "available")
+    elsif controller_name == "candidates" && action_name == "show"
       request.path.start_with?("/dashboard") ? dashboard_candidates_path : candidates_path
     else
       request.referer.presence || dashboard_path
@@ -11,10 +13,10 @@
 
     <div class="flex shrink-0 items-center gap-2">
       <% if show_back_button %>
-        <a href="#" onclick="history.back(); return false;" class="inline-flex h-10 items-center gap-2 rounded-full border border-base-200 bg-base-100/80 px-4 text-sm font-medium text-base-content/75 shadow-sm transition hover:bg-base-100 hover:text-base-content">
+        <%= link_to back_url, class: "inline-flex h-10 items-center gap-2 rounded-full border border-base-200 bg-base-100/80 px-4 text-sm font-medium text-base-content/75 shadow-sm transition hover:bg-base-100 hover:text-base-content" do %>
           <i class="fa-solid fa-arrow-left text-[#ed0e64]"></i>
           Retour
-        </a>
+        <% end %>
       <% end %>
       <button type="button" class="h-10 w-10 items-center justify-center rounded-full border border-base-200 bg-base-100/80 text-primary shadow-sm transition hover:bg-base-100 sm:inline-flex" onclick="document.getElementById('<%= search_modal_id %>').showModal()">
         <i class="fa-solid fa-magnifying-glass text-base text-[#ed0e64]"></i>

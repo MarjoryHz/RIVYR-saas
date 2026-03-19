@@ -14,6 +14,22 @@ module ApplicationHelper
     logo
   end
 
+  def avatar_asset_src(record)
+    logical_path =
+      if record.respond_to?(:avatar_image_path)
+        record.avatar_image_path
+      elsif record.respond_to?(:avatar_path)
+        record.avatar_path
+      end
+
+    return if logical_path.blank?
+    return logical_path if logical_path.start_with?("data:", "http://", "https://")
+
+    asset_path(logical_path.sub(%r{\A/assets/}, ""))
+  rescue StandardError
+    logical_path
+  end
+
   def mission_origin_badge_classes(mission)
     case mission.origin_type.to_s
     when "freelancer"

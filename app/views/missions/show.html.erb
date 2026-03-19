@@ -17,7 +17,6 @@
 <% freelance_created_mission = freelance_owns_assigned_mission && @mission.origin_type.to_s == "freelancer" %>
 <% mission_placed = mission_placed?(@mission) %>
 <% placed_candidate = mission_placed ? @mission.placement&.candidate : nil %>
-<% placed_candidate_avatar_index = placed_candidate.present? ? ((placed_candidate.id || placed_candidate.email.to_s.sum) % 10 + 1) : nil %>
 <% closure_reason_options = [
   "Mission gagnee",
   "Le client a recruté par ses propres moyens",
@@ -430,7 +429,10 @@
                 <i class="fa-solid fa-xmark mr-1"></i>Se retirer
               </button>
             <% elsif show_apply %>
-              <%= button_to "Se positionner sur la mission", apply_mission_path(@mission), method: :post, class: "btn mt-4 w-full rounded-2xl border-[#ED0E64] bg-[#ED0E64] text-base text-white hover:border-[#cf0c57] hover:bg-[#cf0c57]" %>
+              <%= button_to "Se positionner sur la mission",
+                            apply_mission_path(@mission, return_to: (request.referer.to_s.include?("/dashboard") ? dashboard_library_missions_path(status: "open") : library_missions_path(status: "open"))),
+                            method: :post,
+                            class: "btn mt-4 w-full rounded-2xl border-[#ED0E64] bg-[#ED0E64] text-base text-white hover:border-[#cf0c57] hover:bg-[#cf0c57]" %>
             <% elsif mission_placed %>
               <span class="mt-4 block rounded-2xl border border-[#cfe4d4] bg-[#edf8f0] px-4 py-3 text-center text-base font-semibold text-[#2f6b3c]">Mission placée</span>
             <% elsif @mission.status_closed? %>
@@ -457,10 +459,10 @@
             <% end %>
             <% if mission_placed && placed_candidate.present? %>
               <%= link_to candidate_path(placed_candidate), class: "mt-3 flex w-full items-center gap-3 rounded-2xl border border-[#d7e9dc] bg-[#edf8f0] px-4 py-3 text-left transition hover:bg-[#e4f4e8]" do %>
-                <%= image_tag "avatars/avatar-#{format('%02d', placed_candidate_avatar_index)}.png", alt: "#{placed_candidate.first_name} #{placed_candidate.last_name}", class: "h-11 w-11 rounded-full object-cover ring-2 ring-white" %>
+                <%= image_tag avatar_asset_src(placed_candidate), alt: placed_candidate.display_name, class: "h-11 w-11 rounded-full object-cover ring-2 ring-white" %>
                 <span class="min-w-0">
                   <span class="block text-xs font-semibold uppercase tracking-wide text-[#5d8a68]">Candidat placé</span>
-                  <span class="block truncate text-base font-semibold text-[#2f6b3c]"><%= placed_candidate.first_name %> <%= placed_candidate.last_name %></span>
+                  <span class="block truncate text-base font-semibold text-[#2f6b3c]"><%= placed_candidate.display_name %></span>
                 </span>
               <% end %>
             <% end %>
@@ -716,11 +718,10 @@
         </div>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <% @favorite_candidates.each do |candidate| %>
-            <% avatar_index = ((candidate.id || candidate.email.to_s.sum) % 10) + 1 %>
             <%= link_to candidate_path(candidate), class: "flex items-center gap-3 rounded-2xl border border-[#ead2dc] bg-white px-4 py-3 transition hover:border-[#f7c4da] hover:bg-[#fff5f8]" do %>
-              <%= image_tag "avatars/avatar-#{format('%02d', avatar_index)}.png", alt: "#{candidate.first_name} #{candidate.last_name}", class: "h-10 w-10 flex-shrink-0 rounded-full object-cover ring-2 ring-[#f7c4da]" %>
+              <%= image_tag avatar_asset_src(candidate), alt: candidate.display_name, class: "h-10 w-10 flex-shrink-0 rounded-full object-cover ring-2 ring-[#f7c4da]" %>
               <div class="min-w-0">
-                <p class="truncate text-sm font-semibold text-[#4c1f2a]"><%= candidate.first_name %> <%= candidate.last_name %></p>
+                <p class="truncate text-sm font-semibold text-[#4c1f2a]"><%= candidate.display_name %></p>
                 <p class="truncate text-xs text-[#9a5a68]"><%= candidate.job_titles&.last.presence || "Candidat" %></p>
                 <% if candidate.availability.present? %>
                   <p class="mt-0.5 text-[11px] text-[#b49aa4]"><%= Candidate::AVAILABILITY_LABELS[candidate.availability] %></p>
@@ -980,16 +981,15 @@
         <div id="selected-candidate-card" class="mt-3 hidden rounded-2xl border border-[#d7e9dc] bg-[#edf8f0] px-4 py-3 text-sm text-[#2f6b3c]"></div>
         <div id="candidate-search-results" class="mt-3 max-h-64 space-y-2 overflow-y-auto">
           <% @close_candidate_options.each do |candidate| %>
-            <% candidate_avatar_index = (candidate.id || candidate.email.to_s.sum) % 10 + 1 %>
             <button
               type="button"
               class="mission-candidate-result flex w-full items-center gap-3 rounded-2xl border border-[#ead2dc] bg-white px-3 py-3 text-left transition hover:border-[#dfbcc9] hover:bg-[#fff5f8]"
               data-candidate-id="<%= candidate.id %>"
-              data-candidate-name="<%= [candidate.first_name, candidate.last_name].compact.join(' ') %>"
+              data-candidate-name="<%= candidate.display_name %>"
               onclick="selectMissionCandidate(this)">
-              <%= image_tag "avatars/avatar-#{format('%02d', candidate_avatar_index)}.png", alt: "#{candidate.first_name} #{candidate.last_name}", class: "h-10 w-10 rounded-full object-cover" %>
+              <%= image_tag avatar_asset_src(candidate), alt: candidate.display_name, class: "h-10 w-10 rounded-full object-cover" %>
               <span class="min-w-0">
-                <span class="block truncate text-sm font-semibold text-[#4c1f2a]"><%= candidate.first_name %> <%= candidate.last_name %></span>
+                <span class="block truncate text-sm font-semibold text-[#4c1f2a]"><%= candidate.display_name %></span>
                 <span class="block truncate text-xs text-[#7b4b5a]"><%= candidate.job_titles&.last.presence || candidate.source.to_s.humanize.presence || "Candidat" %></span>
               </span>
             </button>

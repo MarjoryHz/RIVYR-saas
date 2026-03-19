@@ -58,46 +58,44 @@
   </section>
 
   <section class="grid gap-5" style="grid-template-columns: minmax(360px,1.02fr) minmax(340px,0.85fr) minmax(340px,0.96fr); grid-template-rows: 1fr auto 1fr; min-height: 900px">
-    <section class="<%= surface_card_class %> p-5">
+    <section class="<%= surface_card_class %> p-5 transition hover:-translate-y-0.5 hover:border-[#e7b2c3] hover:bg-white hover:shadow-[0_24px_50px_rgba(94,31,50,0.09)]">
       <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
           <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff2f7] text-[#f08d72]">
             <i class="fa-solid fa-gift text-lg"></i>
           </span>
-          <h2 class="text-2xl font-semibold text-[#5b2633]">Missions suggérées</h2>
+          <div>
+            <h2 class="text-2xl font-semibold text-[#5b2633]">Bibliothèque de missions</h2>
+            <p class="mt-1 text-sm text-[#8a5b6a]">
+              <span class="font-semibold text-[#4c1f2a]"><%= @dashboard_library_available_count.to_i %></span> missions disponibles
+            </p>
+            <p class="text-sm text-[#8a5b6a]">
+              <span class="font-semibold text-[#4c1f2a]"><%= @dashboard_library_pending_count.to_i %></span> en attente | <span class="font-semibold text-[#4c1f2a]"><%= @dashboard_library_new_count.to_i %></span> nouvelles missions
+            </p>
+          </div>
         </div>
         <%= link_to "Tout", dashboard_library_missions_path(status: "open"), class: "text-sm font-medium text-[#9a5a68]" %>
       </div>
 
       <div class="mt-5">
         <% if @dashboard_recommended_missions.any? %>
-          <div class="carousel w-full">
-            <% @dashboard_recommended_missions.each_with_index do |item, index| %>
+          <div class="space-y-3">
+            <% @dashboard_recommended_missions.each do |item| %>
               <% mission = item[:mission] %>
-              <% slide_id = "dashboard-suggestion-item-#{index + 1}" %>
-              <div id="<%= slide_id %>" class="carousel-item w-full">
-                <div class="w-full">
-                  <%= render "missions/suggestion_card",
-                    mission: mission,
-                    dom_id_suffix: "dashboard",
-                    compact: false %>
+              <%= link_to dashboard_mission_path(mission), class: "group flex items-center justify-between gap-4 rounded-[1.35rem] border border-[#efdbe4] bg-white/80 px-4 py-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[#e7b2c3] hover:bg-white hover:shadow-[0_18px_36px_rgba(94,31,50,0.08)]" do %>
+                <div class="min-w-0">
+                  <p class="truncate text-[1.05rem] font-semibold text-[#4c1f2a]"><%= mission.title %></p>
+                  <p class="mt-1 truncate text-sm text-[#8a5b6a]"><%= mission.region&.name || mission.location %> • <%= mission.mission_type %></p>
                 </div>
-              </div>
+                <div class="flex shrink-0 items-center gap-3">
+                  <%= render "missions/origin_badge", mission: mission %>
+                  <span class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#ead2dc] bg-[#fff7fa] text-[#b46a7d] transition group-hover:border-[#ed0e64] group-hover:text-[#ed0e64]">
+                    <i class="fa-solid fa-arrow-right"></i>
+                  </span>
+                </div>
+              <% end %>
             <% end %>
           </div>
-
-          <% if @dashboard_recommended_missions.size > 1 %>
-            <div class="flex w-full justify-center gap-2 py-3">
-              <% @dashboard_recommended_missions.each_with_index do |_item, index| %>
-                <button
-                  type="button"
-                  onclick="document.getElementById('dashboard-suggestion-item-<%= index + 1 %>').scrollIntoView({behavior:'smooth',block:'nearest',inline:'start'})"
-                  class="btn btn-xs h-8 min-h-0 w-8 rounded-full border border-[#efdbe4] bg-white/85 px-0 text-[#8f4a58] shadow-sm hover:border-[#ed0e64] hover:bg-[#fff2f7] hover:text-[#ed0e64]">
-                  <%= index + 1 %>
-                </button>
-              <% end %>
-            </div>
-          <% end %>
         <% else %>
           <p class="rounded-2xl border border-[#efdbe4] bg-white/80 px-4 py-3 text-sm text-[#8a5b6a]">
             Aucune mission suggérée pour le moment.
@@ -106,7 +104,7 @@
       </div>
     </section>
 
-    <%= link_to dashboard_my_missions_path, class: "#{surface_card_class} block p-5 transition hover:bg-white", style: "grid-column: span 2" do %>
+    <%= link_to dashboard_my_missions_path, class: "#{surface_card_class} block p-5 transition hover:-translate-y-0.5 hover:border-[#e7b2c3] hover:bg-white hover:shadow-[0_24px_50px_rgba(94,31,50,0.09)]", style: "grid-column: span 2" do %>
       <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
           <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff2f7] text-[#f08d72]">
@@ -119,7 +117,7 @@
 
       <div class="mt-5 space-y-3 max-h-112 overflow-y-auto pr-1">
         <% @dashboard_missions.each do |item| %>
-          <article class="rounded-[1.35rem] border <%= item[:urgent] ? 'border-[#f2a0a0] bg-[#fff5f5]' : 'border-[#efdbe4] bg-white/80' %> px-4 py-3">
+          <article class="rounded-[1.35rem] border px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_18px_36px_rgba(94,31,50,0.08)] <%= item[:urgent] ? 'border-[#f2a0a0] bg-[#fff5f5] hover:border-[#e8a2a2]' : 'border-[#efdbe4] bg-white/80 hover:border-[#e7b2c3]' %>">
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
                 <div class="flex items-center gap-2">

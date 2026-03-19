@@ -302,7 +302,6 @@
             <div class="<%= soft_card_class %> px-4 py-4">
               <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Montant placement en attente</p>
               <p class="mt-2 text-3xl font-semibold text-[#4c1f2a]"><%= number_to_currency(placement_metrics[:total_amount_cents].to_i / 100.0, unit: "€", precision: 0) %></p>
-              <p class="mt-1 text-sm text-[#7b4b5a]">Part freelance sur les dossiers visibles.</p>
             </div>
             <% if @active_finance_tab[:task_count].positive? %>
               <%= link_to dashboard_freelance_finance_path(tab: @tab, wallet_tab: @wallet_tab, placements_changes_only: "1"), class: "group block rounded-[1.35rem] border border-[#f3b6ca] bg-[linear-gradient(135deg,rgba(255,241,246,1),rgba(255,250,252,1))] px-4 py-4 shadow-[0_18px_32px_rgba(163,61,104,0.08)] transition hover:-translate-y-0.5 hover:border-[#ed0e64] hover:shadow-[0_22px_36px_rgba(163,61,104,0.16)]" do %>
@@ -327,23 +326,44 @@
           </div>
         </div>
       <% else %>
-        <div class="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] xl:items-start">
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]"><%= @active_finance_tab[:label] %></p>
-            <h2 class="mt-2 text-2xl font-semibold text-[#4c1f2a]"><%= @active_finance_tab[:headline] %></h2>
-            <p class="mt-2 max-w-3xl text-sm text-[#7b4b5a]"><%= @active_finance_tab[:description] %></p>
-          </div>
-          <div class="grid gap-3 sm:grid-cols-2">
+        <% payment_metrics = @active_finance_tab[:metrics] || {} %>
+        <div>
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div class="<%= soft_card_class %> px-4 py-4">
-              <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">À traiter</p>
-              <p class="mt-2 text-3xl font-semibold text-[#4c1f2a]"><%= @active_finance_tab[:task_count] %></p>
-              <p class="mt-1 text-sm text-[#7b4b5a]">Tâches immédiatement activables.</p>
+              <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">En attente de paiement</p>
+              <p class="mt-2 text-3xl font-semibold text-[#c96b28]"><%= payment_metrics[:pending_count].to_i %></p>
+              <p class="mt-1 text-sm text-[#7b4b5a]">Virements Rivyr en préparation.</p>
             </div>
             <div class="<%= soft_card_class %> px-4 py-4">
-              <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Dernières 24h</p>
-              <p class="mt-2 text-3xl font-semibold text-[#4c1f2a]"><%= @active_finance_tab[:recent_items].count %></p>
-              <p class="mt-1 text-sm text-[#7b4b5a]">Changements visibles sur la période récente.</p>
+              <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Paiements effectués</p>
+              <p class="mt-2 text-3xl font-semibold text-[#2f6b3c]"><%= payment_metrics[:paid_count].to_i %></p>
+              <p class="mt-1 text-sm text-[#7b4b5a]">Virements déjà reçus par le freelance.</p>
             </div>
+            <div class="<%= soft_card_class %> px-4 py-4">
+              <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Montant total versé</p>
+              <p class="mt-2 text-3xl font-semibold text-[#4c1f2a]"><%= number_to_currency(payment_metrics[:paid_total_cents].to_i / 100.0, unit: "€", precision: 0) %></p>
+              <p class="mt-1 text-sm text-[#7b4b5a]">Historique des paiements Rivyr.</p>
+            </div>
+            <% if @active_finance_tab[:task_count].positive? %>
+              <%= link_to dashboard_freelance_finance_path(tab: @tab, wallet_tab: @wallet_tab, payment_status: @payment_status.presence, payment_changes_only: "1"), class: "group block rounded-[1.35rem] border border-[#f3b6ca] bg-[linear-gradient(135deg,rgba(255,241,246,1),rgba(255,250,252,1))] px-4 py-4 shadow-[0_18px_32px_rgba(163,61,104,0.08)] transition hover:-translate-y-0.5 hover:border-[#ed0e64] hover:shadow-[0_22px_36px_rgba(163,61,104,0.16)]" do %>
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#a15c70]">À traiter</p>
+                    <p class="mt-2 text-3xl font-semibold <%= metric_tone_classes.fetch(payment_metrics[:task_tone], metric_tone_classes[:slate]) %>"><%= @active_finance_tab[:task_count] %></p>
+                  </div>
+                  <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/80 bg-white text-[#ed0e64] shadow-sm transition group-hover:bg-[#ed0e64] group-hover:text-white">
+                    <i class="fa-solid fa-arrow-right"></i>
+                  </span>
+                </div>
+                <p class="mt-4 text-sm font-medium text-[#8b4452]">Filtrer les lignes actives</p>
+              <% end %>
+            <% else %>
+              <div class="<%= soft_card_class %> px-4 py-4">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">À traiter</p>
+                <p class="mt-2 text-3xl font-semibold text-[#4c1f2a]"><%= @active_finance_tab[:task_count] %></p>
+                <p class="mt-1 text-sm text-[#7b4b5a]">Tâches immédiatement activables.</p>
+              </div>
+            <% end %>
           </div>
         </div>
       <% end %>
@@ -683,43 +703,90 @@
             <% end %>
           </section>
           <% else %>
-          <section class="<%= soft_card_class %> p-4 md:p-5">
-            <div class="flex items-center justify-between gap-3">
-              <div>
-                <h3 class="text-lg font-semibold text-[#4c1f2a]">Actions à réaliser</h3>
-                <p class="mt-1 text-sm text-[#7b4b5a]">Les éléments qui nécessitent une intervention de ta part.</p>
-              </div>
-              <span class="inline-flex items-center rounded-full border border-[#f0bfd0] bg-white px-3 py-1 text-xs font-semibold text-[#8b4452]"><%= @active_finance_tab[:task_count] %></span>
-            </div>
-            <% if @active_finance_tab[:action_items].any? %>
-              <div class="mt-4 space-y-3">
-                <% @active_finance_tab[:action_items].each do |item| %>
-                  <% badge_class = tone_classes.fetch(item[:badge_tone], tone_classes[:slate]) %>
-                  <article class="rounded-[1.2rem] border border-[#edd8df] bg-white px-4 py-4">
-                    <div class="flex items-start justify-between gap-3">
-                      <div class="min-w-0">
-                        <div class="flex flex-wrap items-center gap-2">
-                          <p class="text-base font-semibold text-[#4c1f2a]"><%= item[:title] %></p>
-                          <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold <%= badge_class %>"><%= item[:badge] %></span>
-                        </div>
-                        <p class="mt-1 text-sm font-medium text-[#8b4452]"><%= item[:subtitle] %></p>
-                        <p class="mt-2 text-sm text-[#6f4a58]"><%= item[:detail] %></p>
-                      </div>
-                    </div>
-                    <div class="mt-4 flex items-center justify-between gap-3">
-                      <p class="text-xs font-medium text-[#a15c70]"><%= item[:occurred_at].present? ? l(item[:occurred_at], format: "%d/%m à %Hh%M") : "-" %></p>
-                      <% if item[:cta][:method] == :post %>
-                        <%= button_to item[:cta][:label], item[:cta][:path], method: :post, params: item[:cta][:params], class: "inline-flex items-center rounded-full border border-[#ed0e64] bg-[#ed0e64] px-4 py-2 text-sm font-semibold text-white transition hover:border-[#cf0c57] hover:bg-[#cf0c57]" %>
-                      <% else %>
-                        <%= link_to item[:cta][:label], item[:cta][:path], class: "inline-flex items-center rounded-full border border-[#dfbcc9] bg-[#fff5f8] px-4 py-2 text-sm font-semibold text-[#8b4452] transition hover:bg-[#fdeef3]" %>
-                      <% end %>
-                    </div>
-                  </article>
+          <% rows = @active_finance_tab[:rows].to_a %>
+          <section class="<%= soft_card_class %> relative">
+            <div class="border-b border-[#f0dce3] px-4 py-4 md:px-5">
+              <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h2 class="text-2xl font-semibold text-[#4c1f2a]">Historique des paiements</h2>
+                </div>
+                <%= form_with url: dashboard_freelance_finance_path, method: :get, local: true, class: "flex items-center gap-2" do %>
+                  <%= hidden_field_tag :tab, @tab %>
+                  <%= hidden_field_tag :wallet_tab, @wallet_tab %>
+                  <%= hidden_field_tag :payment_changes_only, (@payment_changes_only ? "1" : nil) %>
+                  <label for="payment_status" class="text-xs font-semibold uppercase tracking-[0.18em] text-[#9a5a68]">Status</label>
+                  <%= select_tag :payment_status, options_for_select([["Tous", ""]] + @active_finance_tab[:status_options].to_a, @payment_status), id: "payment_status", class: "select select-bordered rounded-full border-[#f0cfd9] bg-white text-sm text-[#5f3647]", onchange: "this.form.submit()" %>
                 <% end %>
               </div>
+              <% if @payment_changes_only %>
+                <div class="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-[#f1cfda] bg-[#fff4f8] px-3 py-2 text-sm text-[#8b4452]">
+                  <span><%= rows.count %> ligne<%= "s" if rows.count != 1 %> avec changement récent affichée<%= "s" if rows.count != 1 %>.</span>
+                  <%= link_to "Voir toutes les lignes", dashboard_freelance_finance_path(tab: @tab, wallet_tab: @wallet_tab, payment_status: @payment_status.presence), class: "inline-flex items-center rounded-full border border-[#dfbcc9] bg-white px-3 py-1.5 text-xs font-semibold text-[#8b4452] transition hover:bg-[#fdeef3]" %>
+                </div>
+              <% end %>
+            </div>
+            <% if rows.any? %>
+              <div class="overflow-x-auto">
+                <table class="min-w-full table-fixed divide-y divide-[#f3e2e8] text-sm">
+                  <thead class="bg-[#fff7fa] text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9a5a68]">
+                    <tr>
+                      <th class="w-[72px] px-4 py-3 md:px-5"></th>
+                      <th class="w-[180px] px-4 py-3 md:px-5">Status</th>
+                      <th class="w-[280px] px-4 py-3 md:px-5">Client</th>
+                      <th class="w-[280px] px-4 py-3 md:px-5">Mission</th>
+                      <th class="w-[180px] px-4 py-3 md:px-5">Référence</th>
+                      <th class="w-[160px] px-4 py-3 md:px-5">Montant</th>
+                      <th class="w-[160px] px-4 py-3 md:px-5">Date</th>
+                      <th class="w-[320px] px-4 py-3 md:px-5">Note</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-[#f6e8ed] bg-white">
+                    <% rows.each do |row| %>
+                      <% badge_class = tone_classes.fetch(row[:status_tone], tone_classes[:slate]) %>
+                      <tr class="transition hover:bg-[#fff8fb]">
+                        <td class="align-middle px-4 py-4 md:px-5">
+                          <div class="flex items-center gap-4" data-controller="signature-change-indicator" data-signature-change-indicator-row-id-value="<%= row[:id] %>" data-signature-change-indicator-changed-recently-value="<%= row[:changed_recently] %>">
+                            <span class="relative inline-flex" <% if row[:changed_recently] %>data-action="mouseenter->signature-change-indicator#reveal mouseleave->signature-change-indicator#hide"<% end %>>
+                              <span data-signature-change-indicator-target="indicator" class="inline-flex h-3 w-3 shrink-0 rounded-full border border-[#dec4cd] bg-white"></span>
+                              <% if row[:changed_recently] %>
+                                <span data-signature-change-indicator-target="tooltip" class="pointer-events-none absolute left-0 top-full z-30 hidden min-w-[240px] max-w-[320px] rounded-xl border border-[#f4d5bf] bg-white px-3 py-2 text-sm text-[#5f3647] shadow-[0_20px_45px_rgba(116,43,70,0.16)] mt-2">
+                                  <%= row[:change_hint] %>
+                                </span>
+                              <% end %>
+                            </span>
+                            <%= link_to placement_path(row[:placement]), class: "inline-flex h-8 w-8 items-center justify-center rounded-xl border border-[#dfbcc9] bg-[#fff5f8] text-xs text-[#8b4452] transition hover:bg-[#fdeef3]", title: "Ouvrir le placement", data: { action: "click->signature-change-indicator#markSeen" } do %>
+                              <i class="fa-solid fa-wallet"></i>
+                            <% end %>
+                          </div>
+                        </td>
+                        <td class="align-middle px-4 py-4 md:px-5">
+                          <span class="inline-flex items-center whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold <%= badge_class %>"><%= row[:status_short_label] %></span>
+                        </td>
+                        <td class="align-middle px-4 py-4 md:px-5">
+                          <div class="flex items-center gap-3 whitespace-nowrap">
+                            <% if row[:client_logo].present? %>
+                              <span class="h-11 w-11 shrink-0 overflow-hidden rounded-2xl border border-[#f0dce3] bg-white">
+                                <%= image_tag client_logo_src(row[:client_logo]), alt: row[:client_name], class: "h-full w-full object-cover" %>
+                              </span>
+                            <% else %>
+                              <span class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#f0dce3] bg-[#fff1f6] text-sm font-semibold text-[#a33d68]"><%= row[:client_name].to_s.first(1) %></span>
+                            <% end %>
+                            <span class="block truncate font-semibold text-[#4c1f2a]"><%= row[:client_name] %></span>
+                          </div>
+                        </td>
+                        <td class="align-middle px-4 py-4 md:px-5 font-semibold text-[#4c1f2a]"><span class="block truncate whitespace-nowrap"><%= row[:mission_title] %></span></td>
+                        <td class="align-middle whitespace-nowrap px-4 py-4 md:px-5 text-[#6f4a58]"><%= row[:invoice_number] %></td>
+                        <td class="align-middle whitespace-nowrap px-4 py-4 md:px-5 text-[#4c1f2a]"><%= number_to_currency(row[:amount_cents].to_i / 100.0, unit: "€", precision: 0) %></td>
+                        <td class="align-middle whitespace-nowrap px-4 py-4 md:px-5 text-[#6f4a58]"><%= l(row[:occurred_at].to_date, format: :default) rescue row[:occurred_at].strftime("%d/%m/%Y") %></td>
+                        <td class="align-middle px-4 py-4 md:px-5 text-[#6f4a58]"><span class="block truncate whitespace-nowrap"><%= row[:note] %></span></td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
             <% else %>
-              <div class="mt-4 rounded-[1.2rem] border border-dashed border-[#ead2dc] bg-white/70 px-4 py-10 text-center">
-                <p class="text-sm font-medium text-[#7b4b5a]"><%= @active_finance_tab[:empty_action_label] %></p>
+              <div class="px-4 py-10 text-center md:px-5">
+                <p class="text-sm font-medium text-[#7b4b5a]">Aucun paiement visible pour le moment.</p>
               </div>
             <% end %>
           </section>

@@ -27,7 +27,6 @@
     <div class="space-y-4">
       <% @favorite_candidates.each do |candidate| %>
         <%
-          avatar_index = ((candidate.id || candidate.email.to_s.sum) % 10) + 1
           last_title = candidate.work_experiences.first&.title || candidate.job_titles&.last
           whatsapp_number = candidate.phone.to_s.gsub(/\D/, '')
           status_config = {
@@ -45,12 +44,12 @@
 
             <%# ── Colonne gauche : identité ── %>
             <div class="flex items-start gap-4 lg:flex-col lg:items-center lg:text-center lg:w-44">
-              <%= image_tag "avatars/avatar-#{format('%02d', avatar_index)}.png",
-                    alt: "#{candidate.first_name} #{candidate.last_name}",
+              <%= image_tag avatar_asset_src(candidate),
+                    alt: candidate.display_name,
                     class: "h-20 w-20 rounded-full object-cover ring-4 ring-white shadow-md shrink-0" %>
               <div class="space-y-1.5">
                 <div>
-                  <h2 class="text-base font-bold text-[#3d1a24]"><%= candidate.first_name %> <%= candidate.last_name %></h2>
+                  <h2 class="text-base font-bold text-[#3d1a24]"><%= candidate.display_name %></h2>
                   <% if last_title.present? %>
                     <p class="text-xs font-medium text-[#7b4b5a]"><%= last_title %></p>
                   <% end %>

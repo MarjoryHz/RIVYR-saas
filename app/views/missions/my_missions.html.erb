@@ -2,6 +2,7 @@
   surface_card_class = "rounded-[1.45rem] border border-base-100/70 bg-base-100/88 shadow-lg"
   current_tab_class = @tab == "current" ? "bg-[#f4a58a] font-semibold text-white" : "font-medium text-base-content/75 transition hover:text-base-content"
   drafts_tab_class = @tab == "drafts" ? "bg-[#f4a58a] font-semibold text-white" : "font-medium text-base-content/75 transition hover:text-base-content"
+  refused_tab_class = @tab == "refused" ? "bg-[#f4a58a] font-semibold text-white" : "font-medium text-base-content/75 transition hover:text-base-content"
   closed_tab_class = @tab == "closed" ? "bg-[#f4a58a] font-semibold text-white" : "font-medium text-base-content/75 transition hover:text-base-content"
 %>
 
@@ -24,6 +25,9 @@
             <%= link_to pending_missions_missions_path, class: "px-6 py-3 text-base font-medium text-base-content/75 transition hover:text-base-content" do %>
               En attente de validation (<%= @pending_validation_count.to_i %>)
             <% end %>
+            <%= link_to my_missions_missions_path(tab: "refused"), class: "inline-flex items-center rounded-full px-6 py-3 text-base #{refused_tab_class}" do %>
+              Refusées (<%= @rejected_missions_count.to_i %>)
+            <% end %>
             <span class="text-base-content/20">|</span>
             <%= link_to my_missions_missions_path(tab: "closed"), class: "inline-flex items-center rounded-full px-6 py-3 text-base #{closed_tab_class}" do %>
               Terminées (<%= @closed_missions_count.to_i %>)
@@ -35,6 +39,9 @@
               <% if @tab == "drafts" %>
                 <p class="text-3xl font-semibold text-base-content"><%= @draft_missions_count.to_i %></p>
                 <p class="mt-1 text-base text-base-content/60">Brouillons enregistrés</p>
+              <% elsif @tab == "refused" %>
+                <p class="text-3xl font-semibold text-base-content"><%= number_to_currency(@rejected_total_potential_cents / 100.0, unit: "€", precision: 0) %></p>
+                <p class="mt-1 text-base text-base-content/60">Potentiel refusé</p>
               <% else %>
                 <p class="text-3xl font-semibold text-base-content"><%= number_to_currency((@tab == "closed" ? @closed_total_potential_cents : @total_potential_cents) / 100.0, unit: "€", precision: 0) %></p>
                 <p class="mt-1 text-base text-base-content/60"><%= @tab == "closed" ? "Potentiel archivé" : "Potentiel total" %></p>
@@ -44,6 +51,9 @@
               <% if @tab == "drafts" %>
                 <p class="text-3xl font-semibold text-base-content"><%= @draft_last_updated_label.present? ? l(@draft_last_updated_label, format: "%d/%m") : "-" %></p>
                 <p class="mt-1 text-base text-base-content/60">Dernière sauvegarde</p>
+              <% elsif @tab == "refused" %>
+                <p class="text-3xl font-semibold text-base-content"><%= @rejected_average_days %> jours</p>
+                <p class="mt-1 text-base text-base-content/60">Délai moyen avant refus</p>
               <% else %>
                 <p class="text-3xl font-semibold text-base-content"><%= @tab == "closed" ? @closed_average_open_days : @average_open_days %> jours</p>
                 <p class="mt-1 text-base text-base-content/60"><%= @tab == "closed" ? "Durée moyenne avant clôture" : "Ouverture moyenne" %></p>
@@ -53,6 +63,9 @@
               <% if @tab == "drafts" %>
                 <p class="text-3xl font-semibold text-base-content"><%= @draft_mission_rows.count { |row| row[:company_name] != "Entreprise à définir" } %></p>
                 <p class="mt-1 text-base text-base-content/60">Entreprises renseignées</p>
+              <% elsif @tab == "refused" %>
+                <p class="text-3xl font-semibold text-base-content"><%= @rejected_total_candidates %></p>
+                <p class="mt-1 text-base text-base-content/60">Candidats présentés</p>
               <% else %>
                 <p class="text-3xl font-semibold text-base-content"><%= @tab == "closed" ? @closed_total_sent_candidates : @total_sent_candidates %></p>
                 <p class="mt-1 text-base text-base-content/60">Candidats chez le client</p>
@@ -89,6 +102,8 @@
               <%= form_with url: my_missions_missions_path, method: :get, class: "grid gap-3 md:grid-cols-2 xl:grid-cols-5", html: { onsubmit: "document.getElementById('missions-filtres').classList.add('hidden')" } do %>
                 <% if @tab == "closed" %>
                   <%= hidden_field_tag :tab, "closed" %>
+                <% elsif @tab == "refused" %>
+                  <%= hidden_field_tag :tab, "refused" %>
                 <% elsif @tab == "drafts" %>
                   <%= hidden_field_tag :tab, "drafts" %>
                 <% end %>
@@ -135,7 +150,7 @@
 
                 <div class="flex items-end gap-2">
                   <%= submit_tag "Appliquer", class: "btn btn-primary flex-1" %>
-                  <%= link_to "Réinitialiser", my_missions_missions_path(tab: (@tab.in?(%w[closed drafts]) ? @tab : nil)), class: "btn btn-ghost" %>
+                  <%= link_to "Réinitialiser", my_missions_missions_path(tab: (@tab.in?(%w[closed drafts refused]) ? @tab : nil)), class: "btn btn-ghost" %>
                 </div>
               <% end %>
             </div>
@@ -144,6 +159,7 @@
 
         <% rows = case @tab
                  when "drafts" then @draft_mission_rows
+                 when "refused" then @rejected_mission_rows
                  when "closed" then @closed_mission_rows
                  else @mission_rows
                  end %>
@@ -179,6 +195,22 @@
                         </span>
                         <span class="text-sm font-medium text-base-content/55">
                           Archivée le <%= l(row[:archived_at], format: :default) rescue row[:archived_at].strftime("%d/%m/%Y") %>
+                        </span>
+                      </div>
+                    <% elsif @tab == "refused" %>
+                      <div class="flex flex-wrap items-center justify-self-end gap-3">
+                        <%= render "missions/origin_badge", mission: mission %>
+                        <span class="relative inline-flex group">
+                          <span class="inline-flex items-center rounded-full border border-[#f1c9d3] bg-[#fff1f4] px-4 py-2 text-sm font-semibold text-[#b14360]">
+                            Candidature non retenue par RIVYR.
+                          </span>
+                          <span class="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden min-w-[260px] max-w-[360px] rounded-xl border border-[#f1c9d3] bg-white px-3 py-2 text-sm text-[#6b3f4f] shadow-lg group-hover:block">
+                            <span class="block text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a15c70]">Motif du refus</span>
+                            <span class="mt-1 block"><%= row[:review_reason].presence || "Refus remonté par l'équipe Rivyr." %></span>
+                          </span>
+                        </span>
+                        <span class="text-sm font-medium text-base-content/55">
+                          Refusée le <%= l(row[:rejected_at], format: :default) rescue row[:rejected_at].strftime("%d/%m/%Y") %>
                         </span>
                       </div>
                     <% else %>
@@ -247,6 +279,10 @@
                         <button type="button" class="inline-flex min-w-[14rem] items-center justify-center gap-2 rounded-full border border-[#ead7dc] bg-base-100/82 px-4 py-2.5 text-sm font-medium text-[#8c5665]">
                           Suivre <%= row[:sent_candidates_count] %> candidats envoyés
                         </button>
+                      <% elsif @tab == "refused" %>
+                        <div class="min-w-[14rem] rounded-[1.1rem] border border-[#f2d5db] bg-[#fff7f9] px-4 py-3 text-sm text-[#8c5665]">
+                          <p class="font-medium text-[#6d4050]">Survole le statut de refus pour voir le motif détaillé.</p>
+                        </div>
                       <% end %>
 
                       <% unless @tab == "drafts" %>
@@ -262,7 +298,7 @@
           </div>
         <% else %>
           <div class="p-8 text-center text-base-content/65">
-            <%= @tab == "closed" ? "Aucune mission terminée pour le moment." : (@tab == "drafts" ? "Aucun brouillon pour le moment." : "Aucune mission en cours pour le moment.") %>
+            <%= @tab == "closed" ? "Aucune mission terminée pour le moment." : (@tab == "drafts" ? "Aucun brouillon pour le moment." : (@tab == "refused" ? "Aucune mission refusée pour le moment." : "Aucune mission en cours pour le moment.")) %>
           </div>
         <% end %>
       </div>

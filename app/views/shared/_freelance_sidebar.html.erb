@@ -1,7 +1,5 @@
 <% active_controller = controller_name %>
 <% active_action = action_name %>
-<% profile_avatar_path = current_user&.first_name.to_s.casecmp("claire")&.zero? ? "avatars/avatar-02.png" : nil %>
-
 <aside class="freelance-sidebar" data-freelance-sidebar>
   <div class="freelance-sidebar__shell">
     <div class="freelance-sidebar__header">
@@ -77,16 +75,12 @@
         <summary class="freelance-sidebar__footer">
           <div class="freelance-sidebar__avatar-wrap">
             <div class="freelance-sidebar__avatar">
-              <% if profile_avatar_path.present? %>
-                <%= image_tag profile_avatar_path, alt: current_user.first_name.presence || current_user.email, class: "h-full w-full rounded-full object-cover" %>
-              <% else %>
-                <%= (current_user.first_name.to_s.first || current_user.email.to_s.first || "U").upcase %>
-              <% end %>
+              <%= image_tag avatar_asset_src(current_user), alt: current_user.display_name, class: "h-full w-full rounded-full object-cover" %>
             </div>
             <span class="freelance-sidebar__avatar-status"></span>
           </div>
           <div class="freelance-sidebar__identity">
-            <strong><%= current_user.first_name.presence || current_user.email %></strong>
+            <strong><%= current_user.display_name.presence || current_user.email %></strong>
             <span><%= current_user.role.to_s.humanize.presence || "Utilisateur" %></span>
           </div>
           <span class="freelance-sidebar__footer-chevron">
@@ -98,16 +92,12 @@
           <div class="freelance-sidebar__profile-header">
             <div class="freelance-sidebar__avatar-wrap">
               <div class="freelance-sidebar__avatar freelance-sidebar__avatar--panel">
-                <% if profile_avatar_path.present? %>
-                  <%= image_tag profile_avatar_path, alt: [current_user.first_name, current_user.last_name].compact.join(" ").presence || current_user.email, class: "h-full w-full rounded-full object-cover" %>
-                <% else %>
-                  <%= (current_user.first_name.to_s.first || current_user.email.to_s.first || "U").upcase %>
-                <% end %>
+                <%= image_tag avatar_asset_src(current_user), alt: current_user.display_name.presence || current_user.email, class: "h-full w-full rounded-full object-cover" %>
               </div>
               <span class="freelance-sidebar__avatar-status"></span>
             </div>
             <div class="freelance-sidebar__identity freelance-sidebar__identity--panel">
-              <strong><%= [current_user.first_name, current_user.last_name].compact.join(" ").presence || current_user.email %></strong>
+              <strong><%= current_user.display_name.presence || current_user.email %></strong>
               <span><%= current_user.role.to_s.humanize.presence || "Utilisateur" %></span>
             </div>
           </div>
