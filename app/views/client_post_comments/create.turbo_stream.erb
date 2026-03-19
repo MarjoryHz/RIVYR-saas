@@ -1,0 +1,30 @@
+<%= turbo_stream.append "comments_#{@client_post.id}" do %>
+  <%= render "client_post_comments/comment", comment: @comment %>
+<% end %>
+
+<%= turbo_stream.replace "comment_form_#{@client_post.id}" do %>
+  <%= render "client_post_comments/form", client_post: @client_post, comment: @client_post.client_post_comments.build %>
+<% end %>
+
+<%= turbo_stream.remove "empty_comments_#{@client_post.id}" %>
+
+<%= turbo_stream.replace "engagement_stats_#{@client_post.id}" do %>
+  <% total_reactions = @client_post.client_post_reactions.count %>
+  <% total_comments = @client_post.client_post_comments.count %>
+  <div id="engagement_stats_<%= @client_post.id %>" class="mx-5 mb-4 flex items-center justify-between rounded-[1.2rem] border border-[#f0dde6] bg-white/80 px-4 py-3 text-xs text-[#b07a90]">
+    <span id="reaction_count_<%= @client_post.id %>"><% if total_reactions > 0 %><%= total_reactions %> reaction<%= total_reactions > 1 ? "s" : "" %><% end %></span>
+    <span id="comment_count_<%= @client_post.id %>"><%= total_comments %> commentaire<%= total_comments > 1 ? "s" : "" %></span>
+  </div>
+<% end %>
+
+<%= turbo_stream.replace "comment_count_#{@client_post.id}" do %>
+  <span id="comment_count_<%= @client_post.id %>">
+    <%= @client_post.client_post_comments.count %> commentaire<%= @client_post.client_post_comments.count > 1 ? "s" : "" %>
+  </span>
+<% end %>
+
+<%= turbo_stream.replace "comments_badge_#{@client_post.id}" do %>
+  <span id="comments_badge_<%= @client_post.id %>" class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#a33d68]">
+    <%= @client_post.client_post_comments.count %> message<%= @client_post.client_post_comments.count > 1 ? "s" : "" %>
+  </span>
+<% end %>

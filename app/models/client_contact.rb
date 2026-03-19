@@ -9,6 +9,7 @@ class ClientContact < ApplicationRecord
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
   validates :phone, length: { maximum: 30 }, allow_blank: true
   validates :job_title, length: { maximum: 255 }, allow_blank: true
+  validates :avatar, length: { maximum: 255 }, allow_blank: true
 
   scope :search, lambda { |q|
     return all if q.blank?

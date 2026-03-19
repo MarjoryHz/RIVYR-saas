@@ -28,6 +28,9 @@ Mission.destroy_all
 ClientContact.destroy_all
 ClientHighlight.destroy_all
 ClientValue.destroy_all
+ClientPostReaction.destroy_all
+ClientPostComment.destroy_all
+ClientPost.destroy_all
 Client.destroy_all
 WorkExperience.destroy_all
 Education.destroy_all
@@ -408,16 +411,21 @@ CLIENTS_DATA = [
 ].freeze
 
 CLIENT_CONTACTS_DATA = [
-  { client_legal_name: 'Flandres Industrie SAS', first_name: 'Marion', last_name: 'Lefebvre', job_title: 'Directrice RH' },
-  { client_legal_name: 'Nord Logistics Group SAS', first_name: 'Paul', last_name: 'Dufour', job_title: 'Directeur des Operations' },
-  { client_legal_name: 'BelgoTech Solutions SA', first_name: 'Elise', last_name: 'Vanhaecke', job_title: 'Head of Talent' },
-  { client_legal_name: 'Artois Conseil & Transformation SAS', first_name: 'Julien', last_name: 'Carpentier', job_title: 'Associe' },
-  { client_legal_name: 'Hexa Retail Performance SAS', first_name: 'Sonia', last_name: 'Lambert', job_title: 'DRH' },
-  { client_legal_name: 'Cap Avenir Energie SAS', first_name: 'Benoit', last_name: 'Rousseau', job_title: 'Directeur General' },
-  { client_legal_name: 'Littoral Agro Solutions SAS', first_name: 'Celine', last_name: 'Morin', job_title: 'Responsable Recrutement' },
-  { client_legal_name: 'Euronextia Services SAS', first_name: 'David', last_name: 'Perrin', job_title: 'Directeur de Pole' },
-  { client_legal_name: 'Wallonie Engineering SA', first_name: 'Aurelie', last_name: 'Masson', job_title: 'HR Manager' },
-  { client_legal_name: 'Seine Corporate Finance SAS', first_name: 'Mathieu', last_name: 'Blanc', job_title: 'Partner' }
+  { client_legal_name: 'Flandres Industrie SAS', first_name: 'Marion', last_name: 'Lefebvre', job_title: 'Directrice RH', primary_contact: true },
+  { client_legal_name: 'Flandres Industrie SAS', first_name: 'Thomas', last_name: 'Vasseur', job_title: 'Directeur de Site' },
+  { client_legal_name: 'Nord Logistics Group SAS', first_name: 'Paul', last_name: 'Dufour', job_title: 'Directeur des Operations', primary_contact: true },
+  { client_legal_name: 'Nord Logistics Group SAS', first_name: 'Camille', last_name: 'Benoit', job_title: 'DRH Groupe' },
+  { client_legal_name: 'Nord Logistics Group SAS', first_name: 'Nora', last_name: 'Leclercq', job_title: 'Responsable Talent Acquisition' },
+  { client_legal_name: 'BelgoTech Solutions SA', first_name: 'Elise', last_name: 'Vanhaecke', job_title: 'Head of Talent', primary_contact: true },
+  { client_legal_name: 'BelgoTech Solutions SA', first_name: 'Maxime', last_name: 'De Smet', job_title: 'VP Product' },
+  { client_legal_name: 'BelgoTech Solutions SA', first_name: 'Sarah', last_name: 'Declercq', job_title: 'People Partner' },
+  { client_legal_name: 'Artois Conseil & Transformation SAS', first_name: 'Julien', last_name: 'Carpentier', job_title: 'Associe', primary_contact: true },
+  { client_legal_name: 'Hexa Retail Performance SAS', first_name: 'Sonia', last_name: 'Lambert', job_title: 'DRH', primary_contact: true },
+  { client_legal_name: 'Cap Avenir Energie SAS', first_name: 'Benoit', last_name: 'Rousseau', job_title: 'Directeur General', primary_contact: true },
+  { client_legal_name: 'Littoral Agro Solutions SAS', first_name: 'Celine', last_name: 'Morin', job_title: 'Responsable Recrutement', primary_contact: true },
+  { client_legal_name: 'Euronextia Services SAS', first_name: 'David', last_name: 'Perrin', job_title: 'Directeur de Pole', primary_contact: true },
+  { client_legal_name: 'Wallonie Engineering SA', first_name: 'Aurelie', last_name: 'Masson', job_title: 'HR Manager', primary_contact: true },
+  { client_legal_name: 'Seine Corporate Finance SAS', first_name: 'Mathieu', last_name: 'Blanc', job_title: 'Partner', primary_contact: true }
 ].freeze
 
 MISSIONS_DATA = [
@@ -787,6 +795,10 @@ def domain_for(name)
   "#{name.parameterize}.fr"
 end
 
+def seeded_avatar_path(seed_number)
+  "avatars/avatar-#{format('%02d', (seed_number % 10) + 1)}.png"
+end
+
 def seeded_date(offset_days)
   Date.current - offset_days
 end
@@ -1129,7 +1141,294 @@ end
 puts "#{ClientValue.count} client values ready."
 
 # --------------------------------------------------
-# 10. Contacts clients
+# 10. Publications entreprises (ClientPost)
+# --------------------------------------------------
+
+puts "Seeding client posts..."
+
+CLIENT_POSTS_DATA = [
+  {
+    client_legal_name: "Flandres Industrie SAS",
+    posts: [
+      {
+        title: "Ouverture de notre nouveau site de Valenciennes",
+        body: "Apres 18 mois de travaux, notre site de Valenciennes ouvre officiellement ses portes. 4 200 m2 dedies a la production de precision, 60 nouveaux postes crees d ici fin d annee. Une etape majeure dans notre strategie d expansion regionale.",
+        post_type: "photo",
+        media_url: "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800",
+        published_at: 12.days.ago
+      },
+      {
+        title: "Notre equipe RH recrute",
+        body: "Nous accelerons nos recrutements sur les fonctions de direction. Directeur de Site, Responsable Production, Chef de Projet Industriel. Si vous cherchez un environnement exigeant ou votre impact est visible des le premier jour, parlons-en.",
+        post_type: "text",
+        media_url: nil,
+        published_at: 5.days.ago
+      },
+      {
+        title: "Visite ministerielle sur notre site pilote",
+        body: "Le secretaire d Etat charge de l Industrie a visite notre site pilote ce mardi. L occasion de presenter nos investissements en automatisation et notre programme de formation interne. Fiers de representer le savoir-faire industriel du Nord.",
+        post_type: "video",
+        media_url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        published_at: 2.days.ago
+      }
+    ]
+  },
+  {
+    client_legal_name: "Nord Logistics Group SAS",
+    posts: [
+      {
+        title: "Record de volume traite ce trimestre",
+        body: "Q1 2026 : +23% de volumes traites par rapport a l annee precedente sur nos plateformes Hauts-de-France. Un resultat qui reflete l engagement de nos equipes et la robustesse de notre organisation logistique.",
+        post_type: "photo",
+        media_url: "https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?w=800",
+        published_at: 8.days.ago
+      },
+      {
+        title: "On recrute des managers terrain",
+        body: "Responsable d Exploitation, Chef de Quai, Directeur Regional : nos postes sont ouverts. Ici les decisions se prennent vite, les responsabilites sont reelles et la progression est rapide pour ceux qui delivrent.",
+        post_type: "text",
+        media_url: nil,
+        published_at: 3.days.ago
+      },
+      {
+        title: "Notre nouvelle flotte electrique est arrivee",
+        body: "30 nouvelles unites electriques integrent notre parc cette semaine. Un investissement de 4,2 M EUR dans le cadre de notre plan de decarbonation 2026-2028. La logistique verte, c est maintenant.",
+        post_type: "photo",
+        media_url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800",
+        published_at: 1.day.ago
+      }
+    ]
+  },
+  {
+    client_legal_name: "BelgoTech Solutions SA",
+    posts: [
+      {
+        title: "BelgoTech leve 8M EUR pour accelerer son expansion",
+        body: "Nous venons de finaliser notre serie B avec le soutien de trois fonds europeens specialises tech. Ces fonds financeront le recrutement de 45 profils techniques et l ouverture de notre bureau a Amsterdam d ici septembre.",
+        post_type: "photo",
+        media_url: "https://images.unsplash.com/photo-1551434678-e076c223a692?w=800",
+        published_at: 15.days.ago
+      },
+      {
+        title: "Retour sur notre hackathon interne",
+        body: "72h, 8 equipes, 14 prototypes. Notre hackathon annuel a encore prouve que l innovation vient de l interieur. Le projet gagnant : un outil d automatisation des revues de code integre a notre CI/CD. On le passe en prod le mois prochain.",
+        post_type: "video",
+        media_url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        published_at: 6.days.ago
+      },
+      {
+        title: "Nous rejoindre en tant que CTO adjoint",
+        body: "Notre croissance necessite de renforcer le leadership technique. On cherche un profil capable de structurer nos pratiques d ingenierie tout en restant proche du produit. Remote-friendly, package competitif, vrai impact.",
+        post_type: "text",
+        media_url: nil,
+        published_at: 1.day.ago
+      }
+    ]
+  },
+  {
+    client_legal_name: "Artois Conseil & Transformation SAS",
+    posts: [
+      {
+        title: "Publication de notre barometre transformation 2026",
+        body: "Nous avons interroge 210 DG et DAF de PME regionales sur leurs priorites de transformation. Resultat : 67% citent l alignement organisation-strategie comme premier frein. Notre barometre complet est disponible sur notre site.",
+        post_type: "photo",
+        media_url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800",
+        published_at: 20.days.ago
+      },
+      {
+        title: "Nouveau partenariat avec une ESN nordiste",
+        body: "Artois Conseil s associe a une ESN regionale pour proposer une offre combinant conseil strategique et execution digitale. Une reponse concrete aux entreprises qui ne veulent plus choisir entre vision et mise en oeuvre.",
+        post_type: "text",
+        media_url: nil,
+        published_at: 9.days.ago
+      },
+      {
+        title: "On recherche un Senior Manager Transformation",
+        body: "Vous aimez les sujets complexes, les clients exigeants et les missions ou tout reste a construire ? Rejoignez notre equipe de 12 consultants comme Senior Manager. Perimetre complet, clientele grands comptes, autonomie reelle.",
+        post_type: "text",
+        media_url: nil,
+        published_at: 2.days.ago
+      }
+    ]
+  },
+  {
+    client_legal_name: "Hexa Retail Performance SAS",
+    posts: [
+      {
+        title: "Refonte de l experience en magasin : les resultats sont la",
+        body: "6 mois apres le lancement de notre nouveau concept de magasin, les premiers chiffres tombent : +18% de panier moyen, +31% de taux de conversion sur les rayons remodelee. La preuve que l experience physique n est pas morte.",
+        post_type: "photo",
+        media_url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800",
+        published_at: 11.days.ago
+      },
+      {
+        title: "Nos 1 200 collaborateurs celebrent 20 ans",
+        body: "Hexa Retail fete ses 20 ans cette annee. De 3 magasins pilotes a 47 points de vente en France et Belgique, cette aventure est avant tout humaine. Merci a toutes celles et ceux qui l ont construite.",
+        post_type: "video",
+        media_url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        published_at: 4.days.ago
+      },
+      {
+        title: "Recrutement : Directeur des Operations",
+        body: "Nous cherchons un Directeur des Operations pour piloter nos 47 sites et accompagner notre croissance. Si vous avez une culture du resultat, le gout du terrain et l envie de piloter a grande echelle, ce poste est fait pour vous.",
+        post_type: "text",
+        media_url: nil,
+        published_at: 1.day.ago
+      }
+    ]
+  },
+  {
+    client_legal_name: "Cap Avenir Energie SAS",
+    posts: [
+      {
+        title: "20 MW de capacite solaire supplementaire installee",
+        body: "Notre dernier parc solaire en Hauts-de-France vient d etre raccorde au reseau. 20 MW de capacite supplementaire, 11 000 foyers alimentes en energie verte. Un jalon important dans notre objectif 100 MW d ici 2028.",
+        post_type: "photo",
+        media_url: "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800",
+        published_at: 14.days.ago
+      },
+      {
+        title: "Retour sur notre forum Energie & Territoires",
+        body: "300 participants, 14 intervenants, 3 tables rondes. Notre forum annuel a reuni elus, industriels et acteurs de l energie autour d un sujet central : comment accelerer la transition sans laisser les territoires ruraux sur le cote ?",
+        post_type: "photo",
+        media_url: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800",
+        published_at: 7.days.ago
+      },
+      {
+        title: "On recrute un Directeur du Developpement",
+        body: "Notre croissance necessite un profil senior capable de structurer notre pipeline de projets et d animer nos relations avec les collectivites. Secteur en forte dynamique, impact concret sur la transition energetique.",
+        post_type: "text",
+        media_url: nil,
+        published_at: 2.days.ago
+      }
+    ]
+  },
+  {
+    client_legal_name: "Littoral Agro Solutions SAS",
+    posts: [
+      {
+        title: "Lancement de notre gamme bio certifiee",
+        body: "Apres 3 ans de transition, 8 de nos 22 exploitations partenaires sont desormais certifiees bio. Le lancement de notre gamme Littoral Bio marque une etape cle de notre strategie de montee en valeur.",
+        post_type: "photo",
+        media_url: "https://images.unsplash.com/photo-1500651230702-0e2d8a49d4ad?w=800",
+        published_at: 18.days.ago
+      },
+      {
+        title: "Agritech : notre partenariat avec une startup de precision",
+        body: "Nous signons un accord de co-developpement avec une startup specialisee en agriculture de precision. L objectif : deployer des capteurs connectes sur l ensemble de notre reseau de parcelles d ici fin 2026.",
+        post_type: "text",
+        media_url: nil,
+        published_at: 8.days.ago
+      },
+      {
+        title: "Recrutement : Directeur Commercial",
+        body: "Notre ambition de doubler notre chiffre d affaires d ici 2028 passe par le recrutement d un Directeur Commercial capable de structurer une force de vente et d ouvrir de nouveaux marches. Secteur agricole requis.",
+        post_type: "text",
+        media_url: nil,
+        published_at: 3.days.ago
+      }
+    ]
+  },
+  {
+    client_legal_name: "Euronextia Services SAS",
+    posts: [
+      {
+        title: "Euronextia obtient la certification ISO 27001",
+        body: "Notre systeme de management de la securite de l information est desormais certifie ISO 27001. Un signal fort envers nos clients grands comptes et une etape indispensable pour notre developpement a l international.",
+        post_type: "photo",
+        media_url: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800",
+        published_at: 22.days.ago
+      },
+      {
+        title: "Notre DG presente notre vision 2030 lors d une conference",
+        body: "Isabelle Moreau, notre Directrice Generale, est intervenue lors du Forum des Services Numeriques a Paris. Au programme : comment les ESN regionales peuvent rivaliser avec les grands cabinets sur les sujets de transformation.",
+        post_type: "video",
+        media_url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        published_at: 10.days.ago
+      },
+      {
+        title: "Poste ouvert : Directeur de Projet Senior",
+        body: "Nous cherchons un Directeur de Projet Senior pour piloter nos chantiers de transformation les plus strategiques. Vous aimez la complexite, vous savez gerer des parties prenantes exigeantes et vous delivrez. Parlons.",
+        post_type: "text",
+        media_url: nil,
+        published_at: 1.day.ago
+      }
+    ]
+  },
+  {
+    client_legal_name: "Wallonie Engineering SA",
+    posts: [
+      {
+        title: "Inauguration de notre centre R&D a Liege",
+        body: "Notre nouveau centre de recherche et developpement a Liege est officiellement ouvert. 800 m2 dedies a l innovation en genie civil et infrastructures durables. Trois projets de recherche demarrent des ce mois-ci en partenariat avec l ULiege.",
+        post_type: "photo",
+        media_url: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800",
+        published_at: 16.days.ago
+      },
+      {
+        title: "Notre equipe sur le chantier du pont de la Meuse",
+        body: "Wallonie Engineering assure la maitrise d oeuvre du nouveau pont de la Meuse a Namur. Un chantier de 36 mois, 120 intervenants, un defi technique et logistique majeur. Fiertes de notre metier.",
+        post_type: "photo",
+        media_url: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800",
+        published_at: 5.days.ago
+      },
+      {
+        title: "Recrutement : Ingenieur Chef de Projet",
+        body: "Nous recherchons des Ingenieurs Chefs de Projet pour renforcer nos equipes sur nos grands chantiers belges et luxembourgeois. Experience de 7 ans minimum en genie civil ou BTP, gout pour les projets complexes.",
+        post_type: "text",
+        media_url: nil,
+        published_at: 2.days.ago
+      }
+    ]
+  },
+  {
+    client_legal_name: "Seine Corporate Finance SAS",
+    posts: [
+      {
+        title: "Cloture de 3 operations M&A au T1 2026",
+        body: "Seine Corporate Finance a conseille 3 operations de fusion-acquisition au premier trimestre 2026, pour un total de valeur d entreprise de 210 M EUR. PME industrielles et services B2B restent notre coeur de cible.",
+        post_type: "text",
+        media_url: nil,
+        published_at: 13.days.ago
+      },
+      {
+        title: "Notre associe intervient au Paris M&A Summit",
+        body: "Thomas Devaux, associe fondateur, a presente notre vision du marche mid-cap au Paris M&A Summit la semaine derniere. Retrouvez sa tribune sur notre site : pourquoi les PME familiales sont les meilleures cibles de 2026.",
+        post_type: "photo",
+        media_url: "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800",
+        published_at: 6.days.ago
+      },
+      {
+        title: "Nous recrutons un Analyste M&A Senior",
+        body: "Dans le cadre de notre developpement, nous ouvrons un poste d Analyste M&A Senior. Vous interviendrez sur l ensemble du cycle des transactions, de la phase de sourcing aux negociations. Profil grande ecole ou universite top-tier requis.",
+        post_type: "text",
+        media_url: nil,
+        published_at: 1.day.ago
+      }
+    ]
+  }
+]
+
+CLIENT_POSTS_DATA.each do |data|
+  client = Client.find_by(legal_name: data[:client_legal_name])
+  next unless client
+
+  data[:posts].each do |post_data|
+    ClientPost.create!(
+      client: client,
+      title: post_data[:title],
+      body: post_data[:body],
+      post_type: post_data[:post_type],
+      media_url: post_data[:media_url],
+      published_at: post_data[:published_at]
+    )
+  end
+end
+
+puts "#{ClientPost.count} client posts ready."
+
+# --------------------------------------------------
+# 11. Contacts clients
 # --------------------------------------------------
 
 puts "Seeding client contacts..."
@@ -1141,8 +1440,9 @@ CLIENT_CONTACTS_DATA.each_with_index do |data, index|
     first_name: data[:first_name],
     last_name: data[:last_name],
     phone: safe_phone(100 + index),
+    avatar: data[:avatar].presence || seeded_avatar_path(index),
     job_title: data[:job_title],
-    primary_contact: true
+    primary_contact: data[:primary_contact] || false
   })
 end
 puts "#{ClientContact.count} client contacts ready."

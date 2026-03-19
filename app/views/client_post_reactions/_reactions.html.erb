@@ -1,0 +1,23 @@
+<% icons = {
+  "heart"      => "fa-solid fa-heart",
+  "rocket"     => "fa-solid fa-rocket",
+  "handshake"  => "fa-solid fa-handshake",
+  "lightbulb"  => "fa-solid fa-lightbulb",
+  "surprised"  => "fa-solid fa-face-surprise",
+  "thumbsdown" => "fa-solid fa-thumbs-down"
+} %>
+<div id="reactions_<%= post.id %>" class="flex items-center justify-center gap-1.5 flex-wrap">
+  <% icons.each do |key, fa_class| %>
+    <% count = post.client_post_reactions.where(emoji: key).count %>
+    <% reacted = current_user && post.client_post_reactions.exists?(user: current_user, emoji: key) %>
+    <%= button_to client_post_client_post_reactions_path(post, emoji: key),
+        method: :post,
+        data: { turbo_stream: true },
+        class: "flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 transition #{ reacted ? 'border-[#ed0e64] bg-[#fff0f5] text-[#ed0e64]' : 'border-[#ead2dc] bg-white text-[#8b4452] hover:border-[#ed0e64] hover:bg-[#fff0f5] hover:text-[#ed0e64]' }" do %>
+      <i class="<%= fa_class %>"></i>
+      <% if count > 0 %>
+        <span class="text-xs font-medium"><%= count %></span>
+      <% end %>
+    <% end %>
+  <% end %>
+</div>

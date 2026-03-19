@@ -71,6 +71,7 @@ class ClientContactsController < ApplicationController
       :last_name,
       :email,
       :phone,
+      :avatar,
       :job_title,
       :primary_contact
     )
