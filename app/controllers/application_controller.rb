@@ -3,6 +3,7 @@ class ApplicationController < ActionController::Base
   helper_method :freelance_pending_validation_count, :freelance_unread_decision_count, :freelance_attention_count, :admin_pending_application_count
 
   before_action :authenticate_user!
+  before_action :load_global_freelance_admin_updates
   rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
 
   def after_sign_in_path_for(resource)
@@ -66,5 +67,19 @@ class ApplicationController < ActionController::Base
       .closed_by_freelance
       .where(closure_admin_read_at: nil)
       .count
+  end
+
+  def load_global_freelance_admin_updates
+    @dashboard_admin_updates = []
+    return unless current_user&.role_freelance?
+
+    freelancer_profile = current_user.freelancer_profile
+    return if freelancer_profile.blank?
+
+    @dashboard_admin_updates = freelancer_profile.freelance_mission_applications
+      .with_unread_freelance_decision
+      .includes(:mission)
+      .order(updated_at: :desc)
+      .to_a
   end
 end
