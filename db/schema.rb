@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_19_152000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_19_161000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -74,6 +74,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_152000) do
     t.string "title"
     t.datetime "updated_at", null: false
     t.index ["client_id"], name: "index_client_highlights_on_client_id"
+  end
+
+  create_table "client_post_comment_reactions", force: :cascade do |t|
+    t.bigint "client_post_comment_id", null: false
+    t.datetime "created_at", null: false
+    t.string "emoji", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["client_post_comment_id", "user_id"], name: "index_comment_reactions_on_comment_and_user", unique: true
+    t.index ["client_post_comment_id"], name: "index_client_post_comment_reactions_on_client_post_comment_id"
+    t.index ["user_id"], name: "index_client_post_comment_reactions_on_user_id"
   end
 
   create_table "client_post_comments", force: :cascade do |t|
@@ -196,7 +207,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_152000) do
     t.bigint "user_id", null: false
     t.index ["candidate_id"], name: "index_favorite_candidates_on_candidate_id"
     t.index ["mission_id"], name: "index_favorite_candidates_on_mission_id"
-    t.index ["user_id", "candidate_id", "mission_id"], name: "index_favorite_candidates_uniqueness", unique: true
+    t.index ["user_id", "candidate_id", "mission_id"], name: "index_favorite_candidates_uniqueness", unique: true, nulls_not_distinct: true
     t.index ["user_id"], name: "index_favorite_candidates_on_user_id"
   end
 
@@ -314,7 +325,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_152000) do
     t.string "mission_type"
     t.date "opened_at"
     t.string "origin_type"
-    t.string "pipeline_stage", default: "sourcing_candidates", null: false
     t.string "priority_level"
     t.string "reference"
     t.bigint "region_id"
@@ -465,6 +475,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_152000) do
   add_foreign_key "client_contacts", "clients"
   add_foreign_key "client_contacts", "users"
   add_foreign_key "client_highlights", "clients"
+  add_foreign_key "client_post_comment_reactions", "client_post_comments"
+  add_foreign_key "client_post_comment_reactions", "users"
   add_foreign_key "client_post_comments", "client_posts"
   add_foreign_key "client_post_comments", "users"
   add_foreign_key "client_post_reactions", "client_posts"
@@ -477,7 +489,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_152000) do
   add_foreign_key "contributions", "candidates"
   add_foreign_key "educations", "candidates"
   add_foreign_key "favorite_candidates", "candidates"
-  add_foreign_key "favorite_candidates", "missions", on_delete: :cascade
+  add_foreign_key "favorite_candidates", "missions"
   add_foreign_key "favorite_candidates", "users"
   add_foreign_key "favorite_missions", "missions"
   add_foreign_key "favorite_missions", "users"

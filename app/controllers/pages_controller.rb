@@ -16,7 +16,7 @@ class PagesController < ApplicationController
     @contact_form = ContactForm.new(contact_params)
 
     if @contact_form.submit
-      redirect_to contact_path, notice: "Merci, votre demande a bien ete recue. Nous reviendrons vers vous rapidement."
+      redirect_to contact_path, notice: "Merci, votre demande a bien été reçue. Nous reviendrons vers vous rapidement."
     else
       render :contact, status: :unprocessable_entity
     end
@@ -47,9 +47,9 @@ class PagesController < ApplicationController
     @training_tracks = [
       {
         category: "Recrutement",
-        title: "Structurer une mission complexe de A a Z",
+        title: "Structurer une mission complexe de A à Z",
         duration: "1h45",
-        level: "Intermediaire",
+        level: "Intermédiaire",
         progress: 100,
         quiz_score: "18/20",
         status: "Valide",
@@ -60,9 +60,9 @@ class PagesController < ApplicationController
       },
       {
         category: "Business",
-        title: "Mieux convertir une mission ouverte en mission gagnee",
+        title: "Mieux convertir une mission ouverte en mission gagnée",
         duration: "1h20",
-        level: "Avance",
+        level: "Avancé",
         progress: 74,
         quiz_score: "Quiz a lancer",
         status: "En cours",
@@ -73,7 +73,7 @@ class PagesController < ApplicationController
       },
       {
         category: "LinkedIn",
-        title: "Construire une presence qui genere des missions",
+        title: "Construire une présence qui génère des missions",
         duration: "58 min",
         level: "Essentiel",
         progress: 42,
@@ -85,13 +85,13 @@ class PagesController < ApplicationController
         next_step: "Terminer le module social selling"
       },
       {
-        category: "Negociation",
-        title: "Defendre ses honoraires sans perdre la mission",
+        category: "Négociation",
+        title: "Défendre ses honoraires sans perdre la mission",
         duration: "52 min",
-        level: "Avance",
+        level: "Avancé",
         progress: 0,
-        quiz_score: "Non demarre",
-        status: "A lancer",
+        quiz_score: "Non démarré",
+        status: "À lancer",
         status_tone: "slate",
         summary: "Cadres de nego, ancrage de valeur et traitement des pressions tarifaires.",
         lessons: [ "Ancrer le fee", "Rythmer la nego", "Protections contractuelles", "Quiz de certification" ],
@@ -100,9 +100,9 @@ class PagesController < ApplicationController
     ]
 
     @quiz_pipeline = [
-      { title: "Quiz closing", module: "Mieux convertir une mission ouverte", questions: 12, status: "Pret a lancer", tone: "pink" },
-      { title: "Quiz sourcing executive", module: "Structurer une mission complexe", questions: 10, status: "Valide", tone: "emerald" },
-      { title: "Quiz social selling", module: "Presence LinkedIn", questions: 8, status: "Bloque avant module 3", tone: "amber" }
+      { title: "Quiz closing", module: "Mieux convertir une mission ouverte", questions: 12, status: "Prêt à lancer", tone: "pink" },
+      { title: "Quiz sourcing executive", module: "Structurer une mission complexe", questions: 10, status: "Validé", tone: "emerald" },
+      { title: "Quiz social selling", module: "Présence LinkedIn", questions: 8, status: "Bloqué avant module 3", tone: "amber" }
     ]
 
     @learning_paths = [
@@ -114,7 +114,7 @@ class PagesController < ApplicationController
       {
         title: "Parcours Commercial freelance",
         progress: 58,
-        description: "Une progression orientee closing, relance client et posture de conseil."
+        description: "Une progression orientée closing, relance client et posture de conseil."
       },
       {
         title: "Parcours Influence LinkedIn",
@@ -125,19 +125,19 @@ class PagesController < ApplicationController
 
     @academy_feed = [
       "Nouveau module disponible : convaincre un client hesitant apres shortlist.",
-      "Votre quiz sourcing executive a ete valide par le collectif Rivyr.",
-      "Deux freelances ont termine la certification LinkedIn cette semaine."
+      "Votre quiz sourcing executive a été validé par le collectif Rivyr.",
+      "Deux freelances ont terminé la certification LinkedIn cette semaine."
     ]
   end
 
   def create_community_message
     body = params[:body].to_s.strip
     channel = community_hub.normalized_channel(params[:channel])
-    return redirect_to dashboard_community_path(channel: channel), alert: "Le message ne peut pas etre vide." if body.blank?
+    return redirect_to dashboard_community_path(channel: channel), alert: "Le message ne peut pas être vide." if body.blank?
 
     community_hub.create_message(channel: channel, body: body)
 
-    redirect_to dashboard_community_path(channel: channel), notice: "Message envoye au collectif."
+    redirect_to dashboard_community_path(channel: channel), notice: "Message envoyé au collectif."
   end
 
   def destroy_community_message
@@ -145,29 +145,29 @@ class PagesController < ApplicationController
     result = community_hub.destroy_message(channel: channel, message_id: params[:id])
     return redirect_to dashboard_community_path(channel: channel), alert: result[:error] if result[:error].present?
 
-    redirect_to dashboard_community_path(channel: channel), notice: "Message supprime."
+    redirect_to dashboard_community_path(channel: channel), notice: "Message supprimé."
   end
 
   def create_community_reply
     body = params[:body].to_s.strip
     channel = community_hub.normalized_channel(params[:channel])
-    return redirect_to dashboard_community_path(channel: channel, reply_to: params[:message_id]), alert: "La reponse ne peut pas etre vide." if body.blank?
+    return redirect_to dashboard_community_path(channel: channel, reply_to: params[:message_id]), alert: "La réponse ne peut pas être vide." if body.blank?
 
     result = community_hub.create_reply(channel: channel, message_id: params[:message_id], body: body)
     return redirect_to dashboard_community_path(channel: channel), alert: result[:error] if result[:error].present?
 
-    redirect_to dashboard_community_path(channel: channel), notice: "Reponse ajoutee."
+    redirect_to dashboard_community_path(channel: channel), notice: "Réponse ajoutée."
   end
 
   def create_community_reaction
     emoji = params[:emoji].to_s.strip
     channel = community_hub.normalized_channel(params[:channel])
-    return redirect_to dashboard_community_path(channel: channel), alert: "Reaction invalide." if emoji.blank?
+    return redirect_to dashboard_community_path(channel: channel), alert: "Réaction invalide." if emoji.blank?
 
     result = community_hub.create_reaction(channel: channel, message_id: params[:message_id], emoji: emoji)
     return redirect_to dashboard_community_path(channel: channel), alert: result[:error] if result[:error].present?
 
-    redirect_to dashboard_community_path(channel: channel), notice: "Reaction ajoutee."
+    redirect_to dashboard_community_path(channel: channel), notice: "Réaction ajoutée."
   end
 
   def company_showcase
@@ -202,7 +202,7 @@ class PagesController < ApplicationController
         level:    m.specialty&.name || @client.sector,
         salary:   m.compensation_summary.presence || "Package selon profil",
         tag:      m.specialty&.name || @client.sector,
-        pitch:    m.brief_summary.presence || "Rejoignez #{@client.brand_name} sur ce poste strategique."
+        pitch:    m.brief_summary.presence || "Rejoignez #{@client.brand_name} sur ce poste stratégique."
       }
     end
     @company_contact_bubbles = company_contacts.map do |contact|

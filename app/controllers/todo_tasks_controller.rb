@@ -4,7 +4,7 @@ class TodoTasksController < ApplicationController
     authorize @todo_task
 
     if @todo_task.save
-      redirect_to todo_list_path, notice: "Tache ajoutee."
+      redirect_to todo_list_path, notice: "Tâche ajoutée."
     else
       redirect_to todo_list_path, alert: @todo_task.errors.full_messages.to_sentence
     end
@@ -16,7 +16,7 @@ class TodoTasksController < ApplicationController
 
     return_to = params[:return_to].presence || todo_list_path
     if @todo_task.update(todo_task_params)
-      redirect_to return_to, notice: "Tache mise a jour."
+      redirect_to return_to, notice: "Tâche mise à jour."
     else
       redirect_to return_to, alert: @todo_task.errors.full_messages.to_sentence
     end
@@ -27,7 +27,7 @@ class TodoTasksController < ApplicationController
     authorize @todo_task
 
     @todo_task.destroy
-    redirect_to todo_list_path, notice: "Tache supprimee."
+    redirect_to todo_list_path, notice: "Tâche supprimée."
   end
 
   private

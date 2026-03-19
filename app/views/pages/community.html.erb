@@ -78,7 +78,7 @@
             <% if @community_reply_to.present? %>
               <p><strong class="text-[#4c1f2a]">Reponse en cours :</strong> <%= @community_reply_to[:author] %> · <%= @community_reply_to[:body] %></p>
             <% else %>
-              <p><strong class="text-[#4c1f2a]">Reaction a ajouter :</strong> <%= @community_react_to[:author] %> · Choisissez l'emoji qui convient au message.</p>
+              <p><strong class="text-[#4c1f2a]">Réaction à ajouter :</strong> <%= @community_react_to[:author] %> · Choisissez l'emoji qui convient au message.</p>
               <div class="mt-2 flex flex-wrap gap-2">
                 <% %w[🔥 👏 💡 ✅].each do |emoji| %>
                   <%= button_to emoji, dashboard_community_reactions_path, params: { channel: @community_current_channel, message_id: @community_react_to[:id], emoji: emoji }, class: "rounded-full border border-[#dfbcc9] bg-white px-3 py-1.5 text-sm", form_class: "inline-block" %>
@@ -96,7 +96,7 @@
                 <button type="button" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] transition hover:bg-[#fdeef3]">
                   <i class="fa-solid fa-reply"></i>
                 </button>
-                <%= form.text_area :body, name: :body, rows: 3, placeholder: "Repondre a #{@community_reply_to[:author]}...", class: "min-h-[68px] flex-1 rounded-2xl border-0 bg-[#fff8fb] px-4 py-3 text-sm leading-6 text-[#4c1f2a] outline-none placeholder:text-[#b38494]" %>
+                <%= form.text_area :body, name: :body, rows: 3, placeholder: "Répondre à #{@community_reply_to[:author]}...", class: "min-h-[68px] flex-1 rounded-2xl border-0 bg-[#fff8fb] px-4 py-3 text-sm leading-6 text-[#4c1f2a] outline-none placeholder:text-[#b38494]" %>
                 <%= form.submit "Envoyer", class: "inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-[#ed0e64] px-5 text-sm font-semibold text-white transition hover:bg-[#cf0c57]" %>
               </div>
             <% end %>
@@ -107,7 +107,7 @@
                 <button type="button" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#dfbcc9] bg-[#fff5f8] text-[#8b4452] transition hover:bg-[#fdeef3]">
                   <i class="fa-solid fa-paperclip"></i>
                 </button>
-                <%= form.text_area :body, name: :body, rows: 3, placeholder: "Ecrire un message au collectif, partager un signal terrain ou demander un avis au canal ##{@community_active_channel[:name]}...", class: "min-h-[68px] flex-1 rounded-2xl border-0 bg-[#fff8fb] px-4 py-3 text-sm leading-6 text-[#4c1f2a] outline-none placeholder:text-[#b38494]" %>
+                <%= form.text_area :body, name: :body, rows: 3, placeholder: "Écrire un message au collectif, partager un signal terrain ou demander un avis au canal ##{@community_active_channel[:name]}...", class: "min-h-[68px] flex-1 rounded-2xl border-0 bg-[#fff8fb] px-4 py-3 text-sm leading-6 text-[#4c1f2a] outline-none placeholder:text-[#b38494]" %>
                 <%= form.submit "Envoyer", class: "inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-[#ed0e64] px-5 text-sm font-semibold text-white transition hover:bg-[#cf0c57]" %>
               </div>
             <% end %>
@@ -131,7 +131,7 @@
         <div class="mt-4 space-y-3 text-sm leading-7 text-[#6b3f4f]">
           <p>La communaute doit ressembler a un salon prive de recruteurs selectifs, pas a un forum bruyant.</p>
           <p>L'objectif ici est de favoriser les echanges utiles, les signaux terrain, les methodes et les retours d'experience entre pairs.</p>
-          <p>On pourra ensuite y ajouter du temps reel, des reactions, des threads et des salons prives si tu valides cette direction.</p>
+          <p>On pourra ensuite y ajouter du temps réel, des réactions, des threads et des salons privés si tu valides cette direction.</p>
         </div>
       </section>
     </aside>

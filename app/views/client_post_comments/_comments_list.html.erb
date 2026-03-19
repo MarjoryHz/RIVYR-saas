@@ -1,0 +1,10 @@
+<% if client_post.client_post_comments.any? %>
+  <% client_post.client_post_comments.recent.each do |comment| %>
+    <%= render "client_post_comments/comment", comment: comment %>
+  <% end %>
+<% else %>
+  <div id="empty_comments_<%= client_post.id %>" class="rounded-[1.5rem] border border-dashed border-[#e7cad6] bg-white/80 px-4 py-5 text-center">
+    <p class="text-sm font-medium text-[#6b3f4f]">Aucun commentaire pour le moment.</p>
+    <p class="mt-1 text-xs text-[#9a7080]">Laissez une première réaction pour lancer la discussion.</p>
+  </div>
+<% end %>
