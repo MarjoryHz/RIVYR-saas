@@ -2,14 +2,14 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["indicator", "tooltip"]
-  static values = { rowId: String }
+  static values = { rowId: String, changedRecently: Boolean }
 
   connect() {
     this.applyIndicatorState()
   }
 
   reveal() {
-    if (!this.hasIndicatorTarget || !this.hasTooltipTarget) return
+    if (!this.changedRecentlyValue || !this.hasIndicatorTarget || !this.hasTooltipTarget) return
 
     const tooltip = this.tooltipTarget
     tooltip.classList.remove("hidden", "left-0", "right-0", "top-full", "bottom-full", "mt-2", "mb-2")
@@ -42,14 +42,14 @@ export default class extends Controller {
   }
 
   markSeen() {
-    if (!this.rowIdValue) return
+    if (!this.changedRecentlyValue || !this.rowIdValue) return
 
     window.sessionStorage.setItem(this.storageKey(), "1")
     this.applyIndicatorState()
   }
 
   seen() {
-    if (!this.rowIdValue) return false
+    if (!this.changedRecentlyValue || !this.rowIdValue) return false
 
     return window.sessionStorage.getItem(this.storageKey()) === "1"
   }
@@ -58,16 +58,27 @@ export default class extends Controller {
     if (!this.hasIndicatorTarget) return
 
     const indicator = this.indicatorTarget
-    indicator.classList.remove("bg-[#ff8a1f]", "shadow-[0_0_0_5px_rgba(255,138,31,0.18)]", "bg-[#ead6dd]")
+    indicator.classList.remove(
+      "border-[#dec4cd]",
+      "border-transparent",
+      "bg-white",
+      "bg-[#ff8a1f]",
+      "shadow-[0_0_0_5px_rgba(255,138,31,0.18)]",
+      "bg-[#ead6dd]"
+    )
 
-    if (this.seen()) {
-      indicator.classList.add("bg-[#ead6dd]")
+    if (!this.changedRecentlyValue) {
+      indicator.classList.add("border-[#dec4cd]", "bg-white")
+    } else if (this.seen()) {
+      indicator.classList.add("border-transparent", "bg-[#ead6dd]")
     } else {
-      indicator.classList.add("bg-[#ff8a1f]", "shadow-[0_0_0_5px_rgba(255,138,31,0.18)]")
+      indicator.classList.add("border-transparent", "bg-[#ff8a1f]", "shadow-[0_0_0_5px_rgba(255,138,31,0.18)]")
     }
   }
 
   storageKey() {
+    if (!this.rowIdValue) return "signature-change-seen:unknown"
+
     return `signature-change-seen:${this.rowIdValue}`
   }
 }
