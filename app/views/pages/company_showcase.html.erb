@@ -2,7 +2,7 @@
   <section class="relative overflow-hidden border-b border-[#f0d6e0]">
     <div class="absolute inset-0"></div>
     <div class="relative mx-auto max-w-7xl px-6 py-10 md:px-8 lg:px-10 lg:py-14">
-      <div class="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+      <div class="grid gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
         <div class="space-y-6">
           <div class="space-y-4">
             <div class="flex flex-wrap items-center gap-3">
@@ -17,16 +17,20 @@
             </p>
           </div>
 
-          <div class="flex flex-wrap gap-3">
-            <button type="button" class="rounded-full bg-[#ed0e64] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#cf0c57]">
-              Voir les annonces
-            </button>
-            <button type="button" class="rounded-full border border-[#dfbcc9] bg-white px-6 py-3 text-sm font-semibold text-[#8b4452] transition hover:bg-[#fdeef3]">
-              Decouvrir l'entreprise
-            </button>
+          <div class="flex items-center gap-3 overflow-x-auto pb-1">
+            <%= link_to "Voir les missions", company_missions_path(client_id: @client.id), class: "inline-flex items-center justify-center whitespace-nowrap rounded-full bg-[#ed0e64] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#cf0c57]" %>
+            <%= link_to "Découvrir l'entreprise", "#company-details", class: "inline-flex items-center justify-center whitespace-nowrap rounded-full border border-[#dfbcc9] bg-white px-6 py-3 text-sm font-semibold text-[#8b4452] transition hover:bg-[#fdeef3]" %>
+            <%= link_to "Nos contributions", "#company-contributions", class: "inline-flex items-center justify-center whitespace-nowrap rounded-full border border-[#dfbcc9] bg-white px-6 py-3 text-sm font-semibold text-[#8b4452] transition hover:bg-[#fdeef3]" %>
           </div>
 
           <div class="flex items-center gap-3">
+            <% if user_signed_in? %>
+              <% if @company_subscribed %>
+                <%= button_to "Abonné", client_subscription_path(@client), method: :delete, class: "inline-flex h-10 items-center justify-center rounded-full border border-[#dfbcc9] bg-white px-4 text-sm font-semibold text-[#8b4452] transition hover:bg-[#fdeef3]" %>
+              <% else %>
+                <%= button_to "S'abonner", client_subscription_path(@client), method: :post, class: "inline-flex h-10 items-center justify-center rounded-full border border-[#dfbcc9] bg-white px-4 text-sm font-semibold text-[#8b4452] transition hover:bg-[#fdeef3]" %>
+              <% end %>
+            <% end %>
             <% if @client.website_url.present? %>
               <%= link_to @client.website_url, target: "_blank", rel: "noopener",
                   class: "inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#8b4452] transition hover:bg-[#fdeef3] hover:text-[#ed0e64]" do %>
@@ -49,21 +53,122 @@
           </div>
         </div>
 
-        <div class="rounded-2xl border border-[#ead2dc] bg-white/70 p-4 shadow-[0_8px_24px_rgba(94,31,50,0.06)] backdrop-blur">
-          <div class="grid gap-2 sm:grid-cols-2">
-            <% @company_metrics.each do |metric| %>
-              <div class="rounded-xl border border-[#f1dce5] bg-[#fff8fb] px-4 py-3">
-                <p class="text-[10px] font-semibold uppercase tracking-widest text-[#b07a90]"><%= metric[:label] %></p>
-                <p class="mt-1 text-lg font-semibold text-[#4c1f2a]"><%= metric[:value] %></p>
+        <% logo_initials = @client.brand_name.to_s.split.map { |word| word.first }.join.first(2).presence ||
+                           @client.legal_name.to_s.split.map { |word| word.first }.join.first(2).presence ||
+                           "R" %>
+        <% showcase_contacts = @company_contact_bubbles.first(4) %>
+        <% desktop_positions = [
+          "right-[2%] top-[20%] aspect-square w-36 xl:w-40",
+          "left-[20%] bottom-[8%] aspect-square w-40 xl:w-44",
+          "right-[10%] bottom-[0%] aspect-square w-36 xl:w-40"
+        ] %>
+        <div class="grid gap-4 lg:hidden">
+          <div class="mx-auto flex h-44 w-44 items-center justify-center overflow-hidden rounded-full border-[6px] border-white/70 bg-white/65 shadow-[0_18px_48px_rgba(240,98,146,0.24)] backdrop-blur">
+            <% if @client.logo.present? %>
+              <%= image_tag @client.logo, alt: @client.brand_name, class: "h-full w-full object-cover" %>
+            <% else %>
+              <div class="flex h-full w-full flex-col items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.98),_rgba(255,221,235,0.92)_65%,_rgba(255,197,222,0.72)_100%)] text-center">
+                <span class="text-5xl font-semibold tracking-[0.08em] text-[#ef2a79]"><%= logo_initials.upcase %></span>
+                <span class="mt-2 px-5 text-sm font-medium text-[#7f4557]"><%= @client.brand_name %></span>
               </div>
             <% end %>
           </div>
+
+          <% if showcase_contacts.any? %>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <% showcase_contacts.each do |contact| %>
+                <div class="rounded-[2rem] border border-white/70 bg-white/55 p-4 shadow-[0_16px_42px_rgba(240,98,146,0.16)] backdrop-blur">
+                  <div class="flex items-center gap-3">
+                    <div class="aspect-square w-16 shrink-0 overflow-hidden rounded-full border-4 border-white/85 shadow-[0_10px_26px_rgba(240,98,146,0.2)]">
+                      <% if contact[:avatar].present? %>
+                        <%= image_tag contact[:avatar], alt: contact[:full_name], class: "h-full w-full object-cover" %>
+                      <% else %>
+                        <div class="flex h-full w-full items-center justify-center bg-[#ed0e64]/12 text-lg font-semibold uppercase text-[#ed0e64]"><%= contact[:initials] %></div>
+                      <% end %>
+                    </div>
+                    <div>
+                      <p class="text-base font-semibold text-[#4c1f2a]"><%= contact[:full_name] %></p>
+                      <p class="text-[11px] uppercase tracking-[0.18em] text-[#a33d68]"><%= contact[:job_title] %></p>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
         </div>
+
+        <div class="relative hidden min-h-[620px] lg:block">
+          <div class="absolute inset-0">
+            <div class="absolute left-[8%] top-[14%] h-3 w-3 rounded-full bg-white/70 shadow-[0_0_18px_rgba(255,255,255,0.95)]"></div>
+            <div class="absolute left-[18%] top-[58%] h-4 w-4 rounded-full bg-white/55 shadow-[0_0_20px_rgba(255,255,255,0.75)]"></div>
+            <div class="absolute left-[35%] top-[38%] h-2.5 w-2.5 rounded-full bg-white/70 shadow-[0_0_16px_rgba(255,255,255,0.95)]"></div>
+            <div class="absolute right-[17%] top-[16%] h-5 w-5 rounded-full border border-white/55 bg-white/10"></div>
+            <div class="absolute right-[8%] top-[46%] h-4 w-4 rounded-full border border-white/55 bg-white/10"></div>
+            <div class="absolute right-[24%] bottom-[22%] h-3 w-3 rounded-full bg-white/70 shadow-[0_0_18px_rgba(255,255,255,0.95)]"></div>
+            <div class="absolute left-[29%] bottom-[10%] h-2.5 w-2.5 rounded-full bg-white/80 shadow-[0_0_18px_rgba(255,255,255,0.95)]"></div>
+          </div>
+
+          <div class="absolute left-[16%] top-[0%] h-64 w-64 rounded-full bg-[#ff74a8]/12 blur-3xl"></div>
+          <div class="absolute right-[2%] bottom-[6%] h-64 w-64 rounded-full bg-[#ffc2d8]/20 blur-3xl"></div>
+
+          <div class="absolute left-[18%] top-[5%] flex h-56 w-56 items-center justify-center rounded-full border-[7px] border-white/70 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.98),_rgba(255,233,242,0.92)_64%,_rgba(255,196,218,0.85)_100%)] shadow-[0_22px_56px_rgba(240,98,146,0.28)]">
+            <div class="absolute inset-2 rounded-full border border-[#ff9bc1]/40"></div>
+            <div class="relative z-10 flex h-[84%] w-[84%] items-center justify-center overflow-hidden rounded-full bg-white/85 text-center shadow-[inset_0_0_30px_rgba(255,179,206,0.22)]">
+              <% if @client.logo.present? %>
+                <%= image_tag @client.logo, alt: @client.brand_name, class: "h-full w-full object-cover" %>
+              <% else %>
+                <div class="px-6">
+                  <div class="text-6xl font-semibold tracking-[0.08em] text-[#ef2a79]"><%= logo_initials.upcase %></div>
+                  <div class="mt-2 text-lg font-medium leading-tight text-[#7d4454]"><%= @client.brand_name %></div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+
+          <% showcase_contacts.first(3).each_with_index do |contact, index| %>
+            <div class="absolute <%= desktop_positions[index] %>">
+              <div class="flex h-full w-full flex-col items-center">
+                <div class="relative aspect-square h-full w-full">
+                  <div class="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.95),_rgba(255,210,228,0.72)_66%,_rgba(255,177,206,0.82)_100%)] shadow-[0_22px_56px_rgba(240,98,146,0.22)]"></div>
+                  <div class="absolute inset-[4%] rounded-full border-[5px] border-white/80 bg-white/30"></div>
+                  <div class="absolute inset-[8%] overflow-hidden rounded-full border border-[#ffb4cf]/55 bg-white/70">
+                    <% if contact[:avatar].present? %>
+                      <%= image_tag contact[:avatar], alt: contact[:full_name], class: "h-full w-full object-cover" %>
+                    <% else %>
+                      <div class="flex h-full w-full items-center justify-center bg-[#ed0e64]/12 text-4xl font-semibold uppercase text-[#ed0e64]"><%= contact[:initials] %></div>
+                    <% end %>
+                  </div>
+                </div>
+                <p class="mt-3 w-full text-center text-sm font-semibold leading-tight text-[#6f3f50] drop-shadow-[0_1px_0_rgba(255,255,255,0.7)] xl:text-base"><%= contact[:full_name] %></p>
+              </div>
+            </div>
+          <% end %>
+
+          <% if showcase_contacts[3].present? %>
+            <% contact = showcase_contacts[3] %>
+            <div class="absolute left-[2%] top-[35%] w-44 rounded-[2rem] border border-white/70 bg-white/58 p-4 shadow-[0_18px_42px_rgba(240,98,146,0.16)] backdrop-blur xl:w-48">
+              <div class="flex items-center gap-3">
+                <div class="aspect-square w-14 shrink-0 overflow-hidden rounded-full border-4 border-white/85 shadow-[0_10px_26px_rgba(240,98,146,0.2)]">
+                  <% if contact[:avatar].present? %>
+                    <%= image_tag contact[:avatar], alt: contact[:full_name], class: "h-full w-full object-cover" %>
+                  <% else %>
+                    <div class="flex h-full w-full items-center justify-center bg-[#ed0e64]/12 text-lg font-semibold uppercase text-[#ed0e64]"><%= contact[:initials] %></div>
+                  <% end %>
+                </div>
+                <div class="min-w-0">
+                  <p class="truncate text-sm font-semibold text-[#4c1f2a]"><%= contact[:full_name] %></p>
+                  <p class="mt-1 text-[10px] uppercase tracking-[0.16em] text-[#a33d68]"><%= contact[:job_title] %></p>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
       </div>
     </div>
   </section>
 
-  <section class="py-8">
+  <section id="company-details" class="py-8">
     <div class="mx-auto max-w-7xl px-6 md:px-8 lg:px-10 mb-4">
       <p class="text-2xl font-semibold tracking-tight text-[#6b3f4f] md:text-3xl">On vous en dit plus</p>
     </div>
@@ -79,7 +184,7 @@
                 <i class="fa-solid fa-location-dot text-sm"></i>
               </span>
               <div>
-                <p class="text-[10px] font-semibold uppercase tracking-widest text-[#b07a90]">Siege social</p>
+                <p class="text-[10px] font-semibold uppercase tracking-widest text-[#b07a90]">Siège social</p>
                 <p class="mt-0.5 text-sm font-semibold text-[#4c1f2a]"><%= @client.location %></p>
               </div>
             </div>
@@ -88,7 +193,7 @@
                 <i class="fa-solid fa-industry text-sm"></i>
               </span>
               <div>
-                <p class="text-[10px] font-semibold uppercase tracking-widest text-[#b07a90]">Secteur d activite</p>
+                <p class="text-[10px] font-semibold uppercase tracking-widest text-[#b07a90]">Secteur d'activité</p>
                 <p class="mt-0.5 text-sm font-semibold text-[#4c1f2a]"><%= @client.sector %></p>
               </div>
             </div>
@@ -97,7 +202,7 @@
                 <i class="fa-solid fa-calendar-days text-sm"></i>
               </span>
               <div>
-                <p class="text-[10px] font-semibold uppercase tracking-widest text-[#b07a90]">Fondee en</p>
+                <p class="text-[10px] font-semibold uppercase tracking-widest text-[#b07a90]">Fondée en</p>
                 <p class="mt-0.5 text-sm font-semibold text-[#4c1f2a]"><%= @company_founded_year || "—" %></p>
               </div>
             </div>
@@ -115,7 +220,7 @@
                 <i class="fa-solid fa-chart-line text-sm"></i>
               </span>
               <div>
-                <p class="text-[10px] font-semibold uppercase tracking-widest text-[#b07a90]">Chiffre d affaires</p>
+                <p class="text-[10px] font-semibold uppercase tracking-widest text-[#b07a90]">Chiffre d'affaires</p>
                 <p class="mt-0.5 text-sm font-semibold text-[#4c1f2a]"><%= @company_revenue || "—" %></p>
               </div>
             </div>
@@ -148,15 +253,15 @@
           </div>
         </article>
 
-        <%# Card 4 — Ambiance d entreprise %>
+        <%# Card 4 — Ambiance d'entreprise %>
         <article class="w-[420px] shrink-0 rounded-[2rem] border border-[#ead2dc] bg-[#fff8fb]/95 p-6 shadow-[0_18px_44px_rgba(94,31,50,0.06)]">
-          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Ambiance d entreprise</p>
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Ambiance d'entreprise</p>
           <% if @company_ambiance.present? %>
             <div class="mt-5 rounded-2xl border border-[#f1dce5] bg-white/80 p-5">
               <p class="text-sm leading-7 text-[#6b3f4f]"><%= @company_ambiance.truncate(400) %></p>
             </div>
           <% else %>
-            <p class="mt-5 text-sm text-[#b07a90]">Aucune description renseignee.</p>
+            <p class="mt-5 text-sm text-[#b07a90]">Aucune description renseignée.</p>
           <% end %>
         </article>
 
@@ -164,5 +269,50 @@
     </div>
   </section>
 
+  <%# Section missions ouvertes %>
+  <section class="mx-auto max-w-7xl px-6 py-10 md:px-8 lg:px-10">
+    <div class="mb-6 flex items-end justify-between">
+      <div class="flex flex-col gap-1">
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Recrutement en cours</p>
+        <h2 class="text-2xl font-semibold tracking-tight text-[#4c1f2a] md:text-3xl">
+          Les opportunités chez <%= @client.brand_name %>
+        </h2>
+      </div>
+      <% if @open_missions_count.to_i > 3 %>
+        <%= link_to "Voir tout", company_missions_path(client_id: @client.id), class: "text-sm font-semibold text-[#ed0e64] hover:underline" %>
+      <% end %>
+    </div>
+
+    <% if @open_missions.any? %>
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <% @open_missions.each do |m| %>
+          <%= render "pages/company_mission_card", client: @client, mission: m %>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-sm text-[#b07a90]">Aucune mission ouverte pour le moment.</p>
+    <% end %>
+  </section>
+
+  <%# Section Contributions %>
+  <section id="company-contributions" class="mx-auto max-w-7xl scroll-mt-24 px-6 py-10 md:px-8 lg:px-10">
+    <div class="mb-6 flex items-end justify-between">
+      <div class="flex flex-col gap-1">
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Vie d'entreprise</p>
+        <h2 class="text-2xl font-semibold tracking-tight text-[#4c1f2a] md:text-3xl">Contributions</h2>
+      </div>
+      <%= link_to "Voir tout", company_contributions_path(client_id: @client.id), class: "text-sm font-semibold text-[#ed0e64] hover:underline" %>
+    </div>
+
+    <% if @client_posts.any? %>
+      <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <% @client_posts.each do |post| %>
+          <%= render "pages/company_contribution_card", client: @client, post: post %>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-sm text-[#b07a90]">Aucune publication pour le moment.</p>
+    <% end %>
+  </section>
 
 </div>

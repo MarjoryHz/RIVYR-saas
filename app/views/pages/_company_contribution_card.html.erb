@@ -1,0 +1,131 @@
+<% total_comments = post.client_post_comments.count %>
+<% total_reactions = post.client_post_reactions.count %>
+<% showcase_url = "#{request.base_url}#{company_showcase_path(client_id: client.id)}" %>
+
+<article class="group relative flex flex-col overflow-hidden rounded-[2rem] border border-[#ead2dc] bg-[radial-gradient(circle_at_top_left,_rgba(237,14,100,0.12),_transparent_28%),linear-gradient(180deg,#fffdfd_0%,#fff8fb_100%)] shadow-[0_18px_44px_rgba(94,31,50,0.06)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_28px_60px_rgba(94,31,50,0.11)]">
+  <div class="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(255,255,255,0.55),rgba(255,255,255,0))]"></div>
+
+  <div class="relative flex items-start gap-3 px-5 pt-5 pb-4">
+    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.2rem] border border-[#ead2dc] bg-white text-base font-bold text-[#ed0e64] shadow-[0_12px_24px_rgba(94,31,50,0.08)]">
+      <%= client.brand_name&.first&.upcase %>
+    </div>
+    <div class="min-w-0 flex-1">
+      <div class="flex flex-wrap items-center gap-2">
+        <p class="truncate text-sm font-semibold text-[#4c1f2a]"><%= client.brand_name %></p>
+      </div>
+      <div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-[#9a7080]">
+        <span><%= post.published_at.strftime("%-d %b %Y") %></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="relative space-y-4 px-5 pb-5">
+    <% if post.title.present? %>
+      <h3 class="text-[1.15rem] font-semibold leading-snug text-[#4c1f2a] transition group-hover:text-[#7a2849]"><%= post.title %></h3>
+    <% end %>
+    <p class="text-sm leading-7 text-[#6b3f4f] line-clamp-5"><%= post.body %></p>
+    <div class="flex flex-wrap items-center gap-2 text-xs text-[#8f6272]">
+      <% if total_comments.positive? %>
+        <span class="inline-flex items-center gap-1 rounded-full border border-[#f3d8e3] bg-white/85 px-3 py-1 font-medium">
+          <i class="fa-regular fa-comment"></i>
+          <%= total_comments %> commentaire<%= total_comments > 1 ? "s" : "" %>
+        </span>
+      <% end %>
+    </div>
+  </div>
+
+  <% if post.photo? && post.media_url.present? %>
+    <div class="px-5 pb-5">
+      <div class="overflow-hidden rounded-[1.6rem] border border-[#efdbe4] bg-white shadow-[0_18px_34px_rgba(94,31,50,0.10)]">
+        <img src="<%= post.media_url %>" alt="<%= post.title %>" class="h-56 w-full object-cover transition duration-500 group-hover:scale-[1.02]">
+      </div>
+    </div>
+  <% elsif post.video? && post.media_url.present? %>
+    <div class="px-5 pb-5">
+      <div class="aspect-video w-full overflow-hidden rounded-[1.6rem] border border-[#efdbe4] bg-white shadow-[0_18px_34px_rgba(94,31,50,0.10)]">
+        <iframe src="<%= post.media_url %>" class="h-full w-full" frameborder="0" allowfullscreen></iframe>
+      </div>
+    </div>
+  <% end %>
+
+  <div id="engagement_stats_<%= post.id %>" class="<%= 'hidden' if total_reactions.zero? && total_comments.zero? %> mx-5 mb-4 flex items-center justify-between rounded-[1.2rem] border border-[#f0dde6] bg-white/80 px-4 py-3 text-xs text-[#b07a90]">
+    <span id="reaction_count_<%= post.id %>"><% if total_reactions > 0 %><%= total_reactions %> reaction<%= total_reactions > 1 ? 's' : '' %><% end %></span>
+    <span id="comment_count_<%= post.id %>"><% if total_comments > 0 %><%= total_comments %> commentaire<%= total_comments > 1 ? 's' : '' %><% end %></span>
+  </div>
+
+  <div class="mt-auto border-t border-[#f0dde6]/80 bg-white/45 backdrop-blur-sm">
+    <div class="flex justify-center px-4 py-3">
+      <%= render "client_post_reactions/reactions", post: post, current_user: current_user %>
+    </div>
+
+    <div class="flex border-t border-[#f0dde6] divide-x divide-[#f0dde6]">
+      <button type="button"
+        onclick="const s=document.getElementById('comments_section_<%= post.id %>');s.classList.toggle('hidden');setTimeout(()=>s.querySelector('input,textarea')?.focus(),50)"
+        class="flex flex-1 items-center justify-center gap-1.5 py-3.5 text-sm font-semibold text-[#8b4452] transition hover:bg-[#fff0f5] hover:text-[#ed0e64]">
+        <i class="fa-regular fa-comment"></i>
+        Commenter
+      </button>
+
+      <div class="relative flex-1">
+        <div id="share_menu_<%= post.id %>" class="pointer-events-none absolute bottom-full right-0 z-20 mb-2 flex items-center gap-1.5 rounded-2xl border border-[#ead2dc] bg-white p-2 shadow-lg opacity-0 transition-all duration-150">
+          <%= link_to "https://www.linkedin.com/sharing/share-offsite/?url=#{CGI.escape(showcase_url)}", target: "_blank", rel: "noopener",
+              class: "flex h-8 w-8 items-center justify-center rounded-full bg-[#0077b5] text-white text-xs transition hover:opacity-80" do %>
+            <i class="fa-brands fa-linkedin-in"></i>
+          <% end %>
+          <%= link_to "https://twitter.com/intent/tweet?url=#{CGI.escape(showcase_url)}&text=#{CGI.escape(post.title.to_s)}", target: "_blank", rel: "noopener",
+              class: "flex h-8 w-8 items-center justify-center rounded-full bg-black text-white text-xs transition hover:opacity-80" do %>
+            <i class="fa-brands fa-x-twitter"></i>
+          <% end %>
+          <%= link_to "https://www.facebook.com/sharer/sharer.php?u=#{CGI.escape(showcase_url)}", target: "_blank", rel: "noopener",
+              class: "flex h-8 w-8 items-center justify-center rounded-full bg-[#1877f2] text-white text-xs transition hover:opacity-80" do %>
+            <i class="fa-brands fa-facebook-f"></i>
+          <% end %>
+          <button type="button"
+            onclick="navigator.clipboard.writeText('<%= showcase_url %>');this.innerHTML='<i class=\'fa-solid fa-check\'></i>';setTimeout(()=>this.innerHTML='<i class=\'fa-solid fa-link\'></i>',1500)"
+            class="flex h-8 w-8 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#8b4452] text-xs transition hover:bg-[#fff0f5]">
+            <i class="fa-solid fa-link"></i>
+          </button>
+        </div>
+        <button type="button"
+          onclick="const m=document.getElementById('share_menu_<%= post.id %>');const open=!m.classList.contains('opacity-0');m.classList.toggle('opacity-0',open);m.classList.toggle('pointer-events-none',open);if(!open){document.addEventListener('click',function h(e){if(!m.contains(e.target)){m.classList.add('opacity-0','pointer-events-none');document.removeEventListener('click',h)}},{once:true,capture:true})}"
+          class="flex w-full items-center justify-center gap-1.5 py-3.5 text-sm font-semibold text-[#8b4452] transition hover:bg-[#fff0f5] hover:text-[#ed0e64]">
+          <i class="fa-solid fa-share-nodes"></i>
+          Partager
+        </button>
+      </div>
+    </div>
+
+    <div id="comments_section_<%= post.id %>" class="hidden border-t border-[#f0dde6] bg-[linear-gradient(180deg,#fffafd_0%,#fff6fa_100%)] px-4 pt-4 pb-4">
+      <div class="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <p class="text-sm font-semibold text-[#4c1f2a]">Espace commentaires</p>
+          <p class="text-xs text-[#9a7080]">Une discussion légère, intégrée à la card et plus en phase avec la direction éditoriale.</p>
+        </div>
+        <span id="comments_badge_<%= post.id %>" class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#a33d68]">
+          <%= total_comments %> message<%= total_comments > 1 ? "s" : "" %>
+        </span>
+      </div>
+
+      <div id="comments_<%= post.id %>" class="space-y-3">
+        <% post.client_post_comments.recent.each do |comment| %>
+          <%= render "client_post_comments/comment", comment: comment %>
+        <% end %>
+
+        <% if total_comments.zero? %>
+          <div id="empty_comments_<%= post.id %>" class="rounded-[1.5rem] border border-dashed border-[#e7cad6] bg-white/80 px-4 py-5 text-center">
+            <p class="text-sm font-medium text-[#6b3f4f]">Aucun commentaire pour le moment.</p>
+            <p class="mt-1 text-xs text-[#9a7080]">Laissez une première réaction pour lancer la discussion.</p>
+          </div>
+        <% end %>
+      </div>
+
+      <% if user_signed_in? %>
+        <div class="mt-4">
+          <%= render "client_post_comments/form", client_post: post, comment: ClientPostComment.new %>
+        </div>
+      <% else %>
+        <p class="mt-4 rounded-2xl border border-[#f0dde6] bg-white px-4 py-3 text-center text-xs text-[#b07a90]">Connectez-vous pour commenter.</p>
+      <% end %>
+    </div>
+  </div>
+</article>
