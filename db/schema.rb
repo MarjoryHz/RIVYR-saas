@@ -240,15 +240,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_135500) do
   end
 
   create_table "freelancer_profiles", force: :cascade do |t|
+    t.integer "annual_revenue_target_eur"
     t.string "availability_status"
     t.text "bio"
     t.datetime "created_at", null: false
+    t.string "freelance_legal_status"
     t.string "linkedin_url"
+    t.jsonb "monthly_revenue_targets_eur", default: {}, null: false
     t.string "operational_status"
     t.jsonb "performance_snapshot", default: {}, null: false
+    t.string "primary_bank_account_label"
+    t.string "primary_bank_bic"
+    t.string "primary_bank_iban"
     t.boolean "profile_private"
     t.bigint "region_id", null: false
     t.integer "rivyr_score_current"
+    t.string "secondary_bank_account_label"
+    t.string "secondary_bank_bic"
+    t.string "secondary_bank_iban"
     t.bigint "specialty_id", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false

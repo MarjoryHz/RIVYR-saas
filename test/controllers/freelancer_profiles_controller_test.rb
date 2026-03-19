@@ -28,7 +28,10 @@ class FreelancerProfilesControllerTest < ActionDispatch::IntegrationTest
           region_id: regions(:one).id,
           specialty_id: specialties(:one).id,
           operational_status: "active",
-          availability_status: "available"
+          availability_status: "available",
+          freelance_legal_status: "sasu",
+          annual_revenue_target_eur: 120_000,
+          monthly_revenue_targets_eur: { "03" => "10000" }
         }
       }
     end
@@ -50,10 +53,18 @@ class FreelancerProfilesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "updates a freelancer profile" do
-    patch freelancer_profile_url(@profile), params: { freelancer_profile: { availability_status: "busy" } }
+    patch freelancer_profile_url(@profile), params: {
+      freelancer_profile: {
+        availability_status: "busy",
+        annual_revenue_target_eur: 96_000,
+        monthly_revenue_targets_eur: { "04" => "8000" }
+      }
+    }
 
     assert_redirected_to freelancer_profile_path(@profile)
     assert_equal "busy", @profile.reload.availability_status
+    assert_equal 96_000, @profile.annual_revenue_target_eur
+    assert_equal 8_000, @profile.monthly_revenue_targets_eur["04"]
   end
 
   test "destroys a freelancer profile" do

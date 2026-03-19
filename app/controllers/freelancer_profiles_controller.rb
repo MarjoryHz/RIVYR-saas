@@ -106,7 +106,16 @@ class FreelancerProfilesController < ApplicationController
         :linkedin_url,
         :website_url,
         :rivyr_score_current,
-        :profile_private
+        :profile_private,
+        :freelance_legal_status,
+        :annual_revenue_target_eur,
+        :primary_bank_account_label,
+        :primary_bank_iban,
+        :primary_bank_bic,
+        :secondary_bank_account_label,
+        :secondary_bank_iban,
+        :secondary_bank_bic,
+        monthly_revenue_targets_eur: {}
       )
     else
       params.require(:freelancer_profile).permit(
@@ -118,7 +127,16 @@ class FreelancerProfilesController < ApplicationController
         :linkedin_url,
         :website_url,
         :rivyr_score_current,
-        :profile_private
+        :profile_private,
+        :freelance_legal_status,
+        :annual_revenue_target_eur,
+        :primary_bank_account_label,
+        :primary_bank_iban,
+        :primary_bank_bic,
+        :secondary_bank_account_label,
+        :secondary_bank_iban,
+        :secondary_bank_bic,
+        monthly_revenue_targets_eur: {}
       )
     end
   end

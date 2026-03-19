@@ -111,6 +111,23 @@
         </ul>
       </article>
 
+      <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-5">
+        <h2 class="text-2xl font-semibold text-[#5b2633]">Coordonnees bancaires</h2>
+        <% if @freelancer_profile.bank_accounts.any? %>
+          <div class="mt-3 space-y-3">
+            <% @freelancer_profile.bank_accounts.each do |account| %>
+              <div class="rounded-2xl border border-[#efdbe4] bg-white/75 p-4 text-[15px] text-[#5f3647]">
+                <p class="font-semibold text-[#4c1f2a]"><%= account[:label].presence || "Compte bancaire" %></p>
+                <p class="mt-1">IBAN: <%= account[:iban].presence || "Non renseigne" %></p>
+                <p class="mt-1">BIC: <%= account[:bic].presence || "Non renseigne" %></p>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="mt-3 text-[15px] text-[#5f3647]">Aucune coordonnee bancaire renseignee.</p>
+        <% end %>
+      </article>
+
       <% if policy(@freelancer_profile).edit? %>
         <article class="rounded-3xl border border-[#ead2dc] bg-[#fff8fb]/95 p-4">
           <div class="flex flex-wrap gap-2">

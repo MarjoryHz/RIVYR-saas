@@ -113,11 +113,11 @@
           </div>
 
           <div class="freelance-sidebar__profile-links">
-            <%= link_to edit_user_registration_path, class: "freelance-sidebar__profile-link" do %>
+            <%= link_to(current_user.freelancer_profile.present? ? freelancer_profile_path(current_user.freelancer_profile) : edit_user_registration_path, class: "freelance-sidebar__profile-link") do %>
               <i class="fa-regular fa-user"></i>
               <span>Mon compte</span>
             <% end %>
-            <%= link_to edit_user_registration_path, class: "freelance-sidebar__profile-link" do %>
+            <%= link_to(current_user.freelancer_profile.present? ? edit_freelancer_profile_path(current_user.freelancer_profile) : edit_user_registration_path, class: "freelance-sidebar__profile-link") do %>
               <i class="fa-solid fa-gear"></i>
               <span>Parametres du profil</span>
             <% end %>
