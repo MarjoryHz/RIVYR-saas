@@ -25,5 +25,5 @@
     <p><strong>Contact principal:</strong> <%= @client_contact.primary_contact ? "Oui" : "Non" %></p>
   </div>
 
-  <a href="#" onclick="history.back(); return false;" class="btn">Retour à la liste</a>
+  <%= link_to "Retour à la liste", client_contacts_path, class: "btn" %>
 </div>

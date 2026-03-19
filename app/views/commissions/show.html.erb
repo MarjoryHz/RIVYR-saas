@@ -23,5 +23,5 @@
     <%= link_to "Nouveau paiement", new_payment_path(commission_id: @commission.id), class: "btn" %>
   </div>
 
-  <a href="#" onclick="history.back(); return false;" class="btn">Retour à la liste</a>
+  <%= link_to "Retour à la liste", commissions_path, class: "btn" %>
 </div>

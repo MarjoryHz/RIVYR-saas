@@ -4,7 +4,7 @@ class TodoCategoriesController < ApplicationController
     authorize @todo_category
 
     if @todo_category.save
-      redirect_to todo_list_path, notice: "Categorie ajoutee."
+      redirect_to todo_list_path, notice: "Catégorie ajoutée."
     else
       redirect_to todo_list_path, alert: @todo_category.errors.full_messages.to_sentence
     end
@@ -15,7 +15,7 @@ class TodoCategoriesController < ApplicationController
     authorize @todo_category
 
     if @todo_category.update(todo_category_params)
-      redirect_to todo_list_path, notice: "Categorie mise a jour."
+      redirect_to todo_list_path, notice: "Catégorie mise à jour."
     else
       redirect_to todo_list_path, alert: @todo_category.errors.full_messages.to_sentence
     end
@@ -26,7 +26,7 @@ class TodoCategoriesController < ApplicationController
     authorize @todo_category
 
     if @todo_category.destroy
-      redirect_to todo_list_path, notice: "Categorie supprimee."
+      redirect_to todo_list_path, notice: "Catégorie supprimée."
     else
       redirect_to todo_list_path, alert: @todo_category.errors.full_messages.to_sentence
     end

@@ -1,131 +1,147 @@
 <% total_comments = post.client_post_comments.count %>
-<% total_reactions = post.client_post_reactions.count %>
 <% showcase_url = "#{request.base_url}#{company_showcase_path(client_id: client.id)}" %>
+<% has_photo = post.photo? && post.media_url.present? %>
+<% quote_text = post.body.to_s.squish.truncate(110) %>
+<% summary_text = post.body.to_s.squish.truncate(120) %>
+<% published_label = post.published_at.strftime("%-d %b %Y") %>
+<% modal_summary_text = post.body.to_s.squish.presence || "Aucun contenu disponible pour cette publication." %>
+<% card_shell_class = has_photo ? "bg-white shadow-[0_18px_44px_rgba(94,31,50,0.09)]" : "bg-[linear-gradient(180deg,#fffafc_0%,#fff2f7_100%)] shadow-[0_18px_44px_rgba(94,31,50,0.08)]" %>
+<% content_text_class = has_photo ? "text-white" : "text-[#4c1f2a]" %>
+<% meta_text_class = has_photo ? "text-white/68" : "text-[#a06d83]" %>
+<% brand_text_class = has_photo ? "text-white/88 drop-shadow-[0_2px_14px_rgba(40,18,30,0.32)]" : "text-[#8b4452]" %>
+<% title_text_class = has_photo ? "text-white drop-shadow-[0_3px_18px_rgba(40,18,30,0.38)]" : "text-[#4c1f2a]" %>
+<% summary_text_class = has_photo ? "text-white/84 drop-shadow-[0_3px_14px_rgba(40,18,30,0.24)]" : "text-[#6b3f4f]" %>
+<% cta_button_class = has_photo ?
+  "inline-flex min-w-[200px] items-center justify-center rounded-full border border-white/35 bg-white/14 px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(40,18,30,0.18)] backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:bg-white/22 hover:shadow-[0_18px_34px_rgba(40,18,30,0.24)]" :
+  "inline-flex min-w-[200px] items-center justify-center rounded-full border border-[#dfbcc9] bg-white px-6 py-3 text-sm font-semibold text-[#8b4452] shadow-[0_12px_28px_rgba(94,31,50,0.08)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#fdeef3] hover:shadow-[0_18px_34px_rgba(94,31,50,0.12)]" %>
 
-<article class="group relative flex flex-col overflow-hidden rounded-[2rem] border border-[#ead2dc] bg-[radial-gradient(circle_at_top_left,_rgba(237,14,100,0.12),_transparent_28%),linear-gradient(180deg,#fffdfd_0%,#fff8fb_100%)] shadow-[0_18px_44px_rgba(94,31,50,0.06)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_28px_60px_rgba(94,31,50,0.11)]">
-  <div class="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(255,255,255,0.55),rgba(255,255,255,0))]"></div>
-
-  <div class="relative flex items-start gap-3 px-5 pt-5 pb-4">
-    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.2rem] border border-[#ead2dc] bg-white text-base font-bold text-[#ed0e64] shadow-[0_12px_24px_rgba(94,31,50,0.08)]">
-      <%= client.brand_name&.first&.upcase %>
-    </div>
-    <div class="min-w-0 flex-1">
-      <div class="flex flex-wrap items-center gap-2">
-        <p class="truncate text-sm font-semibold text-[#4c1f2a]"><%= client.brand_name %></p>
+<article
+  onclick="document.getElementById('comments_modal_<%= post.id %>')?.classList.remove('hidden');document.body.classList.add('overflow-hidden')"
+  class="group cursor-pointer overflow-hidden rounded-[2rem] border border-[#ead2dc] <%= card_shell_class %>">
+  <div class="relative min-h-[500px]">
+    <% if has_photo %>
+      <div class="absolute inset-0">
+        <img src="<%= post.media_url %>" alt="<%= post.title.presence || client.brand_name %>" class="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]">
       </div>
-      <div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-[#9a7080]">
-        <span><%= post.published_at.strftime("%-d %b %Y") %></span>
-      </div>
-    </div>
-  </div>
-
-  <div class="relative space-y-4 px-5 pb-5">
-    <% if post.title.present? %>
-      <h3 class="text-[1.15rem] font-semibold leading-snug text-[#4c1f2a] transition group-hover:text-[#7a2849]"><%= post.title %></h3>
+      <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(88,44,64,0.14)_0%,rgba(92,38,61,0.26)_34%,rgba(77,34,54,0.58)_62%,rgba(61,28,42,0.86)_100%)]"></div>
+      <div class="absolute inset-x-0 bottom-0 h-48 bg-[radial-gradient(circle_at_bottom,_rgba(255,170,210,0.34),_transparent_72%)]"></div>
+    <% else %>
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,223,235,0.95),rgba(255,243,248,0.98)_34%,rgba(255,236,244,0.96)_68%,rgba(252,219,232,0.94)_100%)]"></div>
+      <div class="absolute inset-x-0 top-0 h-32 bg-[linear-gradient(180deg,rgba(255,255,255,0.7),rgba(255,255,255,0))]"></div>
+      <div class="absolute -left-12 top-20 h-32 w-32 rounded-full bg-[#ffd5e6]/70 blur-3xl"></div>
+      <div class="absolute right-0 top-0 h-40 w-40 rounded-full bg-[#ffc3dc]/55 blur-3xl"></div>
     <% end %>
-    <p class="text-sm leading-7 text-[#6b3f4f] line-clamp-5"><%= post.body %></p>
-    <div class="flex flex-wrap items-center gap-2 text-xs text-[#8f6272]">
-      <% if total_comments.positive? %>
-        <span class="inline-flex items-center gap-1 rounded-full border border-[#f3d8e3] bg-white/85 px-3 py-1 font-medium">
-          <i class="fa-regular fa-comment"></i>
-          <%= total_comments %> commentaire<%= total_comments > 1 ? "s" : "" %>
-        </span>
-      <% end %>
-    </div>
-  </div>
 
-  <% if post.photo? && post.media_url.present? %>
-    <div class="px-5 pb-5">
-      <div class="overflow-hidden rounded-[1.6rem] border border-[#efdbe4] bg-white shadow-[0_18px_34px_rgba(94,31,50,0.10)]">
-        <img src="<%= post.media_url %>" alt="<%= post.title %>" class="h-56 w-full object-cover transition duration-500 group-hover:scale-[1.02]">
+    <div class="relative z-10 flex min-h-[500px] flex-col justify-end p-6 <%= content_text_class %> sm:p-7">
+      <div class="max-w-[82%]">
+        <p class="mb-3 text-xs font-medium uppercase tracking-[0.22em] <%= meta_text_class %>"><%= published_label %></p>
+        <p class="text-sm font-medium tracking-[0.05em] <%= brand_text_class %>">
+          <%= client.brand_name %>
+        </p>
+        <% if post.title.present? %>
+          <h3 class="mt-2.5 text-[1.45rem] font-semibold leading-[1.12] tracking-tight <%= title_text_class %> sm:text-[1.7rem]">
+            <%= post.title %>
+          </h3>
+        <% end %>
       </div>
-    </div>
-  <% elsif post.video? && post.media_url.present? %>
-    <div class="px-5 pb-5">
-      <div class="aspect-video w-full overflow-hidden rounded-[1.6rem] border border-[#efdbe4] bg-white shadow-[0_18px_34px_rgba(94,31,50,0.10)]">
-        <iframe src="<%= post.media_url %>" class="h-full w-full" frameborder="0" allowfullscreen></iframe>
-      </div>
-    </div>
-  <% end %>
 
-  <div id="engagement_stats_<%= post.id %>" class="<%= 'hidden' if total_reactions.zero? && total_comments.zero? %> mx-5 mb-4 flex items-center justify-between rounded-[1.2rem] border border-[#f0dde6] bg-white/80 px-4 py-3 text-xs text-[#b07a90]">
-    <span id="reaction_count_<%= post.id %>"><% if total_reactions > 0 %><%= total_reactions %> reaction<%= total_reactions > 1 ? 's' : '' %><% end %></span>
-    <span id="comment_count_<%= post.id %>"><% if total_comments > 0 %><%= total_comments %> commentaire<%= total_comments > 1 ? 's' : '' %><% end %></span>
-  </div>
+      <p class="mt-4 max-w-[88%] text-sm leading-6 <%= summary_text_class %>">
+        <%= summary_text %>
+      </p>
 
-  <div class="mt-auto border-t border-[#f0dde6]/80 bg-white/45 backdrop-blur-sm">
-    <div class="flex justify-center px-4 py-3">
-      <%= render "client_post_reactions/reactions", post: post, current_user: current_user %>
-    </div>
+      <%= render "pages/company_contribution_engagement",
+          post: post,
+          current_user: current_user,
+          showcase_url: showcase_url,
+          dom_prefix: "company_contribution",
+          modal_target: "comments_modal_#{post.id}",
+          light_mode: !has_photo %>
 
-    <div class="flex border-t border-[#f0dde6] divide-x divide-[#f0dde6]">
-      <button type="button"
-        onclick="const s=document.getElementById('comments_section_<%= post.id %>');s.classList.toggle('hidden');setTimeout(()=>s.querySelector('input,textarea')?.focus(),50)"
-        class="flex flex-1 items-center justify-center gap-1.5 py-3.5 text-sm font-semibold text-[#8b4452] transition hover:bg-[#fff0f5] hover:text-[#ed0e64]">
-        <i class="fa-regular fa-comment"></i>
-        Commenter
-      </button>
-
-      <div class="relative flex-1">
-        <div id="share_menu_<%= post.id %>" class="pointer-events-none absolute bottom-full right-0 z-20 mb-2 flex items-center gap-1.5 rounded-2xl border border-[#ead2dc] bg-white p-2 shadow-lg opacity-0 transition-all duration-150">
-          <%= link_to "https://www.linkedin.com/sharing/share-offsite/?url=#{CGI.escape(showcase_url)}", target: "_blank", rel: "noopener",
-              class: "flex h-8 w-8 items-center justify-center rounded-full bg-[#0077b5] text-white text-xs transition hover:opacity-80" do %>
-            <i class="fa-brands fa-linkedin-in"></i>
-          <% end %>
-          <%= link_to "https://twitter.com/intent/tweet?url=#{CGI.escape(showcase_url)}&text=#{CGI.escape(post.title.to_s)}", target: "_blank", rel: "noopener",
-              class: "flex h-8 w-8 items-center justify-center rounded-full bg-black text-white text-xs transition hover:opacity-80" do %>
-            <i class="fa-brands fa-x-twitter"></i>
-          <% end %>
-          <%= link_to "https://www.facebook.com/sharer/sharer.php?u=#{CGI.escape(showcase_url)}", target: "_blank", rel: "noopener",
-              class: "flex h-8 w-8 items-center justify-center rounded-full bg-[#1877f2] text-white text-xs transition hover:opacity-80" do %>
-            <i class="fa-brands fa-facebook-f"></i>
-          <% end %>
-          <button type="button"
-            onclick="navigator.clipboard.writeText('<%= showcase_url %>');this.innerHTML='<i class=\'fa-solid fa-check\'></i>';setTimeout(()=>this.innerHTML='<i class=\'fa-solid fa-link\'></i>',1500)"
-            class="flex h-8 w-8 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#8b4452] text-xs transition hover:bg-[#fff0f5]">
-            <i class="fa-solid fa-link"></i>
-          </button>
-        </div>
+      <div class="mt-5 flex justify-center">
         <button type="button"
-          onclick="const m=document.getElementById('share_menu_<%= post.id %>');const open=!m.classList.contains('opacity-0');m.classList.toggle('opacity-0',open);m.classList.toggle('pointer-events-none',open);if(!open){document.addEventListener('click',function h(e){if(!m.contains(e.target)){m.classList.add('opacity-0','pointer-events-none');document.removeEventListener('click',h)}},{once:true,capture:true})}"
-          class="flex w-full items-center justify-center gap-1.5 py-3.5 text-sm font-semibold text-[#8b4452] transition hover:bg-[#fff0f5] hover:text-[#ed0e64]">
-          <i class="fa-solid fa-share-nodes"></i>
-          Partager
+          onclick="event.stopPropagation();document.getElementById('comments_modal_<%= post.id %>')?.classList.remove('hidden');document.body.classList.add('overflow-hidden')"
+          class="<%= cta_button_class %>">
+          Voir la publication
         </button>
       </div>
     </div>
-
-    <div id="comments_section_<%= post.id %>" class="hidden border-t border-[#f0dde6] bg-[linear-gradient(180deg,#fffafd_0%,#fff6fa_100%)] px-4 pt-4 pb-4">
-      <div class="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <p class="text-sm font-semibold text-[#4c1f2a]">Espace commentaires</p>
-          <p class="text-xs text-[#9a7080]">Une discussion légère, intégrée à la card et plus en phase avec la direction éditoriale.</p>
-        </div>
-        <span id="comments_badge_<%= post.id %>" class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#a33d68]">
-          <%= total_comments %> message<%= total_comments > 1 ? "s" : "" %>
-        </span>
-      </div>
-
-      <div id="comments_<%= post.id %>" class="space-y-3">
-        <% post.client_post_comments.recent.each do |comment| %>
-          <%= render "client_post_comments/comment", comment: comment %>
-        <% end %>
-
-        <% if total_comments.zero? %>
-          <div id="empty_comments_<%= post.id %>" class="rounded-[1.5rem] border border-dashed border-[#e7cad6] bg-white/80 px-4 py-5 text-center">
-            <p class="text-sm font-medium text-[#6b3f4f]">Aucun commentaire pour le moment.</p>
-            <p class="mt-1 text-xs text-[#9a7080]">Laissez une première réaction pour lancer la discussion.</p>
-          </div>
-        <% end %>
-      </div>
-
-      <% if user_signed_in? %>
-        <div class="mt-4">
-          <%= render "client_post_comments/form", client_post: post, comment: ClientPostComment.new %>
-        </div>
-      <% else %>
-        <p class="mt-4 rounded-2xl border border-[#f0dde6] bg-white px-4 py-3 text-center text-xs text-[#b07a90]">Connectez-vous pour commenter.</p>
-      <% end %>
-    </div>
   </div>
 </article>
+
+<% content_for :modals do %>
+  <div id="comments_modal_<%= post.id %>" class="fixed inset-0 z-[140] hidden p-4 sm:p-6">
+    <button type="button"
+      aria-label="Fermer"
+      onclick="document.getElementById('comments_modal_<%= post.id %>')?.classList.add('hidden');document.body.classList.remove('overflow-hidden')"
+      class="absolute inset-0 bg-[#3e1d29]/55 backdrop-blur-[2px]"></button>
+
+    <div class="relative mx-auto flex h-[92vh] max-h-[92vh] max-w-6xl overflow-hidden rounded-[2rem] border border-[#ead2dc] bg-white shadow-[0_28px_70px_rgba(62,29,41,0.24)]">
+      <div class="hidden md:flex md:w-[42%] md:flex-col">
+        <div class="relative flex-1 min-h-[640px] overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(255,223,235,0.95),rgba(248,214,229,0.92)_32%,rgba(230,187,208,0.92)_66%,rgba(173,121,146,0.96)_100%)]">
+          <% if has_photo %>
+            <img src="<%= post.media_url %>" alt="<%= post.title.presence || client.brand_name %>" class="absolute inset-0 h-full w-full object-cover">
+            <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(88,44,64,0.12)_0%,rgba(92,38,61,0.24)_38%,rgba(61,28,42,0.84)_100%)]"></div>
+          <% else %>
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,244,248,0.98),rgba(255,237,244,0.96)_35%,rgba(251,220,232,0.94)_72%,rgba(245,198,217,0.9)_100%)]"></div>
+            <div class="absolute inset-x-0 top-0 h-40 bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(255,255,255,0))]"></div>
+            <div class="absolute -left-10 bottom-12 h-40 w-40 rounded-full bg-[#ffd7e7]/60 blur-3xl"></div>
+            <div class="absolute -right-8 top-16 h-44 w-44 rounded-full bg-[#ffc1da]/50 blur-3xl"></div>
+          <% end %>
+
+          <div class="relative z-10 flex h-full flex-col <%= has_photo ? 'justify-end' : 'justify-start' %> p-8 <%= has_photo ? 'text-white' : 'text-[#4c1f2a]' %>">
+            <p class="text-xs font-medium uppercase tracking-[0.22em] <%= has_photo ? 'text-white/68' : 'text-[#a45e7b]' %>"><%= published_label %></p>
+            <p class="mt-3 text-sm font-medium tracking-[0.05em] <%= has_photo ? 'text-white/88' : 'text-[#8b4452]' %>"><%= client.brand_name %></p>
+            <% if post.title.present? %>
+              <h3 class="mt-2 text-[1.8rem] font-semibold leading-[1.1] tracking-tight <%= has_photo ? 'text-white' : 'text-[#4c1f2a]' %>"><%= post.title %></h3>
+            <% end %>
+            <p class="mt-4 text-sm leading-7 <%= has_photo ? 'text-white/84' : 'text-[#6b3f4f]' %>"><%= modal_summary_text %></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex min-h-0 w-full flex-col md:w-[58%]">
+        <div class="flex items-start justify-between gap-4 border-b border-[#f0dde6] px-5 py-5 sm:px-6">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Publication</p>
+            <h3 class="mt-2 text-xl font-semibold tracking-tight text-[#4c1f2a]"><%= post.title.presence || client.brand_name %></h3>
+          </div>
+          <button type="button"
+            aria-label="Fermer"
+            onclick="document.getElementById('comments_modal_<%= post.id %>')?.classList.add('hidden');document.body.classList.remove('overflow-hidden')"
+            class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#8b4452] transition hover:bg-[#fff0f5] hover:text-[#ed0e64]">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="min-h-0 flex-1 overflow-y-auto bg-[linear-gradient(180deg,#fffafd_0%,#fff6fa_100%)] px-5 py-5 sm:px-6">
+          <div class="mb-4 flex items-center justify-between gap-4">
+            <%= render "pages/company_contribution_engagement",
+                post: post,
+                current_user: current_user,
+                showcase_url: showcase_url,
+                dom_prefix: "company_contribution_modal",
+                modal_target: "comments_modal_#{post.id}",
+                light_mode: true,
+                comment_click: "document.getElementById('comments_#{post.id}')?.scrollIntoView({ behavior: 'smooth', block: 'start' })" %>
+
+            <span id="comments_badge_<%= post.id %>" class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#a33d68] shadow-[0_8px_18px_rgba(94,31,50,0.05)]">
+              <%= total_comments %> message<%= total_comments > 1 ? "s" : "" %>
+            </span>
+          </div>
+
+          <div id="comments_<%= post.id %>" class="space-y-3">
+            <%= render "client_post_comments/comments_list", client_post: post %>
+          </div>
+        </div>
+
+        <div class="border-t border-[#f0dde6] bg-white px-5 py-5 sm:px-6">
+          <% if user_signed_in? %>
+            <%= render "client_post_comments/form", client_post: post, comment: ClientPostComment.new %>
+          <% else %>
+            <p class="rounded-2xl border border-[#f0dde6] bg-[#fffafd] px-4 py-3 text-center text-xs text-[#b07a90]">Connectez-vous pour commenter.</p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>

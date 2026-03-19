@@ -34,7 +34,7 @@ class MissionsController < ApplicationController
 
   def dashboard
     authorize Mission, :index?
-    return redirect_to missions_path, alert: "Le dashboard freelance est reserve aux freelances." unless current_user.role_freelance?
+    return redirect_to missions_path, alert: "Le dashboard freelance est réservé aux freelances." unless current_user.role_freelance?
     return redirect_to dashboard_freelance_finance_path if %w[finance pilotage].include?(params[:tab].to_s)
 
     load_freelance_missions_dashboard
@@ -42,7 +42,7 @@ class MissionsController < ApplicationController
 
   def library
     authorize Mission
-    return redirect_to missions_path, alert: "La bibliotheque de missions est reservee aux freelances." unless current_user.role_freelance?
+    return redirect_to missions_path, alert: "La bibliothèque de missions est réservée aux freelances." unless current_user.role_freelance?
 
     @q = params[:q].to_s.strip
     @status = params[:status].to_s.strip

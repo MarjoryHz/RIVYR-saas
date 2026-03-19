@@ -44,29 +44,29 @@ Specialty.destroy_all
 puts "Database cleaned."
 
 # --------------------------------------------------
-# 2. Catalogues et jeux de donnees
-# Donnees de reference reutilisees dans tout le seed.
+# 2. Catalogues et jeux de données
+# Données de référence réutilisées dans tout le seed.
 # --------------------------------------------------
 
 REGIONS_DATA = [
-  { name: 'Hauts-de-France', options: ['Lille', 'Roubaix', 'Tourcoing', 'Villeneuve-d Ascq', 'Amiens', 'Valenciennes', 'Dunkerque'] },
-  { name: 'Ile-de-France', options: ['Paris', 'Boulogne-Billancourt', 'Nanterre', 'Saint-Denis', 'Creteil'] },
+  { name: 'Hauts-de-France', options: ['Lille', 'Roubaix', 'Tourcoing', "Villeneuve-d'Ascq", 'Amiens', 'Valenciennes', 'Dunkerque'] },
+  { name: 'Île-de-France', options: ['Paris', 'Boulogne-Billancourt', 'Nanterre', 'Saint-Denis', 'Créteil'] },
   { name: 'Grand Est', options: ['Strasbourg', 'Reims', 'Metz', 'Nancy'] },
   { name: 'Normandie', options: ['Rouen', 'Caen', 'Le Havre'] },
   { name: 'Pays de la Loire', options: ['Nantes', 'Angers', 'Le Mans'] },
   { name: 'Bretagne', options: ['Rennes', 'Brest', 'Lorient'] },
-  { name: 'Centre-Val de Loire', options: ['Tours', 'Orleans', 'Blois'] },
+  { name: 'Centre-Val de Loire', options: ['Tours', 'Orléans', 'Blois'] },
   { name: 'Nouvelle-Aquitaine', options: ['Bordeaux', 'Poitiers', 'Limoges'] },
   { name: 'Occitanie', options: ['Toulouse', 'Montpellier', 'Nimes'] },
   { name: 'Auvergne-Rhone-Alpes', options: ['Lyon', 'Grenoble', 'Clermont-Ferrand'] },
-  { name: 'Bourgogne-Franche-Comte', options: ['Dijon', 'Besancon'] },
-  { name: 'Provence-Alpes-Cote d Azur', options: ['Marseille', 'Nice', 'Aix-en-Provence'] },
-  { name: 'Belgique', options: ['Bruxelles', 'Mons', 'Tournai', 'Mouscron', 'Liege', 'Charleroi'] }
+  { name: 'Bourgogne-Franche-Comté', options: ['Dijon', 'Besançon'] },
+  { name: "Provence-Alpes-Côte d'Azur", options: ['Marseille', 'Nice', 'Aix-en-Provence'] },
+  { name: 'Belgique', options: ['Bruxelles', 'Mons', 'Tournai', 'Mouscron', 'Liège', 'Charleroi'] }
 ].freeze
 
 SPECIALTIES_DATA = [
-  { name: 'Direction Generale', options: ['Directeur General', 'COO', 'Directeur de Business Unit'] },
-  { name: 'Finance', options: ['DAF', 'Responsable Controle de Gestion', 'Responsable Comptable'] },
+  { name: 'Direction Générale', options: ['Directeur Général', 'COO', 'Directeur de Business Unit'] },
+  { name: 'Finance', options: ['DAF', 'Responsable Contrôle de Gestion', 'Responsable Comptable'] },
   { name: 'Ressources Humaines', options: ['DRH', 'Responsable RH', 'Talent Acquisition Manager'] },
   { name: 'Commercial', options: ['Directeur Commercial', 'Key Account Manager', 'Business Developer Senior'] },
   { name: 'Marketing', options: ['Responsable Marketing', 'Brand Manager', 'Growth Manager'] },
@@ -74,8 +74,8 @@ SPECIALTIES_DATA = [
   { name: 'Tech & Data', options: ['CTO', 'Lead Developer', 'Head of Data'] },
   { name: 'Industrie', options: ['Directeur de Site', 'Responsable Production', 'Lean Manager'] },
   { name: 'Supply Chain', options: ['Responsable Supply Chain', 'Responsable Logistique', 'Acheteur Senior'] },
-  { name: 'Ingenierie', options: ['Ingenieur Methodes', 'Chef de Projet', 'Responsable Bureau d Etudes'] },
-  { name: 'Maintenance', options: ['Responsable Maintenance', 'Ingenieur Fiabilite', 'Responsable Travaux Neufs'] },
+  { name: 'Ingénierie', options: ['Ingénieur Méthodes', 'Chef de Projet', "Responsable Bureau d'Études"] },
+  { name: 'Maintenance', options: ['Responsable Maintenance', 'Ingénieur Fiabilité', 'Responsable Travaux Neufs'] },
   { name: 'Juridique', options: ['Responsable Juridique', 'Juriste Corporate'] }
 ].freeze
 
@@ -84,10 +84,10 @@ PREMIUM_FREELANCERS = [
     email: 'claire.dumont@rivyr.test',
     first_name: 'Claire',
     last_name: 'Dumont',
-    specialty: 'Direction Generale',
+    specialty: 'Direction Générale',
     region: 'Hauts-de-France',
     score: 94,
-    bio: "Ex-chasseuse de tetes en cabinet, Claire intervient aujourd hui en independante sur des recrutements de dirigeants, membres de CODIR et managers de transformation. Elle est reconnue pour sa capacite a qualifier finement les enjeux politiques, humains et business d un recrutement sensible."
+    bio: "Ex-chasseuse de têtes en cabinet, Claire intervient aujourd'hui en indépendante sur des recrutements de dirigeants, membres de CODIR et managers de transformation. Elle est reconnue pour sa capacité à qualifier finement les enjeux politiques, humains et business d'un recrutement sensible."
   },
   {
     email: 'thomas.leroy@rivyr.test',
@@ -96,7 +96,7 @@ PREMIUM_FREELANCERS = [
     specialty: 'Industrie',
     region: 'Hauts-de-France',
     score: 91,
-    bio: "Thomas accompagne des industriels, ETI et groupes sur des recrutements de direction de site, production, maintenance et supply chain. Son point fort : une lecture terrain des environnements industriels et une evaluation tres concrete du niveau d execution des candidats."
+    bio: "Thomas accompagne des industriels, ETI et groupes sur des recrutements de direction de site, production, maintenance et supply chain. Son point fort : une lecture terrain des environnements industriels et une évaluation très concrète du niveau d'exécution des candidats."
   },
   {
     email: 'sophie.vanacker@rivyr.test',
@@ -105,16 +105,16 @@ PREMIUM_FREELANCERS = [
     specialty: 'Ressources Humaines',
     region: 'Belgique',
     score: 92,
-    bio: "Sophie intervient sur des fonctions RH strategiques et manageriales en France et en Belgique. Elle se distingue par une approche de conseil exigeante, une grande qualite d ecoute et une vraie justesse dans l evaluation des postures de leadership."
+    bio: "Sophie intervient sur des fonctions RH stratégiques et managériales en France et en Belgique. Elle se distingue par une approche de conseil exigeante, une grande qualité d'écoute et une vraie justesse dans l'évaluation des postures de leadership."
   },
   {
     email: 'antoine.mercier@rivyr.test',
     first_name: 'Antoine',
     last_name: 'Mercier',
     specialty: 'Commercial',
-    region: 'Ile-de-France',
+    region: 'Île-de-France',
     score: 89,
-    bio: "Specialiste des recrutements commerciaux, Antoine accompagne ses clients sur des fonctions de direction commerciale, developpement grands comptes et structuration d equipes de vente. Il est particulierement pertinent sur les contextes de croissance et de repositionnement marche."
+    bio: "Spécialiste des recrutements commerciaux, Antoine accompagne ses clients sur des fonctions de direction commerciale, développement grands comptes et structuration d'équipes de vente. Il est particulièrement pertinent sur les contextes de croissance et de repositionnement marché."
   }
 ].freeze
 
@@ -124,9 +124,9 @@ STANDARD_FREELANCERS = [
     first_name: 'Julie',
     last_name: 'Martin',
     specialty: 'Finance',
-    region: 'Ile-de-France',
+    region: 'Île-de-France',
     score: 84,
-    bio: "Julie recrute des profils finance et pilotage de la performance pour des PME, ETI et groupes. Elle apprecie les contextes ou la technicite doit se combiner avec une vraie capacite d influence interne."
+    bio: "Julie recrute des profils finance et pilotage de la performance pour des PME, ETI et groupes. Elle apprécie les contextes où la technicité doit se combiner avec une vraie capacité d'influence interne."
   },
   {
     email: 'arthur.delcourt@rivyr.test',
@@ -135,16 +135,16 @@ STANDARD_FREELANCERS = [
     specialty: 'Tech & Data',
     region: 'Hauts-de-France',
     score: 81,
-    bio: "Arthur intervient sur des recrutements tech et data avec une approche tres structuree du brief, du niveau technique attendu et de la capacite reelle des candidats a s integrer dans une roadmap produit ou plateforme."
+    bio: "Arthur intervient sur des recrutements tech et data avec une approche très structurée du brief, du niveau technique attendu et de la capacité réelle des candidats à s'intégrer dans une roadmap produit ou plateforme."
   },
   {
     email: 'camille.bernard@rivyr.test',
     first_name: 'Camille',
     last_name: 'Bernard',
     specialty: 'Digital & Produit',
-    region: 'Ile-de-France',
+    region: 'Île-de-France',
     score: 78,
-    bio: "Camille accompagne ses clients sur des fonctions produit et digitales, avec un vrai soin porte a l evaluation du niveau de structuration, de priorisation et de collaboration transverse."
+    bio: "Camille accompagne ses clients sur des fonctions produit et digitales, avec un vrai soin porté à l'évaluation du niveau de structuration, de priorisation et de collaboration transverse."
   },
   {
     email: 'nicolas.morel@rivyr.test',
@@ -153,16 +153,16 @@ STANDARD_FREELANCERS = [
     specialty: 'Supply Chain',
     region: 'Pays de la Loire',
     score: 86,
-    bio: "Nicolas est specialise sur les recrutements supply chain, achats et logistique. Il intervient surtout sur des environnements a enjeux operationnels forts, ou la qualite d execution reste decisive."
+    bio: "Nicolas est spécialisé sur les recrutements supply chain, achats et logistique. Il intervient surtout sur des environnements à enjeux opérationnels forts, où la qualité d'exécution reste décisive."
   },
   {
     email: 'lea.garcia@rivyr.test',
-    first_name: 'Lea',
+    first_name: 'Léa',
     last_name: 'Garcia',
-    specialty: 'Ingenierie',
+    specialty: 'Ingénierie',
     region: 'Grand Est',
     score: 76,
-    bio: "Lea recrute des chefs de projet, responsables BE et profils techniques experts, avec une forte attention portee a la credibilite metier et a la capacite a faire le lien entre technique et management."
+    bio: "Léa recrute des chefs de projet, responsables BE et profils techniques experts, avec une forte attention portée à la crédibilité métier et à la capacité à faire le lien entre technique et management."
   },
   {
     email: 'hugo.roux@rivyr.test',
@@ -171,7 +171,7 @@ STANDARD_FREELANCERS = [
     specialty: 'Maintenance',
     region: 'Normandie',
     score: 73,
-    bio: "Hugo intervient principalement sur des fonctions maintenance, fiabilite et travaux neufs. Il est apprecie pour son pragmatisme, sa reactivite et sa capacite a securiser des recrutements penuriques."
+    bio: "Hugo intervient principalement sur des fonctions maintenance, fiabilité et travaux neufs. Il est apprécié pour son pragmatisme, sa réactivité et sa capacité à sécuriser des recrutements pénuriques."
   }
 ].freeze
 
@@ -186,17 +186,17 @@ CLIENTS_DATA = [
     company_size: '201-500',
     founded_year: 1987,
     revenue: '85 M€',
-    ambiance: "Ici, l exigence n est pas un mot de com. Les postes sont exposes, les decisions se prennent vite et les managers sont pleinement responsables de leur perimetre. L ambiance est directe, sobre et orientee resultat. Pas de politique, pas de flou : on sait ce qu on attend de chaque profil des le premier jour.",
-    tagline: "Une ETI industrielle qui combine exigence d execution et ambition de transformation.",
+    ambiance: "Ici, l'exigence n'est pas un mot de com. Les postes sont exposés, les décisions se prennent vite et les managers sont pleinement responsables de leur périmètre. L'ambiance est directe, sobre et orientée résultat. Pas de politique, pas de flou : on sait ce qu'on attend de chaque profil dès le premier jour.",
+    tagline: "Une ETI industrielle qui combine exigence d'exécution et ambition de transformation.",
     highlights: [
-      { title: "Transformation accelee", body: "3 sites industriels restructures en 24 mois avec des gains de productivite mesurables." },
-      { title: "Investissement massif", body: "Plan d investissement engage sur la modernisation des lignes et des outils de pilotage." },
-      { title: "Management direct", body: "Culture sobre, orientee resultat, ou chaque manager est pleinement responsable de son perimetre." }
+      { title: "Transformation accélérée", body: "3 sites industriels restructurés en 24 mois avec des gains de productivité mesurables." },
+      { title: "Investissement massif", body: "Plan d'investissement engagé sur la modernisation des lignes et des outils de pilotage." },
+      { title: "Management direct", body: "Culture sobre, orientée résultat, où chaque manager est pleinement responsable de son périmètre." }
     ],
     values: [
-      { title: "Exigence utile", body: "Un niveau de jeu eleve, mais toujours aligne avec les realites du terrain et de l execution." },
-      { title: "Decisions rapides", body: "Des circuits courts, une gouvernance lisible et une vraie capacite a trancher vite." },
-      { title: "Impact industriel", body: "Chaque poste ouvert a une consequence concrete sur la production, la supply ou la transformation." }
+      { title: "Exigence utile", body: "Un niveau de jeu élevé, mais toujours aligné avec les réalités du terrain et de l'exécution." },
+      { title: "Décisions rapides", body: "Des circuits courts, une gouvernance lisible et une vraie capacité à trancher vite." },
+      { title: "Impact industriel", body: "Chaque poste ouvert a une conséquence concrète sur la production, la supply ou la transformation." }
     ],
     gallery: ["Site de production modernise", "Comite de direction operations", "Atelier supply & excellence"],
     bio: "ETI industrielle implantee dans les Hauts-de-France, Flandres Industrie conçoit et fabrique des equipements techniques a haute valeur ajoutee pour les secteurs de l energie, de l automobile et de la construction. Avec 350 collaborateurs repartis sur 4 sites, l entreprise est engagee dans une transformation ambitieuse de ses operations. Les recrutements portent sur des profils de direction, production, maintenance et supply chain capables de tenir un niveau d exigence eleve dans un environnement en pleine modernisation."
@@ -209,17 +209,17 @@ CLIENTS_DATA = [
     company_size: '500+',
     founded_year: 1998,
     revenue: '220 M€',
-    ambiance: "Le rythme est soutenu et les equipes sont habituees a travailler sous contrainte. La culture du debrief est reelle : on analyse, on ajuste, on repart. Les managers qui s epanouissent ici sont ceux qui aiment le terrain, la mesure et la progression collective.",
+    ambiance: "Le rythme est soutenu et les équipes sont habituées à travailler sous contrainte. La culture du débrief est réelle : on analyse, on ajuste, on repart. Les managers qui s'épanouissent ici sont ceux qui aiment le terrain, la mesure et la progression collective.",
     tagline: "Un groupe logistique multi-sites qui recrute des managers capables de piloter la performance terrain.",
     highlights: [
-      { title: "Reseau multi-sites", body: "12 plateformes logistiques en France et en Belgique avec des flux nationaux et europeens." },
-      { title: "Amelioration continue", body: "Culture du debrief et du management terrain ancree a tous les niveaux de l organisation." },
-      { title: "Croissance solide", body: "Contrats grands comptes multi-annuels qui garantissent une activite stable et en expansion." }
+      { title: "Réseau multi-sites", body: "12 plateformes logistiques en France et en Belgique avec des flux nationaux et européens." },
+      { title: "Amélioration continue", body: "Culture du débrief et du management terrain ancrée à tous les niveaux de l'organisation." },
+      { title: "Croissance solide", body: "Contrats grands comptes multi-annuels qui garantissent une activité stable et en expansion." }
     ],
     values: [
-      { title: "Performance terrain", body: "Les resultats se mesurent au quotidien, avec des indicateurs clairs et une culture du debrief." },
-      { title: "Fiabilite operationnelle", body: "La promesse client repose sur la regularite d execution. Ici, la rigueur n est pas optionnelle." },
-      { title: "Management de proximite", body: "Les managers de terrain sont des relais essentiels. Ils sont formes, accompagnes et valorises." }
+      { title: "Performance terrain", body: "Les résultats se mesurent au quotidien, avec des indicateurs clairs et une culture du débrief." },
+      { title: "Fiabilité opérationnelle", body: "La promesse client repose sur la régularité d'exécution. Ici, la rigueur n'est pas optionnelle." },
+      { title: "Management de proximité", body: "Les managers de terrain sont des relais essentiels. Ils sont formés, accompagnés et valorisés." }
     ],
     gallery: ["Plateforme logistique Nord", "Equipe transport & quai", "Salle de pilotage flux"],
     bio: "Groupe logistique multi-sites intervenant sur des flux nationaux et europeens depuis plus de 20 ans. Dans un contexte de structuration et d exigence operationnelle forte, Nord Logistics Group recherche des managers et experts capables de piloter la performance terrain, d animer des equipes importantes et de structurer les processus sur des sites a fort volume."
@@ -232,17 +232,17 @@ CLIENTS_DATA = [
     company_size: '51-200',
     founded_year: 2014,
     revenue: '18 M€',
-    ambiance: "L ambiance est celle d une boite qui construit. Les process existent mais ne figent pas. On teste, on itere, on documente. Les profils qui s integrent bien sont curieux, directs et a l aise avec l incertitude. La croissance est rapide, les responsabilites aussi.",
-    tagline: "Une scale-up technologique qui recrute des profils produit, data et management pour accelerer.",
+    ambiance: "L'ambiance est celle d'une boîte qui construit. Les process existent mais ne figent pas. On teste, on itère, on documente. Les profils qui s'intègrent bien sont curieux, directs et à l'aise avec l'incertitude. La croissance est rapide, les responsabilités aussi.",
+    tagline: "Une scale-up technologique qui recrute des profils produit, data et management pour accélérer.",
     highlights: [
       { title: "Croissance rapide", body: "+40% en 2 ans avec un modele SaaS recurrent et un pipeline client solide." },
-      { title: "Squads autonomes", body: "Organisation produit en equipes independantes avec un fort niveau de responsabilite." },
-      { title: "Expansion France", body: "Ambition claire d ouverture du marche francais avec des recrutements strategiques." }
+      { title: "Squads autonomes", body: "Organisation produit en équipes indépendantes avec un fort niveau de responsabilité." },
+      { title: "Expansion France", body: "Ambition claire d'ouverture du marché français avec des recrutements stratégiques." }
     ],
     values: [
-      { title: "Produit avant tout", body: "La valeur delivree a l utilisateur est le critere central de toute decision." },
-      { title: "Autonomie responsable", body: "Les equipes ont de la latitude. En contrepartie, les engagements sont tenus." },
-      { title: "Culture de la donnee", body: "Chaque hypothese est testee, chaque decision est etayee par des metriques." }
+      { title: "Produit avant tout", body: "La valeur délivrée à l'utilisateur est le critère central de toute décision." },
+      { title: "Autonomie responsable", body: "Les équipes ont de la latitude. En contrepartie, les engagements sont tenus." },
+      { title: "Culture de la donnée", body: "Chaque hypothèse est testée, chaque décision est étayée par des métriques." }
     ],
     gallery: ["Open space Bruxelles", "Retro produit Q1", "Demo Day interne"],
     bio: "Societe technologique en forte croissance implantee en Belgique, intervenant sur des solutions metiers SaaS a haute valeur ajoutee pour les secteurs RH, finance et operations. BelgoTech Solutions recrute des profils produit, tech, data et management capables d evoluer dans un environnement scale-up avec un haut niveau d autonomie et une culture forte de l iteration rapide."
@@ -1158,21 +1158,21 @@ CLIENT_POSTS_DATA = [
     posts: [
       {
         title: "Ouverture de notre nouveau site de Valenciennes",
-        body: "Apres 18 mois de travaux, notre site de Valenciennes ouvre officiellement ses portes. 4 200 m2 dedies a la production de precision, 60 nouveaux postes crees d ici fin d annee. Une etape majeure dans notre strategie d expansion regionale.",
+        body: "Après 18 mois de travaux, notre site de Valenciennes ouvre officiellement ses portes. 4 200 m2 dédiés à la production de précision, 60 nouveaux postes créés d'ici fin d'année. Une étape majeure dans notre stratégie d'expansion régionale.",
         post_type: "photo",
         media_url: "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800",
         published_at: 12.days.ago
       },
       {
-        title: "Notre equipe RH recrute",
-        body: "Nous accelerons nos recrutements sur les fonctions de direction. Directeur de Site, Responsable Production, Chef de Projet Industriel. Si vous cherchez un environnement exigeant ou votre impact est visible des le premier jour, parlons-en.",
+        title: "Notre équipe RH recrute",
+        body: "Nous accélérons nos recrutements sur les fonctions de direction. Directeur de Site, Responsable Production, Chef de Projet Industriel. Si vous cherchez un environnement exigeant où votre impact est visible dès le premier jour, parlons-en.",
         post_type: "text",
         media_url: nil,
         published_at: 5.days.ago
       },
       {
         title: "Visite ministerielle sur notre site pilote",
-        body: "Le secretaire d Etat charge de l Industrie a visite notre site pilote ce mardi. L occasion de presenter nos investissements en automatisation et notre programme de formation interne. Fiers de representer le savoir-faire industriel du Nord.",
+        body: "Le secrétaire d'État chargé de l'Industrie a visité notre site pilote ce mardi. L'occasion de présenter nos investissements en automatisation et notre programme de formation interne. Fiers de représenter le savoir-faire industriel du Nord.",
         post_type: "video",
         media_url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
         published_at: 2.days.ago
@@ -1183,15 +1183,15 @@ CLIENT_POSTS_DATA = [
     client_legal_name: "Nord Logistics Group SAS",
     posts: [
       {
-        title: "Record de volume traite ce trimestre",
-        body: "Q1 2026 : +23% de volumes traites par rapport a l annee precedente sur nos plateformes Hauts-de-France. Un resultat qui reflete l engagement de nos equipes et la robustesse de notre organisation logistique.",
+        title: "Record de volume traité ce trimestre",
+        body: "Q1 2026 : +23% de volumes traités par rapport à l'année précédente sur nos plateformes Hauts-de-France. Un résultat qui reflète l'engagement de nos équipes et la robustesse de notre organisation logistique.",
         post_type: "photo",
         media_url: "https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?w=800",
         published_at: 8.days.ago
       },
       {
         title: "On recrute des managers terrain",
-        body: "Responsable d Exploitation, Chef de Quai, Directeur Regional : nos postes sont ouverts. Ici les decisions se prennent vite, les responsabilites sont reelles et la progression est rapide pour ceux qui delivrent.",
+        body: "Responsable d'Exploitation, Chef de Quai, Directeur Régional : nos postes sont ouverts. Ici, les décisions se prennent vite, les responsabilités sont réelles et la progression est rapide pour ceux qui délivrent.",
         post_type: "text",
         media_url: nil,
         published_at: 3.days.ago
@@ -1209,22 +1209,22 @@ CLIENT_POSTS_DATA = [
     client_legal_name: "BelgoTech Solutions SA",
     posts: [
       {
-        title: "BelgoTech leve 8M EUR pour accelerer son expansion",
-        body: "Nous venons de finaliser notre serie B avec le soutien de trois fonds europeens specialises tech. Ces fonds financeront le recrutement de 45 profils techniques et l ouverture de notre bureau a Amsterdam d ici septembre.",
+        title: "BelgoTech lève 8M EUR pour accélérer son expansion",
+        body: "Nous venons de finaliser notre série B avec le soutien de trois fonds européens spécialisés tech. Ces fonds financeront le recrutement de 45 profils techniques et l'ouverture de notre bureau à Amsterdam d'ici septembre.",
         post_type: "photo",
         media_url: "https://images.unsplash.com/photo-1551434678-e076c223a692?w=800",
         published_at: 15.days.ago
       },
       {
         title: "Retour sur notre hackathon interne",
-        body: "72h, 8 equipes, 14 prototypes. Notre hackathon annuel a encore prouve que l innovation vient de l interieur. Le projet gagnant : un outil d automatisation des revues de code integre a notre CI/CD. On le passe en prod le mois prochain.",
+        body: "72h, 8 équipes, 14 prototypes. Notre hackathon annuel a encore prouvé que l'innovation vient de l'intérieur. Le projet gagnant : un outil d'automatisation des revues de code intégré à notre CI/CD. On le passe en prod le mois prochain.",
         post_type: "video",
         media_url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
         published_at: 6.days.ago
       },
       {
         title: "Nous rejoindre en tant que CTO adjoint",
-        body: "Notre croissance necessite de renforcer le leadership technique. On cherche un profil capable de structurer nos pratiques d ingenierie tout en restant proche du produit. Remote-friendly, package competitif, vrai impact.",
+        body: "Notre croissance nécessite de renforcer le leadership technique. On cherche un profil capable de structurer nos pratiques d'ingénierie tout en restant proche du produit. Remote-friendly, package compétitif, vrai impact.",
         post_type: "text",
         media_url: nil,
         published_at: 1.day.ago
@@ -1235,22 +1235,22 @@ CLIENT_POSTS_DATA = [
     client_legal_name: "Artois Conseil & Transformation SAS",
     posts: [
       {
-        title: "Publication de notre barometre transformation 2026",
-        body: "Nous avons interroge 210 DG et DAF de PME regionales sur leurs priorites de transformation. Resultat : 67% citent l alignement organisation-strategie comme premier frein. Notre barometre complet est disponible sur notre site.",
+        title: "Publication de notre baromètre transformation 2026",
+        body: "Nous avons interrogé 210 DG et DAF de PME régionales sur leurs priorités de transformation. Résultat : 67% citent l'alignement organisation-stratégie comme premier frein. Notre baromètre complet est disponible sur notre site.",
         post_type: "photo",
         media_url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800",
         published_at: 20.days.ago
       },
       {
         title: "Nouveau partenariat avec une ESN nordiste",
-        body: "Artois Conseil s associe a une ESN regionale pour proposer une offre combinant conseil strategique et execution digitale. Une reponse concrete aux entreprises qui ne veulent plus choisir entre vision et mise en oeuvre.",
+        body: "Artois Conseil s'associe à une ESN régionale pour proposer une offre combinant conseil stratégique et exécution digitale. Une réponse concrète aux entreprises qui ne veulent plus choisir entre vision et mise en œuvre.",
         post_type: "text",
         media_url: nil,
         published_at: 9.days.ago
       },
       {
         title: "On recherche un Senior Manager Transformation",
-        body: "Vous aimez les sujets complexes, les clients exigeants et les missions ou tout reste a construire ? Rejoignez notre equipe de 12 consultants comme Senior Manager. Perimetre complet, clientele grands comptes, autonomie reelle.",
+        body: "Vous aimez les sujets complexes, les clients exigeants et les missions où tout reste à construire ? Rejoignez notre équipe de 12 consultants comme Senior Manager. Périmètre complet, clientèle grands comptes, autonomie réelle.",
         post_type: "text",
         media_url: nil,
         published_at: 2.days.ago
@@ -1261,22 +1261,22 @@ CLIENT_POSTS_DATA = [
     client_legal_name: "Hexa Retail Performance SAS",
     posts: [
       {
-        title: "Refonte de l experience en magasin : les resultats sont la",
-        body: "6 mois apres le lancement de notre nouveau concept de magasin, les premiers chiffres tombent : +18% de panier moyen, +31% de taux de conversion sur les rayons remodelee. La preuve que l experience physique n est pas morte.",
+        title: "Refonte de l'expérience en magasin : les résultats sont là",
+        body: "6 mois après le lancement de notre nouveau concept de magasin, les premiers chiffres tombent : +18% de panier moyen, +31% de taux de conversion sur les rayons remodelés. La preuve que l'expérience physique n'est pas morte.",
         post_type: "photo",
         media_url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800",
         published_at: 11.days.ago
       },
       {
-        title: "Nos 1 200 collaborateurs celebrent 20 ans",
-        body: "Hexa Retail fete ses 20 ans cette annee. De 3 magasins pilotes a 47 points de vente en France et Belgique, cette aventure est avant tout humaine. Merci a toutes celles et ceux qui l ont construite.",
+        title: "Nos 1 200 collaborateurs célèbrent 20 ans",
+        body: "Hexa Retail fête ses 20 ans cette année. De 3 magasins pilotes à 47 points de vente en France et Belgique, cette aventure est avant tout humaine. Merci à toutes celles et ceux qui l'ont construite.",
         post_type: "video",
         media_url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
         published_at: 4.days.ago
       },
       {
-        title: "Recrutement : Directeur des Operations",
-        body: "Nous cherchons un Directeur des Operations pour piloter nos 47 sites et accompagner notre croissance. Si vous avez une culture du resultat, le gout du terrain et l envie de piloter a grande echelle, ce poste est fait pour vous.",
+        title: "Recrutement : Directeur des Opérations",
+        body: "Nous cherchons un Directeur des Opérations pour piloter nos 47 sites et accompagner notre croissance. Si vous avez une culture du résultat, le goût du terrain et l'envie de piloter à grande échelle, ce poste est fait pour vous.",
         post_type: "text",
         media_url: nil,
         published_at: 1.day.ago
@@ -1287,22 +1287,22 @@ CLIENT_POSTS_DATA = [
     client_legal_name: "Cap Avenir Energie SAS",
     posts: [
       {
-        title: "20 MW de capacite solaire supplementaire installee",
-        body: "Notre dernier parc solaire en Hauts-de-France vient d etre raccorde au reseau. 20 MW de capacite supplementaire, 11 000 foyers alimentes en energie verte. Un jalon important dans notre objectif 100 MW d ici 2028.",
+        title: "20 MW de capacité solaire supplémentaire installée",
+        body: "Notre dernier parc solaire en Hauts-de-France vient d'être raccordé au réseau. 20 MW de capacité supplémentaire, 11 000 foyers alimentés en énergie verte. Un jalon important dans notre objectif 100 MW d'ici 2028.",
         post_type: "photo",
         media_url: "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800",
         published_at: 14.days.ago
       },
       {
         title: "Retour sur notre forum Energie & Territoires",
-        body: "300 participants, 14 intervenants, 3 tables rondes. Notre forum annuel a reuni elus, industriels et acteurs de l energie autour d un sujet central : comment accelerer la transition sans laisser les territoires ruraux sur le cote ?",
+        body: "300 participants, 14 intervenants, 3 tables rondes. Notre forum annuel a réuni élus, industriels et acteurs de l'énergie autour d'un sujet central : comment accélérer la transition sans laisser les territoires ruraux sur le côté ?",
         post_type: "photo",
         media_url: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800",
         published_at: 7.days.ago
       },
       {
-        title: "On recrute un Directeur du Developpement",
-        body: "Notre croissance necessite un profil senior capable de structurer notre pipeline de projets et d animer nos relations avec les collectivites. Secteur en forte dynamique, impact concret sur la transition energetique.",
+        title: "On recrute un Directeur du Développement",
+        body: "Notre croissance nécessite un profil senior capable de structurer notre pipeline de projets et d'animer nos relations avec les collectivités. Secteur en forte dynamique, impact concret sur la transition énergétique.",
         post_type: "text",
         media_url: nil,
         published_at: 2.days.ago
@@ -1313,22 +1313,22 @@ CLIENT_POSTS_DATA = [
     client_legal_name: "Littoral Agro Solutions SAS",
     posts: [
       {
-        title: "Lancement de notre gamme bio certifiee",
-        body: "Apres 3 ans de transition, 8 de nos 22 exploitations partenaires sont desormais certifiees bio. Le lancement de notre gamme Littoral Bio marque une etape cle de notre strategie de montee en valeur.",
+        title: "Lancement de notre gamme bio certifiée",
+        body: "Après 3 ans de transition, 8 de nos 22 exploitations partenaires sont désormais certifiées bio. Le lancement de notre gamme Littoral Bio marque une étape clé de notre stratégie de montée en valeur.",
         post_type: "photo",
         media_url: "https://images.unsplash.com/photo-1500651230702-0e2d8a49d4ad?w=800",
         published_at: 18.days.ago
       },
       {
         title: "Agritech : notre partenariat avec une startup de precision",
-        body: "Nous signons un accord de co-developpement avec une startup specialisee en agriculture de precision. L objectif : deployer des capteurs connectes sur l ensemble de notre reseau de parcelles d ici fin 2026.",
+        body: "Nous signons un accord de co-développement avec une startup spécialisée en agriculture de précision. L'objectif : déployer des capteurs connectés sur l'ensemble de notre réseau de parcelles d'ici fin 2026.",
         post_type: "text",
         media_url: nil,
         published_at: 8.days.ago
       },
       {
         title: "Recrutement : Directeur Commercial",
-        body: "Notre ambition de doubler notre chiffre d affaires d ici 2028 passe par le recrutement d un Directeur Commercial capable de structurer une force de vente et d ouvrir de nouveaux marches. Secteur agricole requis.",
+        body: "Notre ambition de doubler notre chiffre d'affaires d'ici 2028 passe par le recrutement d'un Directeur Commercial capable de structurer une force de vente et d'ouvrir de nouveaux marchés. Secteur agricole requis.",
         post_type: "text",
         media_url: nil,
         published_at: 3.days.ago
@@ -1340,14 +1340,14 @@ CLIENT_POSTS_DATA = [
     posts: [
       {
         title: "Euronextia obtient la certification ISO 27001",
-        body: "Notre systeme de management de la securite de l information est desormais certifie ISO 27001. Un signal fort envers nos clients grands comptes et une etape indispensable pour notre developpement a l international.",
+        body: "Notre système de management de la sécurité de l'information est désormais certifié ISO 27001. Un signal fort envers nos clients grands comptes et une étape indispensable pour notre développement à l'international.",
         post_type: "photo",
         media_url: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800",
         published_at: 22.days.ago
       },
       {
-        title: "Notre DG presente notre vision 2030 lors d une conference",
-        body: "Isabelle Moreau, notre Directrice Generale, est intervenue lors du Forum des Services Numeriques a Paris. Au programme : comment les ESN regionales peuvent rivaliser avec les grands cabinets sur les sujets de transformation.",
+        title: "Notre DG présente notre vision 2030 lors d'une conférence",
+        body: "Isabelle Moreau, notre Directrice Générale, est intervenue lors du Forum des Services Numériques à Paris. Au programme : comment les ESN régionales peuvent rivaliser avec les grands cabinets sur les sujets de transformation.",
         post_type: "video",
         media_url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
         published_at: 10.days.ago
@@ -1365,22 +1365,22 @@ CLIENT_POSTS_DATA = [
     client_legal_name: "Wallonie Engineering SA",
     posts: [
       {
-        title: "Inauguration de notre centre R&D a Liege",
-        body: "Notre nouveau centre de recherche et developpement a Liege est officiellement ouvert. 800 m2 dedies a l innovation en genie civil et infrastructures durables. Trois projets de recherche demarrent des ce mois-ci en partenariat avec l ULiege.",
+        title: "Inauguration de notre centre R&D à Liège",
+        body: "Notre nouveau centre de recherche et développement à Liège est officiellement ouvert. 800 m2 dédiés à l'innovation en génie civil et infrastructures durables. Trois projets de recherche démarrent dès ce mois-ci en partenariat avec l'ULiège.",
         post_type: "photo",
         media_url: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800",
         published_at: 16.days.ago
       },
       {
-        title: "Notre equipe sur le chantier du pont de la Meuse",
-        body: "Wallonie Engineering assure la maitrise d oeuvre du nouveau pont de la Meuse a Namur. Un chantier de 36 mois, 120 intervenants, un defi technique et logistique majeur. Fiertes de notre metier.",
+        title: "Notre équipe sur le chantier du pont de la Meuse",
+        body: "Wallonie Engineering assure la maîtrise d'œuvre du nouveau pont de la Meuse à Namur. Un chantier de 36 mois, 120 intervenants, un défi technique et logistique majeur. Fiertés de notre métier.",
         post_type: "photo",
         media_url: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800",
         published_at: 5.days.ago
       },
       {
-        title: "Recrutement : Ingenieur Chef de Projet",
-        body: "Nous recherchons des Ingenieurs Chefs de Projet pour renforcer nos equipes sur nos grands chantiers belges et luxembourgeois. Experience de 7 ans minimum en genie civil ou BTP, gout pour les projets complexes.",
+        title: "Recrutement : Ingénieur Chef de Projet",
+        body: "Nous recherchons des Ingénieurs Chefs de Projet pour renforcer nos équipes sur nos grands chantiers belges et luxembourgeois. Expérience de 7 ans minimum en génie civil ou BTP, goût pour les projets complexes.",
         post_type: "text",
         media_url: nil,
         published_at: 2.days.ago
@@ -1391,22 +1391,22 @@ CLIENT_POSTS_DATA = [
     client_legal_name: "Seine Corporate Finance SAS",
     posts: [
       {
-        title: "Cloture de 3 operations M&A au T1 2026",
-        body: "Seine Corporate Finance a conseille 3 operations de fusion-acquisition au premier trimestre 2026, pour un total de valeur d entreprise de 210 M EUR. PME industrielles et services B2B restent notre coeur de cible.",
+        title: "Clôture de 3 opérations M&A au T1 2026",
+        body: "Seine Corporate Finance a conseillé 3 opérations de fusion-acquisition au premier trimestre 2026, pour un total de valeur d'entreprise de 210 M EUR. PME industrielles et services B2B restent notre cœur de cible.",
         post_type: "text",
         media_url: nil,
         published_at: 13.days.ago
       },
       {
-        title: "Notre associe intervient au Paris M&A Summit",
-        body: "Thomas Devaux, associe fondateur, a presente notre vision du marche mid-cap au Paris M&A Summit la semaine derniere. Retrouvez sa tribune sur notre site : pourquoi les PME familiales sont les meilleures cibles de 2026.",
+        title: "Notre associé intervient au Paris M&A Summit",
+        body: "Thomas Devaux, associé fondateur, a présenté notre vision du marché mid-cap au Paris M&A Summit la semaine dernière. Retrouvez sa tribune sur notre site : pourquoi les PME familiales sont les meilleures cibles de 2026.",
         post_type: "photo",
         media_url: "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800",
         published_at: 6.days.ago
       },
       {
         title: "Nous recrutons un Analyste M&A Senior",
-        body: "Dans le cadre de notre developpement, nous ouvrons un poste d Analyste M&A Senior. Vous interviendrez sur l ensemble du cycle des transactions, de la phase de sourcing aux negociations. Profil grande ecole ou universite top-tier requis.",
+        body: "Dans le cadre de notre développement, nous ouvrons un poste d'Analyste M&A Senior. Vous interviendrez sur l'ensemble du cycle des transactions, de la phase de sourcing aux négociations. Profil grande école ou université top-tier requis.",
         post_type: "text",
         media_url: nil,
         published_at: 1.day.ago

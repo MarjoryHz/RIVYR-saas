@@ -6,9 +6,9 @@
   <%# ── Header ── %>
   <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
     <div>
-      <a href="#" onclick="history.back(); return false;" class="mb-2 inline-flex items-center gap-1.5 text-sm text-[#9a5a68] hover:text-[#ed0e64] transition">
+      <%= link_to mission_path(@mission), class: "mb-2 inline-flex items-center gap-1.5 text-sm text-[#9a5a68] transition hover:text-[#ed0e64]" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> <%= @mission.title %>
-      </a>
+      <% end %>
       <h1 class="text-2xl font-semibold text-[#4c1f2a] md:text-3xl">Candidats favoris</h1>
       <p class="mt-1 text-sm text-[#9a5a68]"><%= client_name %> · <%= @favorite_candidates.size %> candidat<%= @favorite_candidates.size > 1 ? 's' : '' %></p>
     </div>

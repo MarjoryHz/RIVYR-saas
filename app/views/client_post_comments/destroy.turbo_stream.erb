@@ -4,10 +4,6 @@
   </div>
 <% end %>
 
-<%= turbo_stream.replace "comment_form_#{@client_post.id}" do %>
-  <%= render "client_post_comments/form", client_post: @client_post, comment: @client_post.client_post_comments.build %>
-<% end %>
-
 <%= turbo_stream.replace "company_contribution_comment_count_#{@client_post.id}" do %>
   <button type="button"
     id="company_contribution_comment_count_<%= @client_post.id %>"
