@@ -21,7 +21,18 @@
         <tbody>
           <% @client_contacts.each do |contact| %>
             <tr>
-              <td><%= [contact.first_name, contact.last_name].join(" ") %></td>
+              <td>
+                <div class="flex items-center gap-3">
+                  <% if contact.avatar.present? %>
+                    <%= image_tag contact.avatar, alt: [contact.first_name, contact.last_name].join(" "), class: "h-10 w-10 rounded-full object-cover" %>
+                  <% else %>
+                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-base-200 text-xs font-semibold uppercase">
+                      <%= [contact.first_name, contact.last_name].filter_map { |part| part.to_s.first }.join.first(2) %>
+                    </span>
+                  <% end %>
+                  <span><%= [contact.first_name, contact.last_name].join(" ") %></span>
+                </div>
+              </td>
               <td><%= contact.client.legal_name %></td>
               <td><%= contact.email.presence || "-" %></td>
               <td><%= contact.phone.presence || "-" %></td>

@@ -22,6 +22,8 @@ class User < ApplicationRecord
   has_many :favorite_candidates, dependent: :destroy
   has_many :candidate_notes, dependent: :destroy
   has_many :favorited_candidates, through: :favorite_candidates, source: :candidate
+  has_many :client_subscriptions, dependent: :destroy
+  has_many :subscribed_clients, through: :client_subscriptions, source: :client
 
   validates :first_name, presence: true
   validates :last_name, presence: true

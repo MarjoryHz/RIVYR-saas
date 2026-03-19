@@ -173,6 +173,8 @@ class PagesController < ApplicationController
   def company_showcase
     @client = Client.find(params[:client_id])
     open_missions = @client.missions.where(status: "open").includes(:specialty)
+    @open_missions_count = open_missions.count
+    company_contacts = @client.client_contacts.includes(:user).order(primary_contact: :desc, created_at: :asc).limit(5)
     editorial = company_editorial_data[@client.legal_name] || {}
 
     @company_tagline      = editorial[:tagline] || @client.bio.to_s.truncate(120)
@@ -190,6 +192,8 @@ class PagesController < ApplicationController
       { label: "Postes ouverts", value: open_missions.count.to_s }
     ]
 
+    @open_missions = open_missions.limit(3)
+    @client_posts = @client.client_posts.published.limit(3)
     @company_open_roles = open_missions.limit(3).map do |m|
       {
         title:    m.title,
@@ -201,9 +205,35 @@ class PagesController < ApplicationController
         pitch:    m.brief_summary.presence || "Rejoignez #{@client.brand_name} sur ce poste strategique."
       }
     end
+    @company_contact_bubbles = company_contacts.map do |contact|
+      full_name = [ contact.first_name, contact.last_name ].compact.join(" ").strip
+
+      {
+        full_name: full_name.presence || "Contact client",
+        initials: initials_for(contact.first_name, contact.last_name),
+        avatar: contact.avatar,
+        job_title: contact.job_title.presence || "Equipe client"
+      }
+    end
+    @company_subscribed = user_signed_in? && current_user.client_subscriptions.exists?(client: @client)
+  end
+
+  def company_contributions
+    @client = Client.find(params[:client_id])
+    @client_posts = @client.client_posts.published
+  end
+
+  def company_missions
+    @client = Client.find(params[:client_id])
+    @open_missions = @client.missions.where(status: "open").includes(:specialty)
   end
 
   private
+
+  def initials_for(*parts)
+    initials = parts.compact.flat_map { |part| part.to_s.split.map { |word| word.first } }.join.first(2)
+    initials.presence&.upcase || "R"
+  end
 
   def company_editorial_data
     {

@@ -3,6 +3,9 @@ class Client < ApplicationRecord
   has_many :missions, through: :client_contacts
   has_many :client_highlights, dependent: :destroy
   has_many :client_values, dependent: :destroy
+  has_many :client_posts, dependent: :destroy
+  has_many :client_subscriptions, dependent: :destroy
+  has_many :subscribers, through: :client_subscriptions, source: :user
 
   validates :legal_name, presence: true
   validates :sector, length: { maximum: 255 }, allow_blank: true

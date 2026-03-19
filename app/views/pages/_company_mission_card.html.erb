@@ -1,0 +1,48 @@
+<% parsed = mission.brief_summary.to_s.split("||").each_with_object({}) { |part, h| k, v = part.split("=", 2); h[k] = v } %>
+<% context_text = parsed["context"].presence %>
+<% salary_values = mission.compensation_summary.to_s.scan(/\d[\d\s]*/).map { |v| v.gsub(/\s/, "").to_i }.select(&:positive?) %>
+<% salary_avg = salary_values.size >= 2 ? ((salary_values[0] + salary_values[1]) / 2.0).round : salary_values.first.to_i %>
+<% fee_amount = (salary_avg * 0.20 * 0.60).round %>
+
+<%= link_to dashboard_mission_path(mission), class: "group flex flex-col justify-between rounded-[2rem] border border-[#ead2dc] bg-white p-6 shadow-[0_14px_36px_rgba(94,31,50,0.05)] transition hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(94,31,50,0.09)]" do %>
+  <div>
+    <div class="flex items-start justify-between gap-3">
+      <span class="rounded-full bg-[#fff1f6] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#a33d68]">
+        <%= mission.specialty&.name || client.sector %>
+      </span>
+      <% if fee_amount > 0 %>
+        <span class="rounded-full bg-[#fdf4f7] px-3 py-1 text-xs font-semibold text-[#4c1f2a]">
+          <%= number_with_delimiter(fee_amount, delimiter: " ") %> €
+        </span>
+      <% end %>
+    </div>
+
+    <div class="mt-5 space-y-2">
+      <h3 class="text-xl font-semibold leading-tight text-[#4c1f2a]"><%= mission.title %></h3>
+      <% if context_text.present? %>
+        <p class="text-sm leading-7 text-[#6b3f4f] line-clamp-3"><%= context_text %></p>
+      <% end %>
+    </div>
+
+    <div class="mt-5 space-y-1 rounded-2xl border border-[#f1dce5] bg-[#fff8fb] p-4 text-sm text-[#6b3f4f]">
+      <% if (mission.location || client.location).present? %>
+        <p><i class="fa-solid fa-location-dot w-4 text-[#b07a90]"></i> <%= mission.location.presence || client.location %></p>
+      <% end %>
+      <% if parsed["hierarchy_level"].present? %>
+        <p><i class="fa-solid fa-user-tie w-4 text-[#b07a90]"></i> <%= parsed["hierarchy_level"] %></p>
+      <% end %>
+      <% if mission.compensation_summary.present? %>
+        <p><i class="fa-solid fa-sack-dollar w-4 text-[#b07a90]"></i> <%= mission.compensation_summary %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="mt-5 flex items-center justify-between">
+    <span class="text-xs text-[#b07a90]">
+      Ref. <%= mission.reference.presence || "—" %>
+    </span>
+    <span class="inline-flex items-center gap-1 text-sm font-semibold text-[#ed0e64] group-hover:underline">
+      Voir la mission <i class="fa-solid fa-arrow-right text-xs"></i>
+    </span>
+  </div>
+<% end %>

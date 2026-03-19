@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_19_124500) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_19_135500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -49,6 +49,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_124500) do
   end
 
   create_table "client_contacts", force: :cascade do |t|
+    t.string "avatar"
     t.bigint "client_id", null: false
     t.datetime "created_at", null: false
     t.string "email"
@@ -71,6 +72,48 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_124500) do
     t.string "title"
     t.datetime "updated_at", null: false
     t.index ["client_id"], name: "index_client_highlights_on_client_id"
+  end
+
+  create_table "client_post_comments", force: :cascade do |t|
+    t.text "body"
+    t.bigint "client_post_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["client_post_id"], name: "index_client_post_comments_on_client_post_id"
+    t.index ["user_id"], name: "index_client_post_comments_on_user_id"
+  end
+
+  create_table "client_post_reactions", force: :cascade do |t|
+    t.bigint "client_post_id", null: false
+    t.datetime "created_at", null: false
+    t.string "emoji"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["client_post_id"], name: "index_client_post_reactions_on_client_post_id"
+    t.index ["user_id"], name: "index_client_post_reactions_on_user_id"
+  end
+
+  create_table "client_posts", force: :cascade do |t|
+    t.text "body"
+    t.bigint "client_id", null: false
+    t.datetime "created_at", null: false
+    t.string "media_url"
+    t.string "post_type"
+    t.datetime "published_at"
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.index ["client_id"], name: "index_client_posts_on_client_id"
+  end
+
+  create_table "client_subscriptions", force: :cascade do |t|
+    t.bigint "client_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["client_id"], name: "index_client_subscriptions_on_client_id"
+    t.index ["user_id", "client_id"], name: "index_client_subscriptions_on_user_id_and_client_id", unique: true
+    t.index ["user_id"], name: "index_client_subscriptions_on_user_id"
   end
 
   create_table "client_values", force: :cascade do |t|
@@ -417,6 +460,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_124500) do
   add_foreign_key "client_contacts", "clients"
   add_foreign_key "client_contacts", "users"
   add_foreign_key "client_highlights", "clients"
+  add_foreign_key "client_post_comments", "client_posts"
+  add_foreign_key "client_post_comments", "users"
+  add_foreign_key "client_post_reactions", "client_posts"
+  add_foreign_key "client_post_reactions", "users"
+  add_foreign_key "client_posts", "clients"
+  add_foreign_key "client_subscriptions", "clients"
+  add_foreign_key "client_subscriptions", "users"
   add_foreign_key "client_values", "clients"
   add_foreign_key "commissions", "placements"
   add_foreign_key "contributions", "candidates"

@@ -4,6 +4,15 @@ Rails.application.routes.draw do
   get "/contact", to: "pages#contact", as: :contact
   post "/contact", to: "pages#create_contact"
   get "/showcase/company/:client_id", to: "pages#company_showcase", as: :company_showcase
+  get "/showcase/company/:client_id/missions", to: "pages#company_missions", as: :company_missions
+  get "/showcase/company/:client_id/contributions", to: "pages#company_contributions", as: :company_contributions
+  resources :client_posts, only: [] do
+    resources :client_post_comments, only: [:create], shallow: true
+    resources :client_post_reactions, only: [:create, :destroy], shallow: true
+  end
+  resources :clients, only: [] do
+    resource :subscription, controller: "client_subscriptions", only: [ :create, :destroy ]
+  end
   resources :clients
   resources :client_contacts
   resources :freelancer_profiles

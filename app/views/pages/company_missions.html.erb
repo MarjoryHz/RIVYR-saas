@@ -1,0 +1,27 @@
+<div class="min-h-screen">
+  <section class="mx-auto max-w-7xl px-6 py-10 md:px-8 lg:px-10">
+    <div class="mb-8">
+      <div class="space-y-2">
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Recrutement en cours</p>
+        <h1 class="text-3xl font-semibold tracking-tight text-[#4c1f2a] md:text-4xl">
+          Toutes les opportunités chez <%= @client.brand_name %>
+        </h1>
+        <p class="max-w-2xl text-sm leading-7 text-[#6b3f4f] md:text-base">
+          Retrouvez ici l’ensemble des missions ouvertes de l’entreprise.
+        </p>
+      </div>
+    </div>
+
+    <% if @open_missions.any? %>
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <% @open_missions.each do |mission| %>
+          <%= render "pages/company_mission_card", client: @client, mission: mission %>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="rounded-[2rem] border border-[#ead2dc] bg-white/80 px-6 py-10 text-center shadow-[0_18px_44px_rgba(94,31,50,0.06)]">
+        <p class="text-base font-semibold text-[#4c1f2a]">Aucune mission ouverte pour le moment.</p>
+      </div>
+    <% end %>
+  </section>
+</div>
