@@ -1,0 +1,232 @@
+<%
+  form_values = @mission_form_values || {}
+  surface_card_class = "rounded-[1.8rem] border border-[#ead2dc] bg-[#fff8fb]/95 shadow-[0_22px_45px_rgba(100,37,56,0.08)]"
+  field_class = "w-full rounded-2xl border border-[#ead2dc] bg-white px-4 py-3 text-sm text-[#5f3647] outline-none transition placeholder:text-[#bf8d9e] focus:border-[#ed0e64]"
+  step_button_base_class = "flex items-center gap-3 rounded-2xl border px-3 py-3 text-left transition"
+  predefined_advantages = [ "13eme mois", "Tickets restaurants", "Voiture de fonction", "Télétravail", "Mutuelle premium", "Bonus variable" ]
+  step_labels = [
+    { number: 1, title: "Le client", subtitle: "Entreprise et contact" },
+    { number: 2, title: "La mission", subtitle: "Cadre de recherche" },
+    { number: 3, title: "Le poste", subtitle: "Contenu et package" }
+  ]
+  mission_type_options = [
+    [ "Management de transition", "management_transition" ],
+    [ "CDI", "cdi" ],
+    [ "Contingency", "contingency" ]
+  ]
+  page_title =
+    if mission.persisted?
+      mission.status_draft? ? "Reprendre un brouillon" : "Modifier la mission"
+    else
+      "Créer une mission"
+    end
+  page_subtitle = mission.persisted? ? "Finalise ou publie cette mission quand tu es prêt." : "Construis ton annonce en 3 étapes, puis publie-la ou sauvegarde-la en brouillon."
+%>
+
+<div class="mx-auto max-w-6xl">
+  <div class="rounded-[2rem] border border-[#f1d7df] bg-[linear-gradient(135deg,rgba(255,248,251,0.98),rgba(255,239,244,0.94))] p-4 shadow-[0_24px_50px_rgba(100,37,56,0.08)] md:p-6">
+    <div class="rounded-[1.8rem] border border-[#f0dce3] bg-[radial-gradient(circle_at_top_left,_rgba(237,14,100,0.12),_transparent_34%),radial-gradient(circle_at_top_right,_rgba(244,165,138,0.16),_transparent_28%),white] px-5 py-8 md:px-8">
+      <div class="text-center">
+        <p class="text-sm font-semibold uppercase tracking-[0.28em] text-[#a15c70]">Apport freelance</p>
+        <h1 class="mt-3 text-4xl font-semibold tracking-tight text-[#4c1f2a] md:text-5xl"><%= page_title %></h1>
+        <p class="mx-auto mt-3 max-w-2xl text-base text-[#7b4b5a] md:text-lg"><%= page_subtitle %></p>
+      </div>
+
+      <%= form_with model: mission, class: "relative mx-auto mt-8 max-w-5xl", data: { controller: "mission-wizard", action: "submit->mission-wizard#handleSubmit input->mission-wizard#refresh change->mission-wizard#refresh" } do |f| %>
+        <%= f.hidden_field :origin_type, value: "freelancer" %>
+        <%= hidden_field_tag "mission[freelance_client_id]", form_values[:freelance_client_id], id: "freelance-mission-client-id", data: { mission_wizard_target: "clientId" } %>
+        <%= hidden_field_tag "mission[client_contact_id]", form_values[:client_contact_id], id: "freelance-mission-contact-id", data: { mission_wizard_target: "contactId" } %>
+
+        <section class="<%= surface_card_class %> p-3 md:p-5">
+          <div class="rounded-[1.55rem] border border-[#f0dce3] bg-white/80 px-4 py-5 md:px-6">
+            <div class="grid gap-3 border-b border-[#f0dce3] pb-5 md:grid-cols-3">
+              <% step_labels.each_with_index do |step, index| %>
+                <button type="button" class="<%= step_button_base_class %> border-[#f1d7df] bg-[#fff7fa] text-[#8b4452]" data-action="mission-wizard#goToStep" data-step-index="<%= index %>" data-mission-wizard-target="indicator">
+                  <span class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-sm font-semibold text-[#8b4452]" data-mission-wizard-target="indicatorBadge"><%= step[:number] %></span>
+                  <span>
+                    <span class="block text-base font-semibold text-[#4c1f2a]"><%= step[:title] %></span>
+                    <span class="block text-sm text-[#9a5a68]"><%= step[:subtitle] %></span>
+                  </span>
+                </button>
+              <% end %>
+            </div>
+
+            <div class="mt-5 hidden rounded-[1.4rem] border border-[#f3b6ca] bg-[#fff1f6] px-4 py-3 text-sm text-[#8b4452]" data-mission-wizard-target="error"></div>
+
+            <% if mission.errors.any? %>
+              <div class="mt-5 rounded-[1.4rem] border border-[#f3b6ca] bg-[#fff1f6] px-5 py-4 text-left">
+                <p class="text-sm font-semibold text-[#a33d68]"><%= pluralize(mission.errors.count, "erreur") %> empêchent l'enregistrement.</p>
+                <ul class="mt-2 list-disc pl-5 text-sm text-[#7b4b5a]">
+                  <% mission.errors.full_messages.each do |message| %>
+                    <li><%= message %></li>
+                  <% end %>
+                </ul>
+              </div>
+            <% end %>
+
+            <div class="mt-5 space-y-6">
+              <section data-mission-wizard-target="step" class="space-y-5">
+                <div class="grid gap-5 md:grid-cols-2 md:items-start">
+                  <div>
+                    <label for="freelance-mission-company-search" class="mb-2 block text-sm font-semibold text-[#6b3f4f]">Entreprise</label>
+                    <input id="freelance-mission-company-search" type="text" value="<%= form_values[:company_name] %>" autocomplete="off" class="<%= field_class %>" placeholder="Commence à écrire le nom d'une entreprise..." data-mission-wizard-target="companySearch" data-action="input->mission-wizard#filterCompanies">
+                    <div id="freelance-mission-company-results" class="mt-3 max-h-56 space-y-2 overflow-y-auto">
+                      <% @owned_clients.each do |client| %>
+                        <% client_name = client.brand_name.presence || client.legal_name %>
+                        <button type="button" class="flex w-full items-center justify-between rounded-2xl border border-[#ead2dc] bg-white px-4 py-3 text-left text-sm text-[#5f3647] transition hover:border-[#dfbcc9] hover:bg-[#fff5f8]" data-mission-wizard-target="companyResult" data-action="mission-wizard#selectCompany" data-client-id="<%= client.id %>" data-client-name="<%= client_name %>" data-search-text="<%= [client.brand_name, client.legal_name, client.sector].compact.join(' ') %>">
+                          <span class="font-semibold text-[#4c1f2a]"><%= client_name %></span>
+                          <span class="text-xs text-[#9a5a68]"><%= client.sector.presence || "Entreprise" %></span>
+                        </button>
+                      <% end %>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label for="freelance-mission-contact-search" class="mb-2 block text-sm font-semibold text-[#6b3f4f]">Contact client</label>
+                    <input id="freelance-mission-contact-search" type="text" value="<%= form_values[:contact_name] %>" autocomplete="off" class="<%= "#{field_class} disabled:cursor-not-allowed disabled:bg-[#f7f2f5]" %>" placeholder="<%= form_values[:freelance_client_id].present? ? "Commence à écrire le nom du contact..." : "Sélectionne d'abord une entreprise" %>" <%= "disabled" if form_values[:freelance_client_id].blank? %> data-mission-wizard-target="contactSearch" data-action="input->mission-wizard#filterContacts">
+                    <div id="freelance-mission-contact-results" class="mt-3 max-h-56 space-y-2 overflow-y-auto">
+                      <% @owned_client_contacts.each do |contact| %>
+                        <% contact_name = [contact.first_name, contact.last_name].compact.join(" ") %>
+                        <button type="button" class="hidden w-full rounded-2xl border border-[#ead2dc] bg-white px-4 py-3 text-left text-sm text-[#5f3647] transition hover:border-[#dfbcc9] hover:bg-[#fff5f8]" data-mission-wizard-target="contactResult" data-action="mission-wizard#selectContact" data-contact-id="<%= contact.id %>" data-client-id="<%= contact.client_id %>" data-contact-name="<%= contact_name %>">
+                          <span class="block font-semibold text-[#4c1f2a]"><%= contact_name %></span>
+                          <span class="block text-xs text-[#9a5a68]"><%= contact.job_title.presence || contact.email.presence || "Contact client" %></span>
+                        </button>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section data-mission-wizard-target="step" class="hidden space-y-5">
+                <div class="grid gap-5 md:grid-cols-2">
+                  <div class="md:col-span-2">
+                    <%= f.label :title, "Titre de la mission", class: "mb-2 block text-sm font-semibold text-[#6b3f4f]" %>
+                    <%= f.text_field :title, value: form_values[:title], class: field_class, placeholder: "Ex: Directeur commercial France", data: { required: true } %>
+                  </div>
+
+                  <div>
+                    <%= f.label :mission_type, "Type de mission", class: "mb-2 block text-sm font-semibold text-[#6b3f4f]" %>
+                    <%= f.select :mission_type, options_for_select(mission_type_options, form_values[:mission_type]), { prompt: "Choisir un type de mission" }, { class: field_class, data: { required: true } } %>
+                  </div>
+
+                  <div>
+                    <label class="mb-2 block text-sm font-semibold text-[#6b3f4f]">Région</label>
+                    <%= f.collection_select :region_id, @regions, :id, :name, { prompt: "Sélectionner" }, { class: field_class, data: { required: true } } %>
+                  </div>
+
+                  <div class="md:col-span-2">
+                    <label class="mb-2 block text-sm font-semibold text-[#6b3f4f]">Spécialité</label>
+                    <%= f.collection_select :specialty_id, @specialties, :id, :name, { prompt: "Sélectionner" }, { class: field_class, data: { required: true } } %>
+                  </div>
+                </div>
+              </section>
+
+              <section data-mission-wizard-target="step" class="hidden space-y-5">
+                <div class="grid gap-5 md:grid-cols-2">
+                  <div>
+                    <label for="mission-salary-min" class="mb-2 block text-sm font-semibold text-[#6b3f4f]">Package cible minimum</label>
+                    <input id="mission-salary-min" name="mission[salary_min_eur]" type="number" min="1" value="<%= form_values[:salary_min_eur] %>" class="<%= field_class %>" placeholder="Ex: 30000" data-required="true">
+                  </div>
+                  <div>
+                    <label for="mission-salary-max" class="mb-2 block text-sm font-semibold text-[#6b3f4f]">Package cible maximum</label>
+                    <input id="mission-salary-max" name="mission[salary_max_eur]" type="number" min="1" value="<%= form_values[:salary_max_eur] %>" class="<%= field_class %>" placeholder="Ex: 40000" data-required="true">
+                  </div>
+                </div>
+
+                <div>
+                  <label for="mission-profile-search" class="mb-2 block text-sm font-semibold text-[#6b3f4f]">Profil recherché</label>
+                  <textarea id="mission-profile-search" name="mission[profile_search]" rows="4" class="<%= field_class %>" placeholder="Décris précisément le profil recherché, les expériences attendues et les critères indispensables..." data-required="true"><%= form_values[:profile_search] %></textarea>
+                </div>
+
+                <div>
+                  <p class="mb-2 block text-sm font-semibold text-[#6b3f4f]">Avantages</p>
+                  <div class="grid gap-3 rounded-[1.5rem] border border-[#ead2dc] bg-[#fff8fb] px-4 py-4 md:grid-cols-3" data-mission-wizard-target="advantagesGroup">
+                    <% predefined_advantages.each do |advantage| %>
+                      <label class="flex items-center gap-3 text-sm text-[#5f3647]">
+                        <input type="checkbox" name="mission[advantages][]" value="<%= advantage %>" <%= "checked" if Array(form_values[:advantages]).include?(advantage) %> class="checkbox checkbox-sm border-[#dfbcc9] [--chkbg:#ed0e64] [--chkfg:white]">
+                        <span><%= advantage %></span>
+                      </label>
+                    <% end %>
+                    <label class="flex items-center gap-3 text-sm text-[#5f3647]">
+                      <input type="checkbox" name="mission[advantages][]" value="Autre" <%= "checked" if form_values[:custom_advantage].present? %> class="checkbox checkbox-sm border-[#dfbcc9] [--chkbg:#ed0e64] [--chkfg:white]" data-mission-wizard-target="customAdvantageCheckbox" data-action="change->mission-wizard#toggleCustomAdvantage">
+                      <span>Autre</span>
+                    </label>
+                    <div class="md:col-span-2">
+                      <input type="text" name="mission[custom_advantage]" value="<%= form_values[:custom_advantage] %>" class="<%= "#{field_class} #{form_values[:custom_advantage].present? ? '' : 'hidden'}" %>" placeholder="Précise un autre avantage..." data-mission-wizard-target="customAdvantageInput">
+                    </div>
+                  </div>
+                  <p class="mt-2 text-xs text-[#9a5a68]">Sélectionne au moins un avantage.</p>
+                </div>
+
+                <div class="grid gap-5 md:grid-cols-2">
+                  <div>
+                    <label for="mission-en-bref" class="mb-2 block text-sm font-semibold text-[#6b3f4f]">EN BREF</label>
+                    <div class="relative">
+                      <textarea id="mission-en-bref" name="mission[en_bref]" rows="4" class="<%= "#{field_class} pr-14 pb-12" %>" placeholder="Résumé court et impactant de l'opportunité..." data-required="true"><%= form_values[:en_bref] %></textarea>
+                      <button type="button" class="absolute bottom-3 right-3 inline-flex h-7 w-7 items-center justify-center rounded-full border border-[#f3d6df] bg-[#fff7fa] shadow-sm transition hover:bg-white" tabindex="-1" title="IA Rivyr : je t’accompagne dans la rédaction de ce contenu." aria-label="IA Rivyr : je t’accompagne dans la rédaction de ce contenu.">
+                        <%= inline_svg_tag("icon_pers.svg", class: "h-4 w-4 text-[#ed0e64]") %>
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label for="mission-le-role" class="mb-2 block text-sm font-semibold text-[#6b3f4f]">LE ROLE</label>
+                    <div class="relative">
+                      <textarea id="mission-le-role" name="mission[role_summary]" rows="4" class="<%= "#{field_class} pr-14 pb-12" %>" placeholder="Décris le rôle, le périmètre, les responsabilités et la mission..." data-required="true"><%= form_values[:role_summary] %></textarea>
+                      <button type="button" class="absolute bottom-3 right-3 inline-flex h-7 w-7 items-center justify-center rounded-full border border-[#f3d6df] bg-[#fff7fa] shadow-sm transition hover:bg-white" tabindex="-1" title="IA Rivyr : je t’accompagne dans la rédaction de ce contenu." aria-label="IA Rivyr : je t’accompagne dans la rédaction de ce contenu.">
+                        <%= inline_svg_tag("icon_pers.svg", class: "h-4 w-4 text-[#ed0e64]") %>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid gap-5 md:grid-cols-2">
+                  <div>
+                    <label for="mission-le-contexte" class="mb-2 block text-sm font-semibold text-[#6b3f4f]">LE CONTEXTE</label>
+                    <div class="relative">
+                      <textarea id="mission-le-contexte" name="mission[role_context]" rows="5" class="<%= "#{field_class} pr-14 pb-12" %>" placeholder="Contexte de l'entreprise, de l'équipe et du recrutement..." data-required="true"><%= form_values[:role_context] %></textarea>
+                      <button type="button" class="absolute bottom-3 right-3 inline-flex h-7 w-7 items-center justify-center rounded-full border border-[#f3d6df] bg-[#fff7fa] shadow-sm transition hover:bg-white" tabindex="-1" title="IA Rivyr : je t’accompagne dans la rédaction de ce contenu." aria-label="IA Rivyr : je t’accompagne dans la rédaction de ce contenu.">
+                        <%= inline_svg_tag("icon_pers.svg", class: "h-4 w-4 text-[#ed0e64]") %>
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label for="mission-enjeux" class="mb-2 block text-sm font-semibold text-[#6b3f4f]">Enjeux des 12 premiers mois</label>
+                    <div class="relative">
+                      <textarea id="mission-enjeux" name="mission[first_year_challenges]" rows="5" class="<%= "#{field_class} pr-14 pb-12" %>" placeholder="Un enjeu par ligne pour alimenter la page mission..." data-required="true"><%= form_values[:first_year_challenges] %></textarea>
+                      <button type="button" class="absolute bottom-3 right-3 inline-flex h-7 w-7 items-center justify-center rounded-full border border-[#f3d6df] bg-[#fff7fa] shadow-sm transition hover:bg-white" tabindex="-1" title="IA Rivyr : je t’accompagne dans la rédaction de ce contenu." aria-label="IA Rivyr : je t’accompagne dans la rédaction de ce contenu.">
+                        <%= inline_svg_tag("icon_pers.svg", class: "h-4 w-4 text-[#ed0e64]") %>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label for="mission-deroulee" class="mb-2 block text-sm font-semibold text-[#6b3f4f]">Deroulee du recrutement</label>
+                  <div class="relative">
+                    <textarea id="mission-deroulee" name="mission[recruitment_process]" rows="5" class="<%= "#{field_class} pr-14 pb-12" %>" placeholder="Décris les étapes du recrutement, une étape par ligne..." data-required="true"><%= form_values[:recruitment_process] %></textarea>
+                    <button type="button" class="absolute bottom-3 right-3 inline-flex h-7 w-7 items-center justify-center rounded-full border border-[#f3d6df] bg-[#fff7fa] shadow-sm transition hover:bg-white" tabindex="-1" title="IA Rivyr : je t’accompagne dans la rédaction de ce contenu." aria-label="IA Rivyr : je t’accompagne dans la rédaction de ce contenu.">
+                      <%= inline_svg_tag("icon_pers.svg", class: "h-4 w-4 text-[#ed0e64]") %>
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <div class="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-[#f0dce3] pt-5">
+              <div class="flex items-center gap-3">
+                <%= link_to "Retour à mes missions", my_missions_missions_path(tab: mission.status_draft? ? "drafts" : nil), class: "inline-flex items-center rounded-2xl border border-[#dfbcc9] bg-white px-4 py-3 text-sm font-medium text-[#8b4452] transition hover:bg-[#fff5f8]" %>
+                <%= f.button mission.persisted? ? "Sauvegarder le brouillon" : "Sauvegarder en brouillon", type: :submit, name: :commit_action, value: "draft", class: "inline-flex items-center rounded-2xl border border-[#dfbcc9] bg-[#fff5f8] px-4 py-3 text-sm font-semibold text-[#8b4452] transition hover:bg-[#fdeef3]", formnovalidate: true %>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <button type="button" class="inline-flex items-center rounded-2xl border border-[#dfbcc9] bg-white px-5 py-3 text-sm font-medium text-[#8b4452] transition hover:bg-[#fff5f8]" data-mission-wizard-target="previousButton" data-action="mission-wizard#previous">Précédent</button>
+                <button type="button" class="inline-flex items-center rounded-2xl border border-[#f1a38b] bg-[#f4a58a] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]" data-mission-wizard-target="nextButton" data-action="mission-wizard#next">Suivant</button>
+                <%= f.button mission.persisted? ? "Publier la mission" : "Créer la mission", type: :submit, name: :commit_action, value: "publish", class: "hidden items-center rounded-2xl border border-[#f1a38b] bg-[#f4a58a] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:border-[#e39479] hover:bg-[#ee977c]", data: { mission_wizard_target: "publishButton" } %>
+              </div>
+            </div>
+          </div>
+        </section>
+      <% end %>
+    </div>
+  </div>
+</div>

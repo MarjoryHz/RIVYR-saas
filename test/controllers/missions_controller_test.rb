@@ -129,6 +129,95 @@ class MissionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes @response.body, "Mes missions"
+  end
+
+  test "freelance can save a mission draft and find it in drafts tab" do
+    sign_out :user
+    sign_in_as(users(:one))
+    client_contacts(:one).update!(user: users(:one))
+
+    assert_difference("Mission.count", 1) do
+      post missions_url, params: {
+        commit_action: "draft",
+        mission: {
+          title: "Brouillon mission",
+          freelance_client_id: clients(:one).id,
+          client_contact_id: client_contacts(:one).id
+        }
+      }
+    end
+
+    mission = Mission.order(:id).last
+    assert_equal "draft", mission.status
+    assert_redirected_to my_missions_missions_path(tab: "drafts")
+
+    get my_missions_missions_url(tab: "drafts")
+    assert_response :success
+    assert_includes @response.body, "Brouillons"
+    assert_includes @response.body, "Brouillon mission"
+  end
+
+  test "closing a mission as won shows mission placee and keeps the placed candidate" do
+    sign_out :user
+    sign_in_as(users(:one))
+
+    mission = Mission.create!(
+      region: regions(:one),
+      freelancer_profile: freelancer_profiles(:one),
+      client_contact: client_contacts(:one),
+      specialty: specialties(:one),
+      title: "Mission Gagnee",
+      reference: "MIS-WON-#{SecureRandom.hex(3)}",
+      status: "open",
+      opened_at: Date.current,
+      origin_type: "freelancer"
+    )
+    candidate = candidates(:two)
+
+    patch close_by_freelance_mission_url(mission), params: {
+      closure_reason: "Mission gagnee",
+      candidate_id: candidate.id
+    }
+
+    assert_redirected_to my_missions_missions_path
+    assert_equal "Mission gagnee", mission.reload.closure_reason
+    assert_equal candidate, mission.placement.candidate
+
+    get mission_url(mission)
+    assert_response :success
+    assert_includes @response.body, "Mission placée"
+    assert_includes @response.body, "Candidat placé"
+  end
+
+  test "closing a mission as lost shows mission fermee and removes any placed candidate" do
+    sign_out :user
+    sign_in_as(users(:one))
+
+    mission = missions(:one)
+    candidate = mission.placement.candidate
+    candidate.update!(status: "placed")
+
+    patch close_by_freelance_mission_url(mission), params: {
+      closure_reason: "Le client ferme le recrutement",
+      closure_note: "Le poste est stoppe"
+    }
+
+    assert_redirected_to my_missions_missions_path
+    assert_equal "Le client ferme le recrutement", mission.reload.closure_reason
+    assert_nil mission.placement
+    assert_equal "qualified", candidate.reload.status
+
+    get my_missions_missions_url(tab: "closed")
+    assert_response :success
+    assert_includes @response.body, "Mission fermée"
+    assert_not_includes @response.body, "Mission placée"
+
+    get mission_url(mission)
+    assert_response :success
+    assert_includes @response.body, "Mission fermée"
+    assert_not_includes @response.body, "Candidat placé"
+  end
+
   test "freelance can view open library mission without client identity" do
     sign_out :user
     sign_in_as(users(:one))

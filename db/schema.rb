@@ -193,7 +193,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_135500) do
     t.bigint "user_id", null: false
     t.index ["candidate_id"], name: "index_favorite_candidates_on_candidate_id"
     t.index ["mission_id"], name: "index_favorite_candidates_on_mission_id"
-    t.index ["user_id", "candidate_id", "mission_id"], name: "index_favorite_candidates_uniqueness", unique: true, nulls_not_distinct: true
+    t.index ["user_id", "candidate_id", "mission_id"], name: "index_favorite_candidates_uniqueness", unique: true
     t.index ["user_id"], name: "index_favorite_candidates_on_user_id"
   end
 
@@ -287,7 +287,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_135500) do
 
   create_table "missions", force: :cascade do |t|
     t.text "brief_summary"
-    t.bigint "client_contact_id", null: false
+    t.bigint "client_contact_id"
     t.date "closed_at"
     t.datetime "closed_by_freelancer_at"
     t.datetime "closure_admin_read_at"
@@ -302,11 +302,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_135500) do
     t.string "mission_type"
     t.date "opened_at"
     t.string "origin_type"
+    t.string "pipeline_stage", default: "sourcing_candidates", null: false
     t.string "priority_level"
     t.string "reference"
-    t.bigint "region_id", null: false
+    t.bigint "region_id"
     t.text "search_constraints"
-    t.bigint "specialty_id", null: false
+    t.bigint "specialty_id"
     t.date "started_at"
     t.string "status"
     t.string "title"
@@ -462,7 +463,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_135500) do
   add_foreign_key "contributions", "candidates"
   add_foreign_key "educations", "candidates"
   add_foreign_key "favorite_candidates", "candidates"
-  add_foreign_key "favorite_candidates", "missions"
+  add_foreign_key "favorite_candidates", "missions", on_delete: :cascade
   add_foreign_key "favorite_candidates", "users"
   add_foreign_key "favorite_missions", "missions"
   add_foreign_key "favorite_missions", "users"

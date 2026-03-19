@@ -3,6 +3,17 @@ module ApplicationHelper
     value.to_s.gsub(/\s*EUR\b/i, "€")
   end
 
+  def client_logo_src(value)
+    logo = value.to_s.strip
+    return if logo.blank?
+    return logo if logo.start_with?("data:", "http://", "https://")
+
+    logical_path = logo.sub(%r{\A/assets/}, "")
+    asset_path(logical_path)
+  rescue StandardError
+    logo
+  end
+
   def mission_origin_badge_classes(mission)
     case mission.origin_type.to_s
     when "freelancer"
