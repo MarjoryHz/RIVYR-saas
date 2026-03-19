@@ -1,12 +1,84 @@
-<div class="flex items-start gap-3">
+<% editing = local_assigns[:editing] || false %>
+<% liked = current_user && comment.client_post_comment_reactions.exists?(user: current_user, emoji: "heart") %>
+<% like_count = comment.client_post_comment_reactions.where(emoji: "heart").count %>
+
+<div id="client_post_comment_<%= comment.id %>" class="flex items-start gap-3">
   <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[1.1rem] border border-[#ead2dc] bg-white text-xs font-bold text-[#ed0e64] shadow-[0_8px_18px_rgba(94,31,50,0.07)]">
     <%= comment.user.first_name&.first&.upcase %>
   </div>
-  <div class="min-w-0 flex-1 rounded-[1.35rem] border border-[#f0dde6] bg-white/90 px-4 py-3 shadow-[0_10px_22px_rgba(94,31,50,0.05)]">
-    <div class="flex flex-wrap items-center gap-2">
-      <p class="text-xs font-semibold text-[#4c1f2a]"><%= comment.user.first_name %> <%= comment.user.last_name %></p>
-      <span class="text-[11px] text-[#b07a90]"><%= comment.created_at.strftime("%-d %b %Y, %H:%M") %></span>
+
+  <div class="min-w-0 flex-1 space-y-3">
+    <div class="rounded-[1.35rem] border border-[#f0dde6] bg-white/90 px-4 py-3 shadow-[0_10px_22px_rgba(94,31,50,0.05)]">
+      <div id="client_post_comment_display_<%= comment.id %>" class="<%= 'hidden' if editing %>">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-2">
+              <p class="text-xs font-semibold text-[#4c1f2a]"><%= comment.user.first_name %> <%= comment.user.last_name %></p>
+              <span class="text-[11px] text-[#b07a90]"><%= comment.created_at.strftime("%-d %b %Y, %H:%M") %></span>
+            </div>
+            <p class="mt-1 text-sm leading-6 text-[#6b3f4f]"><%= comment.body %></p>
+          </div>
+
+          <% if current_user == comment.user %>
+            <div class="flex items-center gap-2">
+              <button type="button"
+                onclick="document.getElementById('client_post_comment_display_<%= comment.id %>')?.classList.add('hidden');document.getElementById('client_post_comment_edit_<%= comment.id %>')?.classList.remove('hidden')"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#8b4452] transition hover:bg-[#fff0f5] hover:text-[#ed0e64]">
+                <i class="fa-regular fa-pen-to-square text-xs"></i>
+              </button>
+              <%= button_to client_post_comment_path(comment),
+                  method: :delete,
+                  data: { turbo_stream: true, turbo_confirm: "Supprimer ce commentaire ?" },
+                  class: "inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#8b4452] transition hover:bg-[#fff0f5] hover:text-[#ed0e64]" do %>
+                <i class="fa-regular fa-trash-can text-xs"></i>
+              <% end %>
+              <%= button_to raw(%(<i class="fa-solid fa-heart #{liked ? 'text-[#ff63a5]' : 'text-[#8b4452]'}"></i><span>#{like_count}</span>)),
+                  client_post_comment_client_post_comment_reactions_path(comment, emoji: "heart"),
+                  method: :post,
+                  data: { turbo_stream: true },
+                  class: "inline-flex items-center gap-2 rounded-full border border-[#ead2dc] bg-white px-3 py-1.5 text-xs font-semibold text-[#8b4452] transition hover:bg-[#fff0f5] hover:text-[#ed0e64]" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div id="client_post_comment_edit_<%= comment.id %>" class="<%= editing ? '' : 'hidden' %>">
+        <%= form_with url: client_post_comment_path(comment), method: :patch, scope: :client_post_comment, data: { turbo: true }, class: "space-y-3" do |f| %>
+          <% if comment.errors.any? %>
+            <div class="rounded-2xl border border-[#f7c7d8] bg-[#fff1f6] px-3 py-2 text-xs text-[#a33d68]">
+              <%= comment.errors.full_messages.to_sentence %>
+            </div>
+          <% end %>
+
+          <div class="rounded-[1.15rem] border border-[#dfc0ce] bg-white px-4 py-3 focus-within:border-[#ed0e64] focus-within:shadow-[0_0_0_3px_rgba(237,14,100,0.08)]">
+            <%= f.text_area :body,
+                value: comment.body,
+                rows: 3,
+                maxlength: 500,
+                class: "w-full resize-none bg-transparent text-sm leading-6 text-[#4c1f2a] outline-none" %>
+          </div>
+
+          <div class="flex items-center justify-end gap-2">
+            <button type="button"
+              onclick="document.getElementById('client_post_comment_edit_<%= comment.id %>')?.classList.add('hidden');document.getElementById('client_post_comment_display_<%= comment.id %>')?.classList.remove('hidden')"
+              class="inline-flex items-center justify-center rounded-full border border-[#dfbcc9] bg-white px-4 py-2 text-sm font-semibold text-[#8b4452] transition hover:bg-[#fdeef3]">
+              Annuler
+            </button>
+            <%= f.submit "Enregistrer",
+                class: "inline-flex items-center justify-center rounded-full bg-[#ed0e64] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#cf0c57]" %>
+          </div>
+        <% end %>
+      </div>
     </div>
-    <p class="mt-1 text-sm leading-6 text-[#6b3f4f]"><%= comment.body %></p>
+
+    <% unless current_user == comment.user %>
+      <div class="flex items-center gap-3 pl-1 text-xs font-semibold text-[#8b4452]">
+        <%= button_to raw(%(<i class="fa-solid fa-heart #{liked ? 'text-[#ff63a5]' : 'text-[#8b4452]'}"></i><span>#{like_count}</span>)),
+            client_post_comment_client_post_comment_reactions_path(comment, emoji: "heart"),
+            method: :post,
+            data: { turbo_stream: true },
+            class: "inline-flex items-center gap-2 rounded-full border border-[#ead2dc] bg-white px-3 py-1.5 transition hover:bg-[#fff0f5] hover:text-[#ed0e64]" %>
+      </div>
+    <% end %>
   </div>
 </div>

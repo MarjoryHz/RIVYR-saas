@@ -16,7 +16,7 @@ class ApplicationController < ActionController::Base
   private
 
   def user_not_authorized
-    redirect_back_or_to(root_path, alert: "Vous n'etes pas autorise a effectuer cette action.")
+    redirect_back_or_to(root_path, alert: "Vous n'êtes pas autorisé à effectuer cette action.")
   end
 
   def paginate(scope, per_page: 20)

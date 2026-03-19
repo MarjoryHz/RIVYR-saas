@@ -1,0 +1,88 @@
+<% liked = current_user && post.client_post_reactions.exists?(user: current_user, emoji: "heart") %>
+<% like_count = post.client_post_reactions.where(emoji: "heart").count %>
+<% comment_count = post.client_post_comments.count %>
+<% like_button_class = "inline-flex items-center gap-2.5 transition hover:text-white #{liked ? 'text-white' : 'text-white/92'}" %>
+<% like_icon_class = liked ? "fa-solid fa-heart text-[#ff63a5]" : "fa-solid fa-heart text-white/92" %>
+<% dom_prefix = local_assigns[:dom_prefix].presence || "company_contribution" %>
+<% modal_target = local_assigns[:modal_target].presence || "comments_modal_#{post.id}" %>
+<% comment_click = local_assigns[:comment_click].presence || "document.getElementById('#{modal_target}')?.classList.remove('hidden');document.body.classList.add('overflow-hidden')" %>
+<% share_menu_id = "#{dom_prefix}_share_menu_#{post.id}" %>
+<% comment_count_id = "#{dom_prefix}_comment_count_#{post.id}" %>
+<% engagement_id = "#{dom_prefix}_engagement_#{post.id}" %>
+<% light_mode = local_assigns[:light_mode] || false %>
+<% wrapper_text_class = light_mode ? "text-[#6b3f4f]" : "text-white/92" %>
+<% icon_row_class = light_mode ? "text-[#6b3f4f] drop-shadow-none" : "text-base drop-shadow-[0_3px_14px_rgba(40,18,30,0.28)]" %>
+<% action_hover_class = light_mode ? "hover:text-[#ed0e64]" : "hover:text-white" %>
+<% like_button_class = "inline-flex items-center gap-2.5 transition #{action_hover_class} #{liked ? (light_mode ? 'text-[#4c1f2a]' : 'text-white') : (light_mode ? 'text-[#6b3f4f]' : 'text-white/92')}" %>
+<% like_icon_class = if liked
+    "fa-solid fa-heart text-[#ff63a5]"
+  else
+    light_mode ? "fa-solid fa-heart text-[#6b3f4f]" : "fa-solid fa-heart text-white/92"
+  end %>
+
+<div id="<%= engagement_id %>" class="mt-5 flex items-center justify-between gap-4 <%= wrapper_text_class %>">
+  <div class="flex flex-wrap items-center gap-5 text-base font-medium <%= icon_row_class %>">
+    <% if user_signed_in? %>
+      <%= button_to raw(%(<i class="#{like_icon_class}"></i><span>#{like_count}</span>)),
+          client_post_client_post_reactions_path(post, emoji: "heart"),
+          method: :post,
+          data: { turbo_stream: true },
+          form: { onclick: "event.stopPropagation()" },
+          class: like_button_class %>
+    <% else %>
+      <span class="inline-flex items-center gap-2.5">
+        <i class="fa-solid fa-heart text-[#ff63a5]"></i>
+        <%= like_count %>
+      </span>
+    <% end %>
+
+      <button type="button"
+        id="<%= comment_count_id %>"
+        onclick="event.stopPropagation();<%= comment_click %>"
+      class="inline-flex items-center gap-2.5 transition <%= action_hover_class %>">
+      <i class="fa-regular fa-comment"></i>
+      <span><%= comment_count %></span>
+    </button>
+
+    <button type="button"
+      onclick="event.stopPropagation();const m=document.getElementById('<%= share_menu_id %>');const open=!m.classList.contains('opacity-0');m.classList.toggle('opacity-0',open);m.classList.toggle('pointer-events-none',open);if(!open){document.addEventListener('click',function h(e){if(!m.contains(e.target)){m.classList.add('opacity-0','pointer-events-none');document.removeEventListener('click',h)}},{once:true,capture:true})}"
+      class="inline-flex items-center gap-2.5 transition <%= action_hover_class %>">
+      <i class="fa-solid fa-share-nodes"></i>
+      <span>0</span>
+    </button>
+
+    <div class="relative">
+      <div id="<%= share_menu_id %>"
+        onmouseleave="this.classList.add('opacity-0','pointer-events-none')"
+        class="pointer-events-none absolute bottom-full right-0 z-20 mb-3 flex items-center gap-1.5 rounded-2xl border border-white/45 bg-white/92 p-2 shadow-[0_18px_34px_rgba(40,18,30,0.22)] opacity-0 transition-all duration-150">
+        <%= link_to raw('<i class="fa-brands fa-linkedin-in"></i>'),
+            "https://www.linkedin.com/sharing/share-offsite/?url=#{CGI.escape(showcase_url)}",
+            target: "_blank",
+            rel: "noopener",
+            class: "flex h-9 w-9 items-center justify-center rounded-full bg-[#0077b5] text-white text-xs transition hover:opacity-80" %>
+        <%= link_to raw('<i class="fa-brands fa-x-twitter"></i>'),
+            "https://twitter.com/intent/tweet?url=#{CGI.escape(showcase_url)}&text=#{CGI.escape(post.title.to_s)}",
+            target: "_blank",
+            rel: "noopener",
+            class: "flex h-9 w-9 items-center justify-center rounded-full bg-black text-white text-xs transition hover:opacity-80" %>
+        <%= link_to raw('<i class="fa-brands fa-facebook-f"></i>'),
+            "https://www.facebook.com/sharer/sharer.php?u=#{CGI.escape(showcase_url)}",
+            target: "_blank",
+            rel: "noopener",
+            class: "flex h-9 w-9 items-center justify-center rounded-full bg-[#1877f2] text-white text-xs transition hover:opacity-80" %>
+        <button type="button"
+          onclick="event.stopPropagation();navigator.clipboard.writeText('<%= showcase_url %>');this.innerHTML='<i class=\'fa-solid fa-check\'></i>';setTimeout(()=>this.innerHTML='<i class=\'fa-solid fa-link\'></i>',1500)"
+          class="flex h-9 w-9 items-center justify-center rounded-full border border-[#ead2dc] bg-white text-[#8b4452] text-xs transition hover:bg-[#fff0f5]">
+          <i class="fa-solid fa-link"></i>
+        </button>
+      </div>
+
+      <button type="button" onclick="event.stopPropagation()" class="inline-flex items-center gap-2.5 transition <%= action_hover_class %>">
+        <i class="fa-regular fa-bookmark"></i>
+        <span>0</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="shrink-0"></div>
+</div>

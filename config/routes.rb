@@ -7,7 +7,9 @@ Rails.application.routes.draw do
   get "/showcase/company/:client_id/missions", to: "pages#company_missions", as: :company_missions
   get "/showcase/company/:client_id/contributions", to: "pages#company_contributions", as: :company_contributions
   resources :client_posts, only: [] do
-    resources :client_post_comments, only: [:create], shallow: true
+    resources :client_post_comments, only: [:create, :update, :destroy], shallow: true do
+      resources :client_post_comment_reactions, only: [:create], shallow: true
+    end
     resources :client_post_reactions, only: [:create, :destroy], shallow: true
   end
   resources :clients, only: [] do

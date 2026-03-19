@@ -37,5 +37,5 @@
     <p><%= @client.bio.presence || "-" %></p>
   </div>
 
-  <a href="#" onclick="history.back(); return false;" class="btn">Retour</a>
+  <%= link_to "Retour", clients_path, class: "btn" %>
 </div>
