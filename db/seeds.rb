@@ -3,6 +3,7 @@
 
 require 'faker'
 require 'cgi'
+require 'fileutils'
 
 Faker::Config.locale = 'fr'
 
@@ -775,6 +776,8 @@ LAST_NAMES = %w[
   Dupont Lambert Bonnet Francois Martinez Delcourt Vandenberghe Carpentier Rousseau
 ].freeze
 
+FEMALE_FIRST_NAMES = %w[Marjory Claire Sophie Julie Camille Emma Lea Sarah Lucie Marion Laura Elodie Ines Alice Charlotte Mathilde Chloe Manon].freeze
+
 # --------------------------------------------------
 # 3. Helpers
 # Helpers simples pour eviter les repetitions et rendre le seed lisible.
@@ -797,6 +800,50 @@ end
 
 def seeded_avatar_path(seed_number)
   "avatars/avatar-#{format('%02d', (seed_number % 10) + 1)}.png"
+end
+
+def profile_gender_for(first_name)
+  FEMALE_FIRST_NAMES.include?(first_name.to_s) ? "female" : "male"
+end
+
+AVATAR_SPRITE_COLUMNS = [
+  [ 30, 209 ],
+  [ 249, 199 ],
+  [ 459, 209 ],
+  [ 678, 199 ],
+  [ 888, 199 ],
+  [ 1097, 209 ],
+  [ 1317, 199 ]
+].freeze
+
+AVATAR_SPRITE_ROWS = [
+  [ 20, 241 ],
+  [ 271, 241 ],
+  [ 522, 241 ],
+  [ 773, 241 ]
+].freeze
+
+def generated_avatar_path(first_name:, last_name:, gender:, slot_index:)
+  assets_dir = Rails.root.join("app/assets/images/avatars")
+  FileUtils.mkdir_p(assets_dir)
+
+  base_filename = gender == "female" ? "femme-avatar.png" : "homme-avatar.png"
+  source_path = assets_dir.join(base_filename)
+  target_filename = "#{first_name}-#{last_name}".parameterize + ".png"
+  target_path = assets_dir.join(target_filename)
+  sprite_slot = slot_index % (AVATAR_SPRITE_COLUMNS.size * AVATAR_SPRITE_ROWS.size)
+  row_index = sprite_slot / AVATAR_SPRITE_COLUMNS.size
+  column_index = sprite_slot % AVATAR_SPRITE_COLUMNS.size
+  crop_x, crop_width = AVATAR_SPRITE_COLUMNS.fetch(column_index)
+  crop_y, crop_height = AVATAR_SPRITE_ROWS.fetch(row_index)
+  geometry = "#{crop_width}x#{crop_height}+#{crop_x}+#{crop_y}"
+
+  unless File.exist?(target_path)
+    success = system("magick", source_path.to_s, "-crop", geometry, "+repage", target_path.to_s)
+    raise "Unable to generate avatar #{target_filename}" unless success
+  end
+
+  "avatars/#{target_filename}"
 end
 
 def seeded_date(offset_days)
@@ -1030,6 +1077,8 @@ ALL_FREELANCERS.each_with_index do |data, index|
     first_name: data[:first_name],
     last_name: data[:last_name],
     phone: safe_phone(index + 1),
+    profile_gender: profile_gender_for(data[:first_name]),
+    avatar_path: generated_avatar_path(first_name: data[:first_name], last_name: data[:last_name], gender: profile_gender_for(data[:first_name]), slot_index: index),
     status: 'active',
     role: 'freelance'
   })
@@ -1068,6 +1117,8 @@ admin_user = upsert_record(User, { email: "admin@rivyr.test" }, {
   first_name: "Admin",
   last_name: "Rivyr",
   phone: safe_phone(999),
+  profile_gender: "male",
+  avatar_path: generated_avatar_path(first_name: "Admin", last_name: "Rivyr", gender: "male", slot_index: 99),
   status: "active",
   role: "admin"
 })
@@ -1526,8 +1577,10 @@ candidates = []
 
 50.times do |index|
   first_name = FIRST_NAMES[index % FIRST_NAMES.size]
-  last_name = "#{LAST_NAMES[index % LAST_NAMES.size]}#{index + 1}"
+  last_name = LAST_NAMES[index % LAST_NAMES.size]
   email = "#{first_name.parameterize}.#{last_name.parameterize}@candidate.rivyr.test"
+  profile_gender = profile_gender_for(first_name)
+  avatar_path = generated_avatar_path(first_name: first_name, last_name: last_name, gender: profile_gender, slot_index: index)
 
   profile = CANDIDATE_PROFILES[index % CANDIDATE_PROFILES.size]
   status = CANDIDATE_STATUSES[index % CANDIDATE_STATUSES.size]
@@ -1547,6 +1600,8 @@ candidates = []
     first_name: first_name,
     last_name: last_name,
     phone: safe_phone(200 + index),
+    profile_gender: profile_gender,
+    avatar_path: avatar_path,
     linkedin_url: "https://www.linkedin.com/in/#{first_name.parameterize}-#{last_name.parameterize}",
     status: status,
     notes: CANDIDATE_NOTES[index % CANDIDATE_NOTES.size],
@@ -1649,6 +1704,8 @@ if first_candidate
     first_name: first_candidate.first_name,
     last_name: first_candidate.last_name,
     phone: first_candidate.phone,
+    profile_gender: first_candidate.profile_gender,
+    avatar_path: first_candidate.avatar_path,
     status: "active",
     role: "candidate"
   })

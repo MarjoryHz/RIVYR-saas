@@ -210,7 +210,7 @@
               <%# Top : avatar + nom + actions %>
               <div class="flex items-start gap-3">
                 <div class="relative shrink-0">
-                  <%= image_tag row[:avatar_path], alt: row[:full_name], class: "h-14 w-14 rounded-full object-cover ring-2 ring-[#f7c4da]" %>
+                  <%= image_tag avatar_asset_src(candidate), alt: row[:full_name], class: "h-14 w-14 rounded-full object-cover ring-2 ring-[#f7c4da]" %>
                   <% if row[:certified] %>
                     <span class="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#ed0e64] text-[9px] text-white ring-2 ring-white">
                       <i class="fa-solid fa-check"></i>

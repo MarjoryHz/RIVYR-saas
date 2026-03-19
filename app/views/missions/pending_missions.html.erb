@@ -13,9 +13,15 @@
             <%= link_to my_missions_missions_path, class: "px-7 py-3 text-base font-medium text-base-content/75 transition hover:text-base-content" do %>
               En cours (<%= @current_missions_count.to_i %>)
             <% end %>
+            <%= link_to my_missions_missions_path(tab: "drafts"), class: "px-6 py-3 text-base font-medium text-base-content/75 transition hover:text-base-content" do %>
+              Brouillons (<%= @draft_missions_count.to_i %>)
+            <% end %>
             <span class="inline-flex items-center rounded-full bg-[#f4a58a] px-7 py-3 text-base font-semibold text-white">
               En attente de validation (<%= @pending_validation_count.to_i %>)
             </span>
+            <%= link_to my_missions_missions_path(tab: "refused"), class: "px-6 py-3 text-base font-medium text-base-content/75 transition hover:text-base-content" do %>
+              Refusées (<%= @rejected_missions_count.to_i %>)
+            <% end %>
             <span class="text-base-content/20">|</span>
             <%= link_to my_missions_missions_path(tab: "closed"), class: "px-6 py-3 text-base font-medium text-base-content/75 transition hover:text-base-content" do %>
               Terminées (<%= @closed_missions_count.to_i %>)

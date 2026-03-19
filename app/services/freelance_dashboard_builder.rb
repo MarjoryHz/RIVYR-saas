@@ -22,6 +22,9 @@ class FreelanceDashboardBuilder
     pending_applications = pending_applications_for(freelancer_profile)
     placements = placements_for_user
     recommended_missions = recommended_missions_for(freelancer_profile)
+    library_scope = context.send(:library_scope)
+      .includes(:region, :client_contact, :specialty, :placement)
+      .where(status: "open")
     urgent_preferences = urgent_preferences_for(freelancer_profile, current_missions_scope)
     portfolio = build_dashboard_portfolio(placements)
 
@@ -39,6 +42,9 @@ class FreelanceDashboardBuilder
       dashboard_missions: current_missions_scope.map { |mission| build_dashboard_mission_card(mission, urgent_preferences.include?(mission.id)) }.sort_by { |item| item[:urgent] ? 0 : 1 },
       dashboard_pending_items: build_dashboard_pending_items(pending_applications.first(5), current_missions_scope.limit(5), placements.first(4)),
       dashboard_recommended_missions: recommended_missions.map { |mission| build_dashboard_recommended_card(mission) },
+      dashboard_library_available_count: library_scope.count,
+      dashboard_library_pending_count: pending_applications.count,
+      dashboard_library_new_count: [ library_scope.where("missions.created_at >= ?", 30.days.ago).count, 4 ].min,
       dashboard_pipeline: build_dashboard_pipeline(current_missions_scope),
       dashboard_finance_summary: build_dashboard_finance_summary(portfolio),
       dashboard_todo_preview: build_dashboard_todo_preview,

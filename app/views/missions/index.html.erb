@@ -4,6 +4,9 @@
   <% current_missions_count = @current_missions_count.to_i %>
   <% pending_response_count = @pending_response_count.to_i %>
   <% accepted_offers_count = @accepted_offers_count.to_i %>
+  <% library_available_count = @dashboard_library_available_count.to_i.nonzero? || library_missions.size %>
+  <% library_pending_count = @dashboard_library_pending_count.to_i %>
+  <% library_new_count = @dashboard_library_new_count.to_i.nonzero? || 4 %>
   <div class="mx-auto max-w-7xl p-4 md:p-6">
     <section class="space-y-6">
       <header class="space-y-3">
@@ -14,7 +17,7 @@
       </header>
 
       <div class="grid gap-6 xl:grid-cols-2">
-        <div class="group flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-base-100/70 bg-base-100/88 shadow-lg">
+        <div class="group flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-base-100/70 bg-base-100/88 shadow-lg transition hover:-translate-y-1 hover:border-[#f0c9d8] hover:bg-base-100 hover:shadow-xl">
           <div class="h-40 bg-gradient-to-br from-rose-100 via-pink-50 to-orange-50">
             <%= image_tag "img_mes_missions.svg", alt: "Mes missions", class: "h-full w-full object-cover" %>
           </div>
@@ -34,7 +37,7 @@
             <div class="space-y-3">
               <% if current_missions.any? %>
                 <% current_missions.each do |mission| %>
-                  <div class="flex items-center justify-between rounded-2xl border border-base-200 bg-base-100/80 px-4 py-3">
+                  <%= link_to mission_path(mission), class: "flex items-center justify-between rounded-2xl border border-base-200 bg-base-100/80 px-4 py-3 transition hover:-translate-y-0.5 hover:border-[#f0c9d8] hover:bg-base-100 hover:shadow-md" do %>
                     <div class="min-w-0">
                       <p class="truncate text-lg font-medium text-base-content"><%= mission.title %></p>
                       <p class="truncate text-sm text-base-content/65">
@@ -49,7 +52,7 @@
                       <%= render "missions/origin_badge", mission: mission %>
                       <i class="fa-solid fa-angle-right text-[#ed0e64]"></i>
                     </div>
-                  </div>
+                  <% end %>
                 <% end %>
               <% else %>
                 <div class="rounded-2xl border border-base-200 bg-base-100/80 px-4 py-5 text-sm text-base-content/65">
@@ -74,15 +77,20 @@
           <div class="flex flex-1 flex-col space-y-4 p-5">
             <div class="space-y-2">
               <h2 class="text-2xl font-semibold text-base-content">Bibliotheque de missions</h2>
-              <p class="text-base text-base-content/70">
-                Explorez et postulez aux missions disponibles sur Rivyr.
-              </p>
+              <div class="space-y-1 text-base-content/70">
+                <p><span class="text-3xl font-semibold text-[#ed0e64]"><%= library_available_count %></span> missions disponibles</p>
+                <p>
+                  <span class="font-semibold text-[#ed0e64]"><%= library_pending_count %></span> en attente
+                  <span class="mx-2 text-base-content/30">|</span>
+                  <span class="font-semibold text-[#ed0e64]"><%= library_new_count %></span> nouvelles missions
+                </p>
+              </div>
             </div>
 
             <div class="space-y-3">
               <% if library_missions.any? %>
                 <% library_missions.each do |mission| %>
-                  <div class="flex items-center justify-between rounded-2xl border border-base-200 bg-base-100/80 px-4 py-3">
+                  <%= link_to mission_path(mission), class: "flex items-center justify-between rounded-2xl border border-base-200 bg-base-100/80 px-4 py-3 transition hover:-translate-y-0.5 hover:border-[#f0c9d8] hover:bg-base-100 hover:shadow-md" do %>
                     <div class="min-w-0">
                       <p class="truncate text-lg font-medium text-base-content"><%= mission.title %></p>
                       <p class="truncate text-sm text-base-content/65">
@@ -95,7 +103,7 @@
                       <%= render "missions/origin_badge", mission: mission %>
                       <i class="fa-solid fa-angle-right text-[#ed0e64]"></i>
                     </div>
-                  </div>
+                  <% end %>
                 <% end %>
               <% else %>
                 <div class="rounded-2xl border border-base-200 bg-base-100/80 px-4 py-5 text-sm text-base-content/65">

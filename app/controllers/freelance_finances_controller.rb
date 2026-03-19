@@ -12,6 +12,8 @@ class FreelanceFinancesController < ApplicationController
     @signature_archive_date = params[:signature_archive_date].to_s.strip
     @signature_changes_only = params[:signature_changes_only].to_s == "1"
     @placements_changes_only = params[:placements_changes_only].to_s == "1"
+    @payment_status = params[:payment_status].to_s
+    @payment_changes_only = params[:payment_changes_only].to_s == "1"
     @q = params[:q].to_s.strip
     @client_invoice_status = params[:client_invoice_status].to_s.strip
     @payout_status = params[:payout_status].to_s.strip
@@ -439,7 +441,7 @@ class FreelanceFinancesController < ApplicationController
       placement: placement,
       mission_title: placement.mission.title,
       client_name: placement.mission.client_contact.client.brand_name.presence || placement.mission.client_contact.client.legal_name,
-      candidate_name: [ placement.candidate.first_name, placement.candidate.last_name ].compact.join(" "),
+      candidate_name: placement.candidate.display_name,
       amount_cents: placement.commission&.freelancer_share_cents.to_i,
       workflow_label: stage_snapshot[:label],
       workflow_tone: stage_snapshot[:tone],
@@ -494,8 +496,24 @@ class FreelanceFinancesController < ApplicationController
 
   def build_payments_tab(seen_tabs)
     seen_at = finance_seen_at_for(seen_tabs, "payments")
-    action_items = @placements.filter_map { |placement| payment_action_item_for(placement) }.first(5)
-    recent_items = recent_payment_events(seen_at).first(5)
+    all_rows = payment_history_rows(seen_at)
+    rows = all_rows
+    rows = rows.select { |row| row[:status_key] == @payment_status } if @payment_status.present?
+    rows = rows.select { |row| row[:status_key] == "payout_pending" } if @payment_changes_only
+    changed_rows = all_rows.select { |row| row[:changed_recently] }
+    action_items = all_rows.select { |row| row[:status_key] == "payout_pending" }.first(5).map do |row|
+      {
+        id: row[:id],
+        title: row[:mission_title],
+        subtitle: row[:client_name],
+        detail: row[:note],
+        badge: row[:status_label],
+        badge_tone: row[:status_tone],
+        occurred_at: row[:occurred_at],
+        cta: { label: "Voir le placement", path: placement_path(row[:placement]), method: :get }
+      }
+    end
+    recent_items = all_rows.select { |row| row[:changed_recently] }.first(5)
 
     {
       key: "payments",
@@ -507,8 +525,62 @@ class FreelanceFinancesController < ApplicationController
       description: "Les actions finance prioritaires et les mouvements récents encore non consultés.",
       action_items: action_items,
       recent_items: recent_items,
+      rows: rows,
+      changed_rows: changed_rows,
+      status_options: all_rows.map { |row| [ row[:status_label], row[:status_key] ] }.uniq,
+      metrics: payment_metrics_for(all_rows),
       empty_action_label: "Aucune action paiement en attente.",
       empty_recent_label: "Aucun changement récent côté paiements."
+    }
+  end
+
+  def payment_history_rows(seen_at)
+    base_placements = @placements.first(8)
+    return [] if base_placements.empty?
+
+    history_blueprint = [
+      { amount_cents: 200_000, date: Date.current - 2.days, status_key: "payout_pending", status_label: "En attente de paiement", status_tone: :amber, note: "Demande validée par Rivyr, virement en préparation." },
+      { amount_cents: 1_500_00, date: Date.current - 18.days, status_key: "payout_paid", status_label: "Payé", status_tone: :green, note: "Virement exécuté par Rivyr." },
+      { amount_cents: 2_000_00, date: Date.current - 41.days, status_key: "payout_paid", status_label: "Payé", status_tone: :green, note: "Paiement reçu sur le compte freelance." },
+      { amount_cents: 2_500_00, date: Date.current - 67.days, status_key: "payout_paid", status_label: "Payé", status_tone: :green, note: "Virement mensuel confirmé." },
+      { amount_cents: 1_500_00, date: Date.current - 94.days, status_key: "payout_paid", status_label: "Payé", status_tone: :green, note: "Paiement Rivyr envoyé et rapproché." },
+      { amount_cents: 2_000_00, date: Date.current - 126.days, status_key: "payout_paid", status_label: "Payé", status_tone: :green, note: "Virement traité sans incident." },
+      { amount_cents: 2_500_00, date: Date.current - 158.days, status_key: "payout_paid", status_tone: :green, status_label: "Payé", note: "Paiement exécuté sur le mois." },
+      { amount_cents: 2_000_00, date: Date.current - 191.days, status_key: "payout_paid", status_label: "Payé", status_tone: :green, note: "Historique de paiement Rivyr." }
+    ]
+
+    history_blueprint.each_with_index.map do |entry, index|
+      placement = base_placements[index % base_placements.size]
+      event_time = entry[:date].to_time.change(hour: 10, min: 30)
+      changed_recently = finance_recent_unseen?(event_time, seen_at)
+
+      {
+        id: "payment-row-history-#{placement.id}-#{index}",
+        placement: placement,
+        mission: placement.mission,
+        client_name: placement.mission.client_contact.client.brand_name.presence || placement.mission.client_contact.client.legal_name,
+        client_logo: placement.mission.client_contact.client.logo,
+        mission_title: placement.mission.title,
+        invoice_number: "RIV-PAY-2026-#{format('%03d', index + 1)}",
+        amount_cents: entry[:amount_cents],
+        status_key: entry[:status_key],
+        status_label: entry[:status_label],
+        status_short_label: entry[:status_label],
+        status_tone: entry[:status_tone],
+        note: entry[:note],
+        occurred_at: event_time,
+        changed_recently: changed_recently,
+        change_hint: changed_recently ? "#{entry[:status_label]} mis à jour le #{I18n.l(event_time, format: "%d/%m à %Hh%M")}" : nil
+      }
+    end
+  end
+
+  def payment_metrics_for(rows)
+    {
+      pending_count: rows.count { |row| row[:status_key] == "payout_pending" },
+      paid_count: rows.count { |row| row[:status_key] == "payout_paid" },
+      paid_total_cents: rows.select { |row| row[:status_key] == "payout_paid" }.sum { |row| row[:amount_cents].to_i },
+      task_tone: signature_task_tone(rows.select { |row| row[:changed_recently] })
     }
   end
 

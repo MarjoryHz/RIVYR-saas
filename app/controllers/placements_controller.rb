@@ -385,7 +385,7 @@ class PlacementsController < ApplicationController
         region_name: mission.region&.name,
         potential_cents: placement.commission&.freelancer_share_cents.to_i,
         duration_days: [ (ended_on - started_on).to_i, 0 ].max,
-        candidate_name: [ placement.candidate.first_name, placement.candidate.last_name ].compact.join(" "),
+        candidate_name: placement.candidate.display_name,
         closed_steps: [
           { label: "Entretien client", done: true },
           { label: "Recruté", done: true },
@@ -443,7 +443,7 @@ class PlacementsController < ApplicationController
       company_name: client.brand_name.presence || client.legal_name,
       company_logo: client.logo,
       region_name: mission.region&.name,
-      candidate_name: [ placement.candidate.first_name, placement.candidate.last_name ].compact.join(" "),
+      candidate_name: placement.candidate.display_name,
       candidate_status: placement.candidate.status,
       salary_cents: placement.annual_salary_cents.to_i,
       workflow_label: workflow_label_for(placement),

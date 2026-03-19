@@ -159,12 +159,12 @@ class CandidatesController < ApplicationController
 
     {
       candidate:        candidate,
-      full_name:        [ candidate.first_name, candidate.last_name ].compact.join(" "),
-      initials:         [ candidate.first_name, candidate.last_name ].filter_map { |part| part.to_s.first }.join.upcase.first(2),
+      full_name:        candidate.display_name,
+      initials:         candidate.initials,
       avatar_path:      candidate_avatar_path(candidate),
       certified:        !candidate.status_new?,
       seen:             candidate.placements.any?,
-      freelance_name:   latest_freelancer.present? ? [ latest_freelancer.first_name, latest_freelancer.last_name ].compact.join(" ") : nil,
+      freelance_name:   latest_freelancer&.display_name,
       last_position:    current_exp&.title.presence || candidate.job_titles&.last.presence || "Profil en cours de qualification",
       current_company:  current_exp&.company,
       top_skills:       top_candidate_skills(candidate),
@@ -206,8 +206,7 @@ class CandidatesController < ApplicationController
   end
 
   def candidate_avatar_path(candidate)
-    avatar_index = (candidate.id || candidate.email.to_s.sum) % 10 + 1
-    "avatars/avatar-#{format('%02d', avatar_index)}.png"
+    candidate.avatar_image_path
   end
 
   def set_candidate

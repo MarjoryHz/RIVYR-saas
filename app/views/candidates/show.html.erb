@@ -8,7 +8,6 @@
     "placed"       => { label: "Placé",           bg: "bg-emerald-100", text: "text-emerald-800", ring: "ring-emerald-300" }
   }
   badge = status_config[@candidate.status] || status_config["new"]
-  avatar_index = (@candidate.id || @candidate.email.to_s.sum) % 10 + 1
   last_title = @candidate.work_experiences.first&.title || @candidate.job_titles&.last
   whatsapp_number = @candidate.phone.to_s.gsub(/\D/, '')
 %>
@@ -19,12 +18,12 @@
     <%# ── Hero ── %>
     <section class="relative overflow-hidden p-6">
       <div class="relative z-10 flex items-center gap-5">
-        <%= image_tag "avatars/avatar-#{format('%02d', avatar_index)}.png",
-              alt: "#{@candidate.first_name} #{@candidate.last_name}",
+        <%= image_tag avatar_asset_src(@candidate),
+              alt: @candidate.display_name,
               class: "h-24 w-24 rounded-full object-cover ring-4 ring-white shadow-md shrink-0" %>
         <div class="space-y-2">
           <div class="flex items-center gap-2 flex-wrap">
-            <h1 class="text-3xl font-bold text-[#3d1a24] md:text-4xl"><%= @candidate.first_name %> <%= @candidate.last_name %></h1>
+            <h1 class="text-3xl font-bold text-[#3d1a24] md:text-4xl"><%= @candidate.display_name %></h1>
             <% if @candidate.languages&.any? %>
               <div class="flex items-center gap-1">
                 <% @candidate.languages.each do |lang| %>

@@ -111,7 +111,7 @@ class MissionsController < ApplicationController
     authorize Mission
 
     freelancer_profile = current_user.freelancer_profile
-    @tab = params[:tab].to_s.presence_in(%w[current drafts closed]) || "current"
+    @tab = params[:tab].to_s.presence_in(%w[current drafts refused closed]) || "current"
     @company_filter = params[:company].to_s.strip
     @region_filter = params[:region].to_s.strip
     @urgent_filter = params[:urgent].to_s.strip
@@ -148,9 +148,19 @@ class MissionsController < ApplicationController
     all_mission_rows = current_missions.map { |mission| build_my_mission_row(mission, preference_map[mission.id]) }
     draft_rows = draft_missions_scope.map { |mission| build_draft_mission_row(mission) }
     closed_rows = closed_missions_scope.map { |mission| build_closed_mission_row(mission) }
+    rejected_applications = if freelancer_profile.present?
+      freelancer_profile.freelance_mission_applications
+        .where(status: "rejected")
+        .includes(mission: [ :region, :specialty, { client_contact: :client }, { placement: :commission } ])
+        .order(client_rejected_at: :desc, updated_at: :desc, created_at: :desc)
+    else
+      FreelanceMissionApplication.none
+    end
+    rejected_rows = rejected_applications.map { |application| build_rejected_mission_row(application) }
     filter_source_rows =
       case @tab
       when "drafts" then draft_rows
+      when "refused" then rejected_rows
       when "closed" then closed_rows
       else all_mission_rows
       end
@@ -158,6 +168,7 @@ class MissionsController < ApplicationController
     @region_options = filter_source_rows.map { |row| row[:region_name] }.compact.uniq.sort
     @mission_rows = filter_my_mission_rows(all_mission_rows)
     @draft_mission_rows = filter_draft_mission_rows(draft_rows)
+    @rejected_mission_rows = filter_pending_mission_rows(rejected_rows)
     @closed_mission_rows = filter_closed_mission_rows(closed_rows)
     @current_missions = @mission_rows.map { |row| row[:mission] }
     @draft_missions = @draft_mission_rows.map { |row| row[:mission] }
@@ -176,6 +187,13 @@ class MissionsController < ApplicationController
     end
     @closed_total_sent_candidates = @closed_mission_rows.sum { |row| row[:sent_candidates_count] }
     @draft_last_updated_label = @draft_mission_rows.max_by { |row| row[:updated_at] }&.dig(:updated_at)
+    @rejected_total_potential_cents = @rejected_mission_rows.sum { |row| row[:potential_cents] }
+    @rejected_average_days = if @rejected_mission_rows.any?
+      (@rejected_mission_rows.sum { |row| row[:waiting_days] } / @rejected_mission_rows.size.to_f).round
+    else
+      0
+    end
+    @rejected_total_candidates = @rejected_mission_rows.sum { |row| row[:sent_candidates_count] }
   end
 
   def pending_missions
@@ -218,7 +236,10 @@ class MissionsController < ApplicationController
     authorize @mission, :apply?
 
     freelancer_profile = current_user.freelancer_profile
-    return redirect_to missions_path(scope: "library", status: "open"), alert: "Profil freelance introuvable." if freelancer_profile.blank?
+    fallback_target = request.referer.to_s.include?("/dashboard") ? dashboard_library_missions_path(status: "open") : library_missions_path(status: "open")
+    redirect_target = params[:return_to].presence || fallback_target
+
+    return redirect_to redirect_target, alert: "Profil freelance introuvable." if freelancer_profile.blank?
 
     application = FreelanceMissionApplication.find_or_initialize_by(
       freelancer_profile: freelancer_profile,
@@ -233,7 +254,7 @@ class MissionsController < ApplicationController
     application.freelancer_notified_at = nil if FreelanceMissionApplication.supports_freelancer_notification_tracking?
     application.save!
 
-    redirect_to pending_missions_missions_path, notice: "Mission ajoutée à vos validations en attente."
+    redirect_to redirect_target, notice: "Mission ajoutée à vos validations en attente."
   end
 
   def withdraw
@@ -810,6 +831,11 @@ class MissionsController < ApplicationController
     else
       0
     end
+    @rejected_missions_count = if freelancer_profile.present?
+      freelancer_profile.freelance_mission_applications.where(status: "rejected").count
+    else
+      0
+    end
     @closed_missions_count = scope.where(status: "closed").count
   end
 
@@ -838,6 +864,17 @@ class MissionsController < ApplicationController
       region_name: mission.region&.name,
       status_label: application.status_client_review? ? "Chez le client" : "En attente de validation RIVYR"
     }
+  end
+
+  def build_rejected_mission_row(application)
+    row = build_pending_mission_row(application)
+    rejected_at = application.client_rejected_at || application.updated_at || application.created_at
+
+    row.merge(
+      rejected_at: rejected_at,
+      status_label: "Refusée par Rivyr",
+      review_reason: application.respond_to?(:review_reason) ? application.review_reason.presence : nil
+    )
   end
 
   def filter_pending_mission_rows(rows)
