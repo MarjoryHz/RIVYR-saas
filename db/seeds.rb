@@ -1012,6 +1012,10 @@ def serialize_signature_timeline(events)
   end.join(";;")
 end
 
+def normalize_seed_key(value)
+  I18n.transliterate(value.to_s).downcase.strip
+end
+
 SIGNATURE_DEMO_STATUSES = [
   { key: "transmitted", label: "Transmis", action_required: true, contract_signed: false, mission_status: "open", followup: "Relance auto dans 24h", note: "Contrat envoyé au client ce matin, première relance programmée automatiquement." },
   { key: "client_signing", label: "En cours de signature client", action_required: false, contract_signed: false, mission_status: "open", followup: "Relance auto dans 48h", note: "Le client a ouvert le dossier et la signature est en cours côté direction générale." },
@@ -1090,8 +1094,8 @@ ALL_FREELANCERS.each_with_index do |data, index|
     role: 'freelance'
   })
 
-  region = regions_by_name.fetch(data[:region])
-  specialty = specialties_by_name.fetch(data[:specialty])
+  region = regions_by_name[data[:region]] || regions_by_normalized_name.fetch(normalize_seed_key(data[:region]))
+  specialty = specialties_by_name[data[:specialty]] || specialties_by_normalized_name.fetch(normalize_seed_key(data[:specialty]))
 
   freelancer_attrs = {
     region: region,
@@ -1131,8 +1135,8 @@ admin_user = upsert_record(User, { email: "admin@rivyr.test" }, {
 })
 
 # Pool Rivyr: ce profil porte les missions "non attribuees" de la bibliotheque.
-library_region = regions_by_name.fetch("Hauts-de-France")
-library_specialty = specialties_by_name.fetch("Direction Generale")
+library_region = regions_by_name["Hauts-de-France"] || regions_by_normalized_name.fetch(normalize_seed_key("Hauts-de-France"))
+library_specialty = specialties_by_name["Direction Générale"] || specialties_by_normalized_name.fetch(normalize_seed_key("Direction Generale"))
 library_pool_attrs = {
   region: library_region,
   specialty: library_specialty,
@@ -1535,10 +1539,10 @@ puts "Seeding missions..."
 MISSIONS_DATA.each_with_index do |data, index|
   client = clients_by_legal_name.fetch(data[:client_legal_name])
   contact = contacts_by_client_id.fetch(client.id)
-  specialty = specialties_by_name.fetch(data[:specialty])
-  region = regions_by_name.fetch(client.location)
+  specialty = specialties_by_name[data[:specialty]] || specialties_by_normalized_name.fetch(normalize_seed_key(data[:specialty]))
+  region = regions_by_name[client.location] || regions_by_normalized_name.fetch(normalize_seed_key(client.location))
   assigned_freelancer = User.includes(:freelancer_profile).find_by(email: data[:assigned_freelancer_email])&.freelancer_profile
-  matching_freelancer = assigned_freelancer || FreelancerProfile.joins(:specialty).find_by(specialties: { name: data[:specialty] }) || FreelancerProfile.first
+  matching_freelancer = assigned_freelancer || FreelancerProfile.joins(:specialty).find_by(specialties: { name: specialty.name }) || FreelancerProfile.first
   mission_status = data[:status] || mission_status_for(index)
   mission_origin = data[:origin_type] || MISSION_ORIGINS[index % MISSION_ORIGINS.size]
   opened_days_ago = data[:opened_days_ago] || (180 - (index * 5))

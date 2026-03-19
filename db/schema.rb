@@ -100,10 +100,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_161000) do
   create_table "client_post_reactions", force: :cascade do |t|
     t.bigint "client_post_id", null: false
     t.datetime "created_at", null: false
-    t.string "emoji", default: "👍", null: false
+    t.string "emoji"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index ["client_post_id", "user_id"], name: "index_client_post_reactions_on_client_post_id_and_user_id", unique: true
     t.index ["client_post_id"], name: "index_client_post_reactions_on_client_post_id"
     t.index ["user_id"], name: "index_client_post_reactions_on_user_id"
   end
