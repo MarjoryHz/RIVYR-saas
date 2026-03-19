@@ -52,7 +52,7 @@ class FreelanceFinancesControllerTest < ActionDispatch::IntegrationTest
       post create_freelancer_invoice_freelance_finance_url, params: { placement_id: placement.id }
     end
 
-    assert_redirected_to freelance_finance_path
+    assert_redirected_to dashboard_freelance_finance_path
   end
 
   test "creates payout request from freelancer invoice" do
@@ -98,6 +98,6 @@ class FreelanceFinancesControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to freelance_finance_path
+    assert_redirected_to dashboard_freelance_finance_path
   end
 end

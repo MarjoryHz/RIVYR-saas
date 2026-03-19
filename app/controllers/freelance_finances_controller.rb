@@ -3,6 +3,7 @@ class FreelanceFinancesController < ApplicationController
 
   def show
     authorize :freelance_finance, :show?
+    @freelancer_profile = current_user.freelancer_profile
     @tab = params[:tab].presence_in(%w[signatures placements payments]) || "signatures"
     @wallet_tab = params[:wallet_tab].presence_in(%w[available waiting potential]) || "available"
     @signature_status = params[:signature_status].presence_in(%w[transmitted client_signing client_changes_requested signed refused expired]).to_s
@@ -10,6 +11,7 @@ class FreelanceFinancesController < ApplicationController
     @signature_archive_mission = params[:signature_archive_mission].to_s.strip
     @signature_archive_date = params[:signature_archive_date].to_s.strip
     @signature_changes_only = params[:signature_changes_only].to_s == "1"
+    @placements_changes_only = params[:placements_changes_only].to_s == "1"
     @q = params[:q].to_s.strip
     @client_invoice_status = params[:client_invoice_status].to_s.strip
     @payout_status = params[:payout_status].to_s.strip
@@ -20,6 +22,17 @@ class FreelanceFinancesController < ApplicationController
     @available_wallet_cents = available_wallet_cents
     @waiting_client_payments_cents = waiting_client_payments_cents
     @potential_wallet_cents = potential_wallet_cents
+    @finance_overview = finance_overview_data
+    @wallet_bank_account_options = @freelancer_profile&.bank_accounts.to_a.map { |account| [ account[:label], account[:label] ] }
+    @wallet_payout_invoice = own_freelancer_invoices.order(issue_date: :desc, created_at: :desc).max_by do |invoice|
+      requestable_invoice_amount_cents(invoice)
+    end
+    @wallet_requestable_amount_cents =
+      if @wallet_payout_invoice.present?
+        [ requestable_invoice_amount_cents(@wallet_payout_invoice), @available_wallet_cents ].min
+      else
+        0
+      end
 
     seen_tabs = finance_seen_tabs
     @finance_tabs = build_finance_tabs(seen_tabs)
@@ -87,15 +100,28 @@ class FreelanceFinancesController < ApplicationController
     authorize :freelance_finance, :create_payout_request?
 
     invoice = own_freelancer_invoices.find(params[:invoice_id])
-    amount_cents = params[:amount_cents].to_i
+    amount_cents =
+      if params[:amount_eur].present?
+        (params[:amount_eur].to_f * 100).round
+      else
+        params[:amount_cents].to_i
+      end
     amount_cents = invoice.amount_cents if amount_cents <= 0
 
     if amount_cents > available_wallet_cents
-      return redirect_to dashboard_freelance_finance_path, alert: "Montant supérieur au portefeuille disponible."
+      flash[:payout_request_insufficient] = {
+        requested_amount_cents: amount_cents,
+        available_amount_cents: available_wallet_cents
+      }
+      return redirect_to dashboard_freelance_finance_path
     end
 
-    if current_user.payout_requests.where(invoice: invoice, status: [ "pending", "approved" ]).exists?
-      return redirect_to dashboard_freelance_finance_path, alert: "Une demande de virement est déjà en cours pour cette facture."
+    if amount_cents > requestable_invoice_amount_cents(invoice)
+      flash[:payout_request_insufficient] = {
+        requested_amount_cents: amount_cents,
+        available_amount_cents: [ requestable_invoice_amount_cents(invoice), available_wallet_cents ].min
+      }
+      return redirect_to dashboard_freelance_finance_path
     end
 
     payout_request = current_user.payout_requests.new(
@@ -108,6 +134,10 @@ class FreelanceFinancesController < ApplicationController
     )
 
     if payout_request.save
+      flash[:payout_request_success] = {
+        amount_cents: amount_cents,
+        bank_account_label: payout_request.bank_account_label.presence || "Compte bancaire"
+      }
       redirect_to dashboard_freelance_finance_path, notice: "Demande de virement envoyée à Rivyr."
     else
       redirect_to dashboard_freelance_finance_path, alert: payout_request.errors.full_messages.to_sentence
@@ -173,6 +203,10 @@ class FreelanceFinancesController < ApplicationController
       .to_a
   end
 
+  def all_signature_rows
+    @all_signature_rows ||= (@missions + finance_archived_missions_scope).filter_map { |mission| signature_row_for(mission) }
+  end
+
   def finance_archived_missions_scope
     @finance_archived_missions_scope ||= Mission
       .includes(:placement, placement: :commission, client_contact: :client)
@@ -186,6 +220,13 @@ class FreelanceFinancesController < ApplicationController
     Invoice
       .joins(placement: { mission: :freelancer_profile })
       .where(freelancer_profiles: { user_id: current_user.id }, invoice_type: "freelancer")
+  end
+
+  def requestable_invoice_amount_cents(invoice)
+    return 0 if invoice.blank?
+
+    consumed_cents = current_user.payout_requests.where(invoice: invoice).where.not(status: "rejected").sum(:amount_cents)
+    [ invoice.amount_cents.to_i - consumed_cents, 0 ].max
   end
 
   def activated_commissions_cents
@@ -245,10 +286,10 @@ class FreelanceFinancesController < ApplicationController
 
   def build_signatures_tab(seen_tabs)
     seen_at = finance_seen_at_for(seen_tabs, "signatures")
-    all_signature_rows = @missions.filter_map { |mission| signature_row_for(mission) }
+    all_active_signature_rows = @missions.filter_map { |mission| signature_row_for(mission) }
     all_archived_signature_rows = finance_archived_missions_scope.filter_map { |mission| signature_row_for(mission) }
-    all_rows = all_signature_rows + all_archived_signature_rows
-    signature_rows = all_signature_rows
+    all_rows = all_active_signature_rows + all_archived_signature_rows
+    signature_rows = all_active_signature_rows
     signature_rows = signature_rows.select { |row| row[:status_key] == @signature_status } if @signature_status.present?
     signature_rows = signature_rows.select { |row| row[:changed_recently] } if @signature_changes_only
     archived_rows = filter_archived_signature_rows(all_archived_signature_rows)
@@ -337,6 +378,10 @@ class FreelanceFinancesController < ApplicationController
 
   def build_placements_tab(seen_tabs)
     seen_at = finance_seen_at_for(seen_tabs, "placements")
+    placement_rows = @placements.map { |placement| placement_row_for(placement) }
+    active_rows = placement_rows.reject { |row| row[:stage_key] == :paid }
+    archived_rows = placement_rows.select { |row| row[:stage_key] == :paid }
+    filtered_rows = @placements_changes_only ? active_rows.select { |row| row[:changed_recently] } : active_rows
     action_items = @placements.select(&:workflow_in_progress?).first(5).map do |placement|
       {
         id: "placement-action-#{placement.id}",
@@ -375,10 +420,75 @@ class FreelanceFinancesController < ApplicationController
       unseen_count: recent_items.count,
       headline: "Validation, conformité et avancement des dossiers placés.",
       description: "Une lecture opérationnelle des placements encore ouverts et des validations récentes.",
+      rows: filtered_rows,
+      archived_rows: archived_rows,
+      metrics: placement_metrics_for(placement_rows),
       action_items: action_items,
       recent_items: recent_items,
       empty_action_label: "Aucun placement en attente d'action.",
       empty_recent_label: "Aucun changement récent sur les placements."
+    }
+  end
+
+  def placement_row_for(placement)
+    changed_at = placement.admin_reviewed_at || placement.updated_at
+    stage_snapshot = placement_stage_snapshot(placement)
+
+    {
+      id: "placement-row-#{placement.id}",
+      placement: placement,
+      mission_title: placement.mission.title,
+      client_name: placement.mission.client_contact.client.brand_name.presence || placement.mission.client_contact.client.legal_name,
+      candidate_name: [ placement.candidate.first_name, placement.candidate.last_name ].compact.join(" "),
+      amount_cents: placement.commission&.freelancer_share_cents.to_i,
+      workflow_label: stage_snapshot[:label],
+      workflow_tone: stage_snapshot[:tone],
+      stage_key: stage_snapshot[:key],
+      reviewed_at: placement.admin_reviewed_at,
+      note: placement.admin_review_note.presence || "Aucune note Rivyr pour l'instant.",
+      updated_at: placement.updated_at,
+      changed_recently: changed_at.present? && changed_at >= 24.hours.ago,
+      change_hint: changed_at.present? ? "Changement d'etat le #{I18n.l(changed_at, format: "%d/%m a %Hh%M")}" : nil
+    }
+  end
+
+  def placement_stage_snapshot(placement)
+    client_invoice = placement.client_invoice
+    freelancer_invoice = placement.freelancer_invoice
+    latest_payout = latest_payout_request_for(freelancer_invoice)
+    payout_pending_or_approved = latest_payout&.status.in?(%w[pending approved])
+    payout_paid = latest_payout&.status_paid?
+    wallet_available = client_invoice&.status_paid? && freelancer_invoice.present? && !payout_pending_or_approved && !payout_paid
+
+    return { key: :paid, label: "Payé", tone: :green } if payout_paid
+    return { key: :in_payment, label: "En paiement", tone: :slate } if payout_pending_or_approved
+    return { key: :wallet_available, label: "Virement wallet disponible", tone: :green } if wallet_available
+    return { key: :freelancer_invoice_validated, label: "Validation facture freelance", tone: :slate } if freelancer_invoice.present?
+    return { key: :client_payment_received, label: "Paiement client reçu", tone: :green } if client_invoice&.status_paid?
+    return { key: :client_payment_started, label: "Paiement client", tone: :amber } if client_invoice&.status_issued?
+    return { key: :client_invoice_validated, label: "Facture validée", tone: :slate } if client_invoice&.issue_date.present?
+    return { key: :client_invoice_created, label: "Création facture client", tone: :amber } if client_invoice.present?
+    return { key: :documents_validated, label: "Documents validés", tone: :green } if placement.workflow_validated? || placement.mission.contract_signed?
+    return { key: :refused, label: "Refusé", tone: :rose } if placement.workflow_refused?
+
+    { key: :placement_realized, label: "Placement réalisé", tone: :amber }
+  end
+
+  def latest_payout_request_for(freelancer_invoice)
+    freelancer_invoice&.payout_requests&.order(requested_at: :desc, created_at: :desc)&.first
+  end
+
+  def placement_metrics_for(rows)
+    validated_count = rows.count { |row| row[:placement].workflow_validated? }
+    in_progress_count = rows.count { |row| row[:placement].workflow_in_progress? }
+    total_amount_cents = rows.select { |row| row[:placement].workflow_in_progress? }.sum { |row| row[:amount_cents].to_i }
+    latest_review_at = rows.filter_map { |row| row[:reviewed_at] || row[:updated_at] }.max
+
+    {
+      validated_count: validated_count,
+      in_progress_count: in_progress_count,
+      total_amount_cents: total_amount_cents,
+      latest_review_label: latest_review_at.present? ? I18n.l(latest_review_at.to_date, format: "%d/%m/%Y") : "-"
     }
   end
 
@@ -784,6 +894,76 @@ class FreelanceFinancesController < ApplicationController
       end
 
     ((salary_average * 0.20) * 0.60).round * 100
+  end
+
+  def finance_overview_data
+    month_range = Date.current.beginning_of_month..Date.current.end_of_month
+    monthly_revenue_cents = own_freelancer_invoices.where(issue_date: month_range).sum(:amount_cents)
+    monthly_target_eur = @freelancer_profile&.monthly_revenue_target_for(Date.current).to_i
+    signed_this_month = all_signature_rows.select do |row|
+      row[:status_key] == "signed" && row[:signed_at].present? && row[:signed_at].to_date.in?(month_range)
+    end
+    sent_this_month = all_signature_rows.count { |row| row[:sent_on].present? && row[:sent_on].in?(month_range) }
+    promised_payments_cents = signed_this_month.sum do |row|
+      row[:mission].placement&.commission&.freelancer_share_cents.to_i.nonzero? || estimated_mission_commission_cents(row[:mission])
+    end
+
+    signature_actions = all_signature_rows
+      .select { |row| row[:action_required] && row[:status_key] != "signed" }
+      .sort_by { |row| row[:occurred_at] || Time.at(0) }
+      .reverse
+      .map do |row|
+        {
+          occurred_at: row[:occurred_at],
+          text: "#{row[:client_name]} : #{row[:status_label]}"
+        }
+      end
+
+    payment_actions = @placements.filter_map do |placement|
+      item = payment_action_item_for(placement)
+      next if item.blank?
+
+      {
+        occurred_at: item[:occurred_at],
+        text: "#{item[:title]} : #{item[:badge]}"
+      }
+    end
+
+    urgent_actions = (signature_actions + payment_actions)
+      .sort_by { |item| item[:occurred_at] || Time.at(0) }
+      .reverse
+      .uniq { |item| item[:text] }
+
+    raw_progress_percent =
+      if monthly_target_eur.positive?
+        ((monthly_revenue_cents / 100.0) / monthly_target_eur * 100).round
+      else
+        0
+      end
+
+    {
+      current_month_label: month_label_fr(Date.current),
+      monthly_revenue_cents: monthly_revenue_cents,
+      monthly_target_eur: monthly_target_eur,
+      annual_target_eur: @freelancer_profile&.annual_revenue_target_eur.to_i,
+      progress_percent: raw_progress_percent,
+      progress_bar_percent: [ raw_progress_percent, 100 ].min,
+      signed_this_month_count: signed_this_month.count,
+      sent_this_month_count: sent_this_month,
+      promised_payments_cents: promised_payments_cents,
+      freelance_legal_status_label: @freelancer_profile&.freelance_legal_status_label || "Non renseigne",
+      urgent_actions: urgent_actions.first(3),
+      urgent_actions_count: urgent_actions.count
+    }
+  end
+
+  def month_label_fr(date)
+    month_names = [
+      nil, "janvier", "fevrier", "mars", "avril", "mai", "juin",
+      "juillet", "aout", "septembre", "octobre", "novembre", "decembre"
+    ]
+
+    "#{month_names[date.month]} #{date.year}"
   end
 
   def yearly_revenue_snapshot

@@ -1,12 +1,14 @@
 <% content_for :title, "Connexion | Rivyr" %>
 
-<div class="min-h-screen px-4 py-8 sm:px-6 lg:px-8">
-  <div class="mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl overflow-hidden rounded-[32px] border border-white/60 bg-white/80 shadow-[0_28px_90px_rgba(15,23,42,0.14)] backdrop-blur xl:grid-cols-[1.05fr_0.95fr]">
-    <section class="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(237,14,100,0.18),_transparent_36%),linear-gradient(145deg,#fff5f9_0%,#fffdfa_42%,#fff1e7_100%)] px-8 py-10 sm:px-10 lg:px-12 lg:py-14">
+<div class="min-h-screen bg-[linear-gradient(180deg,#fff8fb_0%,#fff4f8_48%,#fffaf6_100%)] px-4 py-8 sm:px-6 lg:px-8">
+  <div class="mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl overflow-hidden rounded-[32px] border border-[#f2d3de] bg-white/90 shadow-[0_28px_90px_rgba(111,26,55,0.16)] backdrop-blur xl:grid-cols-[1.05fr_0.95fr]">
+    <section class="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(237,14,100,0.22),_transparent_34%),radial-gradient(circle_at_bottom_right,_rgba(255,182,193,0.22),_transparent_30%),linear-gradient(145deg,#fff4f8_0%,#fffafb_35%,#fff3ea_100%)] px-8 py-10 sm:px-10 lg:px-12 lg:py-14">
       <div class="absolute inset-x-0 top-0 h-1 bg-[#ED0E64]"></div>
+      <div class="absolute -left-12 top-24 h-48 w-48 rounded-full bg-[#ed0e64]/10 blur-3xl"></div>
+      <div class="absolute bottom-8 right-0 h-56 w-56 rounded-full bg-[#f7b2c7]/20 blur-3xl"></div>
       <div class="relative flex h-full flex-col justify-between">
         <div>
-          <div class="inline-flex items-center gap-3 rounded-full border border-white/70 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
+          <div class="inline-flex items-center gap-3 rounded-full border border-[#f1cfda] bg-white/90 px-4 py-2 text-sm font-semibold text-[#5f3647] shadow-sm">
             <span class="flex h-9 w-9 items-center justify-center rounded-full bg-[#ED0E64] text-white">
               <%= inline_svg_tag("icon_pers.svg", class: "h-4 w-4") %>
             </span>
@@ -14,53 +16,53 @@
           </div>
 
           <div class="mt-10 max-w-xl space-y-5">
-            <h1 class="text-4xl font-semibold leading-tight tracking-tight text-slate-900 md:text-5xl">
+            <h1 class="text-4xl font-semibold leading-tight tracking-tight text-[#3f1825] md:text-5xl">
               Reprenez la main sur vos missions, vos revenus et votre collectif.
             </h1>
-            <p class="text-base leading-relaxed text-slate-600 md:text-lg">
-              Connectez-vous a votre cockpit Rivyr pour suivre vos missions en cours, vos signatures, votre portefeuille et la vie du collectif.
+            <p class="text-base leading-relaxed text-[#7a4a59] md:text-lg">
+              Connectez-vous à votre cockpit Rivyr pour suivre vos missions en cours, vos signatures, votre portefeuille et la vie du collectif.
             </p>
           </div>
 
           <div class="mt-10 grid gap-4 sm:grid-cols-3">
-            <div class="rounded-[24px] border border-white/70 bg-white/75 p-4 shadow-sm">
-              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Missions actives</p>
-              <p class="mt-3 text-3xl font-semibold text-slate-900">12</p>
-              <p class="mt-1 text-sm text-slate-500">Une vision claire de vos priorites du jour.</p>
+            <div class="rounded-[24px] border border-[#f1d4de] bg-white/85 p-4 shadow-[0_14px_32px_rgba(237,14,100,0.08)]">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#b27284]">Missions actives</p>
+              <p class="mt-3 text-3xl font-semibold text-[#3f1825]">12</p>
+              <p class="mt-1 text-sm text-[#8d6070]">Une vision claire de vos priorités du jour.</p>
             </div>
-            <div class="rounded-[24px] border border-white/70 bg-white/75 p-4 shadow-sm">
-              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Signatures</p>
-              <p class="mt-3 text-3xl font-semibold text-slate-900">4</p>
-              <p class="mt-1 text-sm text-slate-500">Contrats, avenants et documents a relancer.</p>
+            <div class="rounded-[24px] border border-[#f1d4de] bg-white/85 p-4 shadow-[0_14px_32px_rgba(237,14,100,0.08)]">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#b27284]">Signatures</p>
+              <p class="mt-3 text-3xl font-semibold text-[#3f1825]">4</p>
+              <p class="mt-1 text-sm text-[#8d6070]">Contrats, avenants et documents à relancer.</p>
             </div>
-            <div class="rounded-[24px] border border-white/70 bg-white/75 p-4 shadow-sm">
-              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Paiements</p>
-              <p class="mt-3 text-3xl font-semibold text-slate-900">8 500€</p>
-              <p class="mt-1 text-sm text-slate-500">Une lecture immediate de ce qui arrive.</p>
+            <div class="rounded-[24px] border border-[#f1d4de] bg-white/85 p-4 shadow-[0_14px_32px_rgba(237,14,100,0.08)]">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#b27284]">Paiements</p>
+              <p class="mt-3 text-3xl font-semibold text-[#3f1825]">8 500€</p>
+              <p class="mt-1 text-sm text-[#8d6070]">Une lecture immédiate de ce qui arrive.</p>
             </div>
           </div>
         </div>
 
-        <div class="mt-10 rounded-[28px] border border-white/70 bg-slate-950 px-6 py-5 text-white shadow-[0_20px_55px_rgba(15,23,42,0.24)]">
+        <div class="mt-10 rounded-[28px] border border-[#f2c7d5] bg-[linear-gradient(145deg,#fff7fa_0%,#ffeef5_52%,#fff4ef_100%)] px-6 py-5 text-[#4c1f2a] shadow-[0_20px_50px_rgba(116,22,56,0.12)]">
           <div class="flex items-start justify-between gap-4">
             <div>
-              <p class="text-xs font-semibold uppercase tracking-[0.24em] text-white/55">Le collectif Rivyr</p>
-              <p class="mt-2 text-lg font-semibold">Un reseau selectif, oriente execution et resultats.</p>
+              <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[#b0687b]">Le collectif Rivyr</p>
+              <p class="mt-2 text-lg font-semibold">Un réseau sélectif, orienté exécution et résultats.</p>
             </div>
-            <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/80">Label actif</span>
+            <span class="rounded-full border border-[#f2c7d5] bg-white px-3 py-1 text-xs font-semibold text-[#b40c4d] shadow-sm">Label actif</span>
           </div>
           <div class="mt-5 grid gap-3 sm:grid-cols-3">
-            <div class="rounded-2xl bg-white/6 p-3">
-              <p class="text-sm font-medium">Opportunites compatibles</p>
-              <p class="mt-2 text-2xl font-semibold">6</p>
+            <div class="rounded-2xl border border-[#f4d7e1] bg-white p-3 shadow-sm">
+              <p class="text-sm font-medium text-[#8b4452]">Opportunités compatibles</p>
+              <p class="mt-2 text-2xl font-semibold text-[#4c1f2a]">6</p>
             </div>
-            <div class="rounded-2xl bg-white/6 p-3">
-              <p class="text-sm font-medium">Freelances certifies</p>
-              <p class="mt-2 text-2xl font-semibold">48</p>
+            <div class="rounded-2xl border border-[#f4d7e1] bg-white p-3 shadow-sm">
+              <p class="text-sm font-medium text-[#8b4452]">Freelances certifiés</p>
+              <p class="mt-2 text-2xl font-semibold text-[#4c1f2a]">48</p>
             </div>
-            <div class="rounded-2xl bg-white/6 p-3">
-              <p class="text-sm font-medium">Indice Rivyr moyen</p>
-              <p class="mt-2 text-2xl font-semibold">8.7</p>
+            <div class="rounded-2xl border border-[#f4d7e1] bg-white p-3 shadow-sm">
+              <p class="text-sm font-medium text-[#8b4452]">Indice Rivyr moyen</p>
+              <p class="mt-2 text-2xl font-semibold text-[#4c1f2a]">8.7</p>
             </div>
           </div>
         </div>
@@ -71,7 +73,7 @@
       <div class="mx-auto w-full max-w-md">
         <div class="mb-8">
           <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[#B40C4D]">Connexion</p>
-          <h2 class="mt-3 text-3xl font-semibold tracking-tight text-slate-900">Acceder a votre espace Rivyr</h2>
+          <h2 class="mt-3 text-3xl font-semibold tracking-tight text-slate-900">Accéder à votre espace Rivyr</h2>
           <p class="mt-2 text-sm leading-relaxed text-slate-500">
             Utilisez vos identifiants pour retrouver votre dashboard, vos missions et vos documents.
           </p>
@@ -91,7 +93,7 @@
             <div>
               <div class="mb-2 flex items-center justify-between gap-3">
                 <label class="block text-sm font-medium text-slate-700" for="<%= "#{resource_name}_password" %>">Mot de passe</label>
-                <%= link_to "Mot de passe oublie ?", new_password_path(resource_name), class: "text-sm font-medium text-[#B40C4D] transition hover:text-[#ED0E64]" %>
+                <%= link_to "Mot de passe oublié ?", new_password_path(resource_name), class: "text-sm font-medium text-[#B40C4D] transition hover:text-[#ED0E64]" %>
               </div>
               <%= f.input_field :password,
                     required: false,
@@ -110,9 +112,9 @@
           <%= render "devise/shared/error_messages", resource: resource %>
 
           <div class="space-y-3">
-            <%= f.button :submit, "Se connecter", class: "inline-flex w-full items-center justify-center rounded-full bg-[#ED0E64] px-5 py-3.5 text-base font-semibold text-white shadow-[0_18px_44px_rgba(237,14,100,0.28)] transition hover:brightness-105" %>
+            <%= f.button :submit, "Se connecter", class: "inline-flex w-full items-center justify-center rounded-full border border-[#ed0e64] bg-[linear-gradient(135deg,#ed0e64_0%,#c10c52_100%)] px-5 py-3.5 text-base font-semibold text-white shadow-[0_20px_48px_rgba(237,14,100,0.34)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_56px_rgba(237,14,100,0.42)]" %>
             <%= link_to root_path, class: "inline-flex w-full items-center justify-center rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900" do %>
-              Retour a l'accueil
+              Retour à l'accueil
             <% end %>
           </div>
         <% end %>

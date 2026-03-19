@@ -1034,7 +1034,13 @@ ALL_FREELANCERS.each_with_index do |data, index|
     linkedin_url: "https://www.linkedin.com/in/#{data[:first_name].parameterize}-#{data[:last_name].parameterize}",
     website_url: "https://www.#{data[:first_name].parameterize}-#{data[:last_name].parameterize}.fr",
     rivyr_score_current: data[:score],
-    profile_private: false
+    profile_private: false,
+    primary_bank_account_label: "Compte principal",
+    primary_bank_iban: "FR7630006000011234567890189",
+    primary_bank_bic: "AGRIFRPP",
+    secondary_bank_account_label: "Compte reserve",
+    secondary_bank_iban: "FR7610278012345678901234567",
+    secondary_bank_bic: "CMCIFR2A"
   }
   if FreelancerProfile.column_names.include?("performance_snapshot")
     freelancer_attrs[:performance_snapshot] = freelancer_performance_snapshot(seed: index + 1, score: data[:score])
@@ -1622,17 +1628,17 @@ end
 
 demo_rows = [
   # 2 missions en attente de paiement par le client
-  { suffix: "A1", title: "CTO de transition", client_invoice_status: "issued", freelancer_share_cents: 4_800_00, rule: "80_20", payout_status: nil, require_action_note: true },
-  { suffix: "A2", title: "Head of Ops", client_invoice_status: "issued", freelancer_share_cents: 3_600_00, rule: "75_25", payout_status: nil, require_action_note: false },
+  { suffix: "A1", title: "CTO de transition", client_invoice_status: "issued", freelancer_share_cents: 4_800_00, rule: "80_20", payout_status: nil, require_action_note: true, workflow_status: "in_progress", review_note: "Documents transmis, validation compliance en attente." },
+  { suffix: "A2", title: "Head of Ops", client_invoice_status: "issued", freelancer_share_cents: 3_600_00, rule: "75_25", payout_status: nil, require_action_note: false, workflow_status: "validated", review_note: "Dossier valide par Rivyr, attente de reglement client." },
   # 2 missions en demande de virement Rivyr
-  { suffix: "B1", title: "DAF Groupe", client_invoice_status: "paid", freelancer_share_cents: 4_000_00, rule: "80_20", payout_status: "pending", payout_amount_cents: 1_000_00, require_action_note: false },
-  { suffix: "B2", title: "Directeur Commercial", client_invoice_status: "paid", freelancer_share_cents: 5_000_00, rule: "80_20", payout_status: "approved", payout_amount_cents: 2_000_00, require_action_note: false },
+  { suffix: "B1", title: "DAF Groupe", client_invoice_status: "paid", freelancer_share_cents: 4_000_00, rule: "80_20", payout_status: "paid", payout_amount_cents: 1_000_00, require_action_note: false, workflow_status: "validated", review_note: "Paiement termine, dossier archive." },
+  { suffix: "B2", title: "Directeur Commercial", client_invoice_status: "paid", freelancer_share_cents: 5_000_00, rule: "80_20", payout_status: "pending", payout_amount_cents: 2_000_00, require_action_note: false, workflow_status: "validated", review_note: "Validation finale acceptee, virement en cours." },
   # 2 missions en attente de paiement client
-  { suffix: "C1", title: "COO", client_invoice_status: "issued", freelancer_share_cents: 5_600_00, rule: "70_30", payout_status: nil, require_action_note: true },
-  { suffix: "C2", title: "Directeur de Site", client_invoice_status: "issued", freelancer_share_cents: 4_200_00, rule: "70_30", payout_status: nil, require_action_note: false },
+  { suffix: "C1", title: "COO", client_invoice_status: "issued", freelancer_share_cents: 5_600_00, rule: "70_30", payout_status: nil, require_action_note: true, workflow_status: "in_progress", review_note: "Attente de confirmation offre client." },
+  { suffix: "C2", title: "Directeur de Site", client_invoice_status: "issued", freelancer_share_cents: 4_200_00, rule: "70_30", payout_status: nil, require_action_note: false, workflow_status: "validated", review_note: "Placement valide, facture client emis." },
   # 2 missions en attente de facturation freelance
-  { suffix: "D1", title: "VP People", client_invoice_status: "paid", freelancer_share_cents: 3_000_00, rule: "75_25", payout_status: nil, require_action_note: false },
-  { suffix: "D2", title: "Responsable Transformation", client_invoice_status: "paid", freelancer_share_cents: 3_000_00, rule: "75_25", payout_status: nil, require_action_note: false }
+  { suffix: "D1", title: "VP People", client_invoice_status: "paid", freelancer_share_cents: 3_000_00, rule: "75_25", payout_status: nil, require_action_note: false, workflow_status: "validated", review_note: "Pret pour emission facture freelance." },
+  { suffix: "D2", title: "Responsable Transformation", client_invoice_status: "paid", freelancer_share_cents: 3_000_00, rule: "75_25", payout_status: nil, require_action_note: false, workflow_status: "validated", review_note: "Paiement client recu, facture freelance a preparer." }
 ]
 
 demo_rows.each_with_index do |row, index|
@@ -1677,7 +1683,10 @@ demo_rows.each_with_index do |row, index|
     annual_salary_cents: 12_000_000 + (index * 200_000),
     placement_fee_cents: gross_amount_cents,
     status: row[:client_invoice_status] == "paid" ? "invoiced" : "validated",
-    notes: "Placement de demonstration pour pilotage financier freelance."
+    notes: "Placement de demonstration pour pilotage financier freelance.",
+    workflow_status: row[:workflow_status],
+    admin_reviewed_at: Time.current - index.hours,
+    admin_review_note: row[:review_note]
   )
 
   client_invoice = Invoice.create!(

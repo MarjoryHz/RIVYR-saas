@@ -11,6 +11,10 @@ one:
   website_url: MyString
   rivyr_score_current: 1
   profile_private: false
+  freelance_legal_status: sasu
+  annual_revenue_target_eur: 120000
+  monthly_revenue_targets_eur:
+    "03": 10000
 
 two:
   region: two
@@ -23,3 +27,7 @@ two:
   website_url: MyString
   rivyr_score_current: 1
   profile_private: false
+  freelance_legal_status: eurl
+  annual_revenue_target_eur: 90000
+  monthly_revenue_targets_eur:
+    "03": 7500
