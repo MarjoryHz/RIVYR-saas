@@ -40,21 +40,21 @@
           </div>
         </article>
 
-        <article class="<%= surface_card_class %> p-4 md:p-5">
-          <div class="rounded-[1.5rem] border border-[#f1d7df] bg-[linear-gradient(135deg,rgba(255,247,250,0.96),rgba(255,240,244,0.98))] p-4 md:p-5">
-            <div class="flex min-h-[260px] flex-col">
+        <article class="<%= surface_card_class %> p-3 md:p-4">
+          <div class="rounded-[1.35rem] border border-[#f1d7df] bg-[linear-gradient(135deg,rgba(255,247,250,0.96),rgba(255,240,244,0.98))] p-3 md:p-4">
+            <div class="flex min-h-[128px] flex-col justify-between">
               <div class="flex justify-end">
                 <div class="text-right">
                   <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a5a68]">Portefeuille</p>
-                  <p class="mt-2 text-4xl font-semibold tracking-tight text-[#4c1f2a] md:text-5xl xl:text-6xl"><%= number_to_currency(active_wallet_tab[:amount_cents] / 100.0, unit: "€", precision: 0) %></p>
+                  <p class="mt-1 text-3xl font-semibold tracking-tight text-[#4c1f2a] md:text-4xl xl:text-5xl"><%= number_to_currency(active_wallet_tab[:amount_cents] / 100.0, unit: "€", precision: 0) %></p>
                 </div>
               </div>
 
-              <div class="mt-2 flex items-center justify-end gap-8 text-right">
+              <div class="mt-1 flex items-center justify-end gap-5 text-right">
                 <% wallet_tabs.reject { |tab| tab[:key] == @wallet_tab }.each do |tab| %>
                   <div class="text-right">
-                    <p class="text-sm font-medium text-[#9a5a68]"><%= tab[:label] %></p>
-                    <p class="mt-0 text-lg font-medium leading-none text-[#4c1f2a]"><%= number_to_currency(tab[:amount_cents] / 100.0, unit: "€", precision: 0) %></p>
+                    <p class="text-xs font-medium text-[#9a5a68]"><%= tab[:label] %></p>
+                    <p class="mt-0.5 text-base font-medium leading-none text-[#4c1f2a]"><%= number_to_currency(tab[:amount_cents] / 100.0, unit: "€", precision: 0) %></p>
                   </div>
                 <% end %>
               </div>
@@ -250,15 +250,15 @@
                       <% badge_class = tone_classes.fetch(row[:status_tone], tone_classes[:slate]) %>
                       <tr class="transition hover:bg-[#fff8fb]">
                         <td class="align-middle px-4 py-4 md:px-5">
-                          <div class="flex items-center gap-4" data-controller="signature-change-indicator" data-signature-change-indicator-row-id-value="<%= row[:id] %>">
-                            <% if row[:changed_recently] %>
-                              <span class="relative inline-flex" data-action="mouseenter->signature-change-indicator#reveal mouseleave->signature-change-indicator#hide">
-                                <span data-signature-change-indicator-target="indicator" class="inline-flex h-3 w-3 shrink-0 rounded-full bg-[#ff8a1f] shadow-[0_0_0_5px_rgba(255,138,31,0.18)]"></span>
+                          <div class="flex items-center gap-4" data-controller="signature-change-indicator" data-signature-change-indicator-row-id-value="<%= row[:id] %>" data-signature-change-indicator-changed-recently-value="<%= row[:changed_recently] %>">
+                            <span class="relative inline-flex" <% if row[:changed_recently] %>data-action="mouseenter->signature-change-indicator#reveal mouseleave->signature-change-indicator#hide"<% end %>>
+                              <span data-signature-change-indicator-target="indicator" class="inline-flex h-3 w-3 shrink-0 rounded-full border border-[#dec4cd] bg-white"></span>
+                              <% if row[:changed_recently] %>
                                 <span data-signature-change-indicator-target="tooltip" class="pointer-events-none absolute left-0 top-full z-30 hidden min-w-[240px] max-w-[320px] rounded-xl border border-[#f4d5bf] bg-white px-3 py-2 text-sm text-[#5f3647] shadow-[0_20px_45px_rgba(116,43,70,0.16)] mt-2">
                                   <%= row[:change_hint] %>
                                 </span>
-                              </span>
-                            <% end %>
+                              <% end %>
+                            </span>
                             <%= link_to mission_path(row[:mission]), class: "inline-flex h-8 w-8 items-center justify-center rounded-xl border border-[#dfbcc9] bg-[#fff5f8] text-xs text-[#8b4452] transition hover:bg-[#fdeef3]", title: "Ouvrir la mission", data: { action: "click->signature-change-indicator#markSeen" } do %>
                               <i class="fa-solid fa-briefcase"></i>
                             <% end %>
