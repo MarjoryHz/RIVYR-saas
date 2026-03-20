@@ -18,6 +18,9 @@ puts "============================"
 
 puts "Cleaning database..."
 
+CommunityMessageReaction.destroy_all
+CommunityMessage.destroy_all
+CommunityChannel.destroy_all
 Payment.destroy_all
 PayoutRequest.destroy_all
 InvoiceNote.destroy_all
@@ -82,13 +85,13 @@ SPECIALTIES_DATA = [
 
 PREMIUM_FREELANCERS = [
   {
-    email: 'claire.dumont@rivyr.test',
-    first_name: 'Claire',
-    last_name: 'Dumont',
+    email: 'marjory.hiez@rivyr.test',
+    first_name: 'Marjory',
+    last_name: 'Hiez',
     specialty: 'Direction Générale',
     region: 'Hauts-de-France',
     score: 94,
-    bio: "Ex-chasseuse de têtes en cabinet, Claire intervient aujourd'hui en indépendante sur des recrutements de dirigeants, membres de CODIR et managers de transformation. Elle est reconnue pour sa capacité à qualifier finement les enjeux politiques, humains et business d'un recrutement sensible."
+    bio: "Ex-chasseuse de têtes en cabinet, Marjory intervient aujourd'hui en indépendante sur des recrutements de dirigeants, membres de CODIR et managers de transformation. Elle est reconnue pour sa capacité à qualifier finement les enjeux politiques, humains et business d'un recrutement sensible."
   },
   {
     email: 'thomas.leroy@rivyr.test',
@@ -451,7 +454,7 @@ MISSIONS_DATA = [
   { reference: 'MIS-2026-019', client_legal_name: 'Wallonie Engineering SA', specialty: 'Direction Generale', title: 'Directeur de Business Unit', priority: 'high' },
   { reference: 'MIS-2026-020', client_legal_name: 'Seine Corporate Finance SAS', specialty: 'Juridique', title: 'Responsable Juridique', priority: 'medium' },
 
-  # 4 missions volontairement alignees avec le profil de Claire Dumont
+  # 4 missions volontairement alignees avec le profil de Marjory Hiez
   { reference: 'MIS-2026-021', client_legal_name: 'Flandres Industrie SAS', specialty: 'Direction Generale', title: 'Directeur General Adjoint', priority: 'critical', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 40 },
   { reference: 'MIS-2026-022', client_legal_name: 'Nord Logistics Group SAS', specialty: 'Direction Generale', title: 'Directeur des Operations Groupe', priority: 'high', status: 'open', origin_type: 'partner', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 18 },
   { reference: 'MIS-2026-023', client_legal_name: 'Artois Conseil & Transformation SAS', specialty: 'Direction Generale', title: 'Directeur Transformation', priority: 'medium', status: 'open', origin_type: 'freelancer', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 12 },
@@ -467,11 +470,11 @@ MISSIONS_DATA = [
   { reference: 'MIS-2026-031', client_legal_name: 'Wallonie Engineering SA', specialty: 'Ingenierie', title: 'Directeur Projets Strategiques', priority: 'high', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 14 },
   { reference: 'MIS-2026-032', client_legal_name: 'Nord Logistics Group SAS', specialty: 'Commercial', title: 'Directeur Grands Comptes', priority: 'high', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'admin@rivyr.test', opened_days_ago: 11 },
 
-  # 4 missions assignees a Claire Dumont par Rivyr
-  { reference: 'MIS-2026-033', client_legal_name: 'Seine Corporate Finance SAS', specialty: 'Direction Generale', title: 'Directeur General', priority: 'critical', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'claire.dumont@rivyr.test', opened_days_ago: 35 },
-  { reference: 'MIS-2026-034', client_legal_name: 'Artois Conseil & Transformation SAS', specialty: 'Direction Generale', title: 'Directeur Associe', priority: 'high', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'claire.dumont@rivyr.test', opened_days_ago: 22 },
-  { reference: 'MIS-2026-035', client_legal_name: 'Hexa Retail Performance SAS', specialty: 'Direction Generale', title: 'CEO France', priority: 'critical', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'claire.dumont@rivyr.test', opened_days_ago: 14 },
-  { reference: 'MIS-2026-036', client_legal_name: 'Euronextia Services SAS', specialty: 'Direction Generale', title: 'Directeur de Pole Senior', priority: 'high', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'claire.dumont@rivyr.test', opened_days_ago: 7 }
+  # 4 missions assignees a Marjory Hiez par Rivyr
+  { reference: 'MIS-2026-033', client_legal_name: 'Seine Corporate Finance SAS', specialty: 'Direction Generale', title: 'Directeur General', priority: 'critical', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'marjory.hiez@rivyr.test', opened_days_ago: 35 },
+  { reference: 'MIS-2026-034', client_legal_name: 'Artois Conseil & Transformation SAS', specialty: 'Direction Generale', title: 'Directeur Associe', priority: 'high', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'marjory.hiez@rivyr.test', opened_days_ago: 22 },
+  { reference: 'MIS-2026-035', client_legal_name: 'Hexa Retail Performance SAS', specialty: 'Direction Generale', title: 'CEO France', priority: 'critical', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'marjory.hiez@rivyr.test', opened_days_ago: 14 },
+  { reference: 'MIS-2026-036', client_legal_name: 'Euronextia Services SAS', specialty: 'Direction Generale', title: 'Directeur de Pole Senior', priority: 'high', status: 'open', origin_type: 'rivyr', assigned_freelancer_email: 'marjory.hiez@rivyr.test', opened_days_ago: 7 }
 ].freeze
 
 PLACEMENTS_DATA = [
@@ -1152,6 +1155,119 @@ if FreelancerProfile.column_names.include?("performance_snapshot")
   library_pool_attrs[:performance_snapshot] = freelancer_performance_snapshot(seed: 99, score: 100)
 end
 library_freelancer_pool = upsert_record(FreelancerProfile, { user: admin_user }, library_pool_attrs)
+
+# --------------------------------------------------
+# 6b. Community channels & messages
+# --------------------------------------------------
+
+puts "Seeding community channels and messages..."
+
+community_channels_data = [
+  { name: "General", slug: "general", position: 0 },
+  { name: "Missions chaudes", slug: "missions-chaudes", position: 1 },
+  { name: "Industrie", slug: "industrie", position: 2 },
+  { name: "Tech & Product", slug: "tech-product", position: 3 },
+  { name: "Finance", slug: "finance", position: 4 },
+  { name: "Bonnes pratiques", slug: "bonnes-pratiques", position: 5 }
+]
+
+community_channels_data.each do |data|
+  CommunityChannel.find_or_create_by!(slug: data[:slug]) do |ch|
+    ch.name = data[:name]
+    ch.position = data[:position]
+  end
+end
+
+channels_by_slug = CommunityChannel.all.index_by(&:slug)
+
+# Lookup users by email for stable references
+community_users = {
+  thomas:  User.find_by!(email: "thomas.leroy@rivyr.test"),
+  sophie:  User.find_by!(email: "sophie.vanacker@rivyr.test"),
+  antoine: User.find_by!(email: "antoine.mercier@rivyr.test"),
+  admin:   User.find_by!(email: "admin@rivyr.test"),
+  julie:   User.find_by!(email: "julie.martin@rivyr.test")
+}
+
+community_messages_data = [
+  {
+    channel: "general", user: :thomas, tone: "rivyr",
+    body: "Nous avons 2 briefs sensibles qui viennent d'entrer sur des fonctions de direction industrielle. Si certains veulent un point rapide aujourd'hui, je peux partager le contexte."
+  },
+  {
+    channel: "general", user: :sophie, tone: "member",
+    body: "Je suis preneur. J'observe aussi une hausse des demandes avec forte attente sur la presence terrain et le pilotage multi-sites."
+  },
+  {
+    channel: "general", user: :antoine, tone: "member",
+    body: "Cote product, les clients demandent en ce moment des shortlists plus courtes mais ultra argumentees. Je peux partager mon template si utile."
+  },
+  {
+    channel: "missions-chaudes", user: :admin, tone: "rivyr",
+    body: "Nouvelle mission chaude ouverte sur une direction de site dans le Nord. Niveau d'attente tres eleve sur le pilotage du changement."
+  },
+  {
+    channel: "missions-chaudes", user: :thomas, tone: "member",
+    body: "Je peux prendre le sujet si vous cherchez quelqu'un qui connait bien les environnements multisites."
+  },
+  {
+    channel: "industrie", user: :thomas, tone: "member",
+    body: "Je constate une hausse nette des demandes sur les profils operations avec forte culture terrain et management de la performance."
+  },
+  {
+    channel: "tech-product", user: :julie, tone: "member",
+    body: "Sur les roles product, les clients challengent beaucoup plus la capacite a influencer et a structurer la priorisation que le simple background startup."
+  },
+  {
+    channel: "finance", user: :sophie, tone: "member",
+    body: "Les recherches DAF restent tres sensibles a la maturite du contexte actionnarial et a la capacite de structurer la fonction rapidement."
+  },
+  {
+    channel: "bonnes-pratiques", user: :admin, tone: "rivyr",
+    body: "Partage du jour : un bon message d'approche n'est pas plus long, il est plus precis. Il doit refleter le niveau de contexte et de discernement."
+  }
+]
+
+seeded_messages = []
+community_messages_data.each do |data|
+  msg = CommunityMessage.create!(
+    community_channel: channels_by_slug.fetch(data[:channel]),
+    user: community_users.fetch(data[:user]),
+    tone: data[:tone],
+    body: data[:body]
+  )
+  seeded_messages << msg
+end
+
+# Seed reactions with varied users
+reaction_data = [
+  { message_index: 0, reactions: [["🔥", [:sophie, :antoine, :julie]], ["👏", [:sophie, :antoine]]] },
+  { message_index: 1, reactions: [["👍", [:thomas, :julie]]] },
+  { message_index: 2, reactions: [["💡", [:thomas, :sophie, :admin]], ["👏", [:thomas]]] },
+  { message_index: 3, reactions: [["🔥", [:thomas, :sophie, :antoine, :julie]]] },
+  { message_index: 4, reactions: [["✅", [:admin, :sophie]]] },
+  { message_index: 5, reactions: [["🏭", [:sophie, :antoine, :julie]]] },
+  { message_index: 6, reactions: [["💡", [:thomas, :sophie, :antoine, :admin]]] },
+  { message_index: 7, reactions: [["📊", [:thomas, :julie]]] },
+  { message_index: 8, reactions: [["👏", [:thomas, :sophie, :antoine, :julie]], ["💬", [:thomas]]] }
+]
+
+reaction_data.each do |entry|
+  msg = seeded_messages[entry[:message_index]]
+  entry[:reactions].each do |emoji, user_keys|
+    user_keys.each do |user_key|
+      CommunityMessageReaction.find_or_create_by!(
+        community_message: msg,
+        user: community_users.fetch(user_key),
+        emoji: emoji
+      )
+    end
+  end
+end
+
+puts "#{CommunityChannel.count} community channels ready."
+puts "#{CommunityMessage.count} community messages ready."
+puts "#{CommunityMessageReaction.count} community reactions ready."
 
 # --------------------------------------------------
 # 7. Clients
@@ -1864,12 +1980,12 @@ puts "#{PayoutRequest.count} payout requests ready."
 
 # --------------------------------------------------
 # 15. Dataset de demo finance
-# Cas d'usage dedie a Claire Dumont pour la page finance freelance.
+# Cas d'usage dedie a Marjory Hiez pour la page finance freelance.
 # --------------------------------------------------
 
-puts "Seeding dedicated finance demo for Claire Dumont..."
+puts "Seeding dedicated finance demo for Marjory Hiez..."
 
-claire_user = User.find_by!(email: "claire.dumont@rivyr.test")
+claire_user = User.find_by!(email: "marjory.hiez@rivyr.test")
 claire_profile = FreelancerProfile.find_by!(user: claire_user)
 fallback_profile = FreelancerProfile.where.not(id: claire_profile.id).first
 
@@ -2113,7 +2229,7 @@ demo_rows.each_with_index do |row, index|
     billing_number: freelancer_invoice.number,
     status: row[:payout_status],
     requested_at: Time.current - (index + 1).days,
-    bank_account_label: "Compte principal Claire"
+    bank_account_label: "Compte principal Marjory"
   )
 end
 
@@ -2127,8 +2243,8 @@ claire_wallet_cents = Placement
     placement.commission&.freelancer_share_cents.to_i
   end - claire_user.payout_requests.where(status: "paid").sum(:amount_cents) - claire_user.payout_requests.where(status: %w[pending approved]).sum(:amount_cents)
 
-puts "Claire wallet seeded: #{(claire_wallet_cents / 100.0).round(2)} EUR"
-puts "Claire demo placements: #{Placement.joins(mission: :freelancer_profile).where(freelancer_profiles: { user_id: claire_user.id }).count}"
+puts "Marjory wallet seeded: #{(claire_wallet_cents / 100.0).round(2)} EUR"
+puts "Marjory demo placements: #{Placement.joins(mission: :freelancer_profile).where(freelancer_profiles: { user_id: claire_user.id }).count}"
 
 puts "============================"
 puts "SEED COMPLETED"
@@ -2147,4 +2263,7 @@ puts "Commissions: #{Commission.count}"
 puts "Payments: #{Payment.count}"
 puts "InvoiceNotes: #{InvoiceNote.count}"
 puts "PayoutRequests: #{PayoutRequest.count}"
+puts "CommunityChannels: #{CommunityChannel.count}"
+puts "CommunityMessages: #{CommunityMessage.count}"
+puts "CommunityReactions: #{CommunityMessageReaction.count}"
 puts "============================"

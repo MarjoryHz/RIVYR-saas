@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_19_161000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_20_144048) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -100,9 +100,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_161000) do
   create_table "client_post_reactions", force: :cascade do |t|
     t.bigint "client_post_id", null: false
     t.datetime "created_at", null: false
-    t.string "emoji"
+    t.string "emoji", default: "👍", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["client_post_id", "user_id"], name: "index_client_post_reactions_on_client_post_id_and_user_id", unique: true
     t.index ["client_post_id"], name: "index_client_post_reactions_on_client_post_id"
     t.index ["user_id"], name: "index_client_post_reactions_on_user_id"
   end
@@ -169,6 +170,39 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_161000) do
     t.string "status"
     t.datetime "updated_at", null: false
     t.index ["placement_id"], name: "index_commissions_on_placement_id"
+  end
+
+  create_table "community_channels", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0
+    t.string "slug", null: false
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_community_channels_on_slug", unique: true
+  end
+
+  create_table "community_message_reactions", force: :cascade do |t|
+    t.bigint "community_message_id", null: false
+    t.datetime "created_at", null: false
+    t.string "emoji", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["community_message_id", "user_id", "emoji"], name: "idx_unique_community_reaction", unique: true
+    t.index ["community_message_id"], name: "index_community_message_reactions_on_community_message_id"
+    t.index ["user_id"], name: "index_community_message_reactions_on_user_id"
+  end
+
+  create_table "community_messages", force: :cascade do |t|
+    t.text "body", null: false
+    t.bigint "community_channel_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "parent_id"
+    t.string "tone", default: "member"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["community_channel_id"], name: "index_community_messages_on_community_channel_id"
+    t.index ["parent_id"], name: "index_community_messages_on_parent_id"
+    t.index ["user_id"], name: "index_community_messages_on_user_id"
   end
 
   create_table "contributions", force: :cascade do |t|
@@ -324,7 +358,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_161000) do
     t.string "mission_type"
     t.date "opened_at"
     t.string "origin_type"
-    t.string "pipeline_stage", default: "sourcing_candidates", null: false
     t.string "priority_level"
     t.string "reference"
     t.bigint "region_id"
@@ -486,6 +519,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_161000) do
   add_foreign_key "client_subscriptions", "users"
   add_foreign_key "client_values", "clients"
   add_foreign_key "commissions", "placements"
+  add_foreign_key "community_message_reactions", "community_messages"
+  add_foreign_key "community_message_reactions", "users"
+  add_foreign_key "community_messages", "community_channels"
+  add_foreign_key "community_messages", "community_messages", column: "parent_id"
+  add_foreign_key "community_messages", "users"
   add_foreign_key "contributions", "candidates"
   add_foreign_key "educations", "candidates"
   add_foreign_key "favorite_candidates", "candidates"
